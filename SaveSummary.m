@@ -3,7 +3,7 @@ function SaveSummary(InputFile,BaseData,BatchSize,PlatPct,TrData,VirtualWIM,Time
 %   Detailed explanation goes here
 
 % Copy blank output file and write results
-filename = strcat('Output/MATSimOutput', InputFile(1:end-5),'_',datestr(now,'mmmdd-yy HHMM'), '.xlsx');
+filename = strcat('Output/MATSimOutput', InputFile(13:end-5),'_',datestr(now,'mmmdd-yy HHMM'), '.xlsx');
 copyfile('Output/Output_blank.xlsx',filename)
 
 writecell(UniqInf',filename,'Sheet','MaxLEs','Range','C2');

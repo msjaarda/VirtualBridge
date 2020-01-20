@@ -11,8 +11,9 @@
 tic, clear, clc, close all, format long g, rng('shuffle'); st = now;
 
 % Input File or Folder Name
-%InputF = 'Input/MATSimInputx.xlsx';  
-InputF = 'Input/PlatStud'; File_List = dir(InputF);
+InputF = 'Input/MATSimInputx.xlsx';  
+%InputF = 'Input/PlatStud'; 
+File_List = dir(InputF);
 
 if File_List(1).isdir
     File_List(1:2) = [];  Folder_Name = InputF(6:end);
@@ -41,7 +42,7 @@ for g = 1:length(File_List)
 MATSimWarnings(TrDistCu, BaseData.BunchFactor, BaseData.RunPlat); VirtualWIM = []; OverMax = []; ApercuOverMax = [];
 
 % Initialize parpool if necessary and initialize progress bar
-if BaseData.Parallel > 0, gcp; clc; end, m = xStartProgBar(BaseData.NumSims, Num.Batches);
+if BaseData.Parallel > 0, gcp; clc; end, m = StartProgBar(BaseData.NumSims, Num.Batches);
 
 parfor (v = 1:BaseData.NumSims, BaseData.Parallel*100)
 %for v = 1:BaseData.NumSims  
