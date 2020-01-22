@@ -1,16 +1,15 @@
-function SaveSummary(InputFile,BaseData,BatchSize,PlatPct,TrData,VirtualWIM,Time,UniqInf,FolDist,LaneData,ESIM,OverMax,LaneTrDistr)
+function SaveSummary(filename,BaseData,BatchSize,PlatPct,TrData,VirtualWIM,Time,UniqInf,FolDist,LaneData,ESIM,OverMax,LaneTrDistr)
 %xSAVEUMMARY Print summary of program output
 %   Detailed explanation goes here
 
 % Copy blank output file and write results
-filename = strcat('Output/MATSimOutput', InputFile(13:end-5),'_',datestr(now,'mmmdd-yy HHMM'), '.xlsx');
 copyfile('Output/Output_blank.xlsx',filename)
 
 writecell(UniqInf',filename,'Sheet','MaxLEs','Range','C2');
 %writematrix([MaxInfv; IntInfv; ESIA; ESIM; ESIA./ESIM-1; mean(OverMax); std(OverMax); OverMax],filename,'Sheet','MaxLEs','Range','C3');
 writematrix([ESIM; mean(OverMax); std(OverMax); OverMax],filename,'Sheet','MaxLEs','Range','C3');
 
-C = {InputFile(18:end-5); datetime; ' '; ' '; BaseData.NumVeh;...
+C = {filename; datetime; ' '; ' '; BaseData.NumVeh;...
     BaseData.NumSims; BaseData.TrRate; BaseData.RunDyn; BaseData.RunPlat; BaseData.BunchFactor;...
     ''; ''; BatchSize; length(VirtualWIM)/(BaseData.NumSims); length(VirtualWIM)/(BaseData.NumVeh*BaseData.NumSims); ' '; Time};
 

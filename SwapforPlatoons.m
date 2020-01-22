@@ -28,7 +28,7 @@ if RunPlat == 1 && q == 1
                 CandidacyStart(s) = true;
             end
         end
-        PlatCand = Flo.Veh == i & Flo.Wgt > mean(Flo.Wgt(Flo.Veh == i)) & Flo.Plat == false & Flo.PTrail == false & Flo.PLead == false & CandidacyStart;
+        PlatCand = Flo.Veh == i & Flo.Wgt > prctile(Flo.Wgt(Flo.Veh == i),35) & Flo.Plat == false & Flo.PTrail == false & Flo.PLead == false & CandidacyStart;
         %numPlatCand = sum(PlatCand);
         
         if ~isempty(find(PlatCand, 1))

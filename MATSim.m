@@ -7,24 +7,26 @@
 %       - Whole number resolution supported (minimum 1m) (improve?)
 %       - Improve output and directional support
 
-% Initial commands
-tic, clear, clc, close all, format long g, rng('shuffle'); st = now;
+clear, clc, close all, format long g, rng('shuffle'); % Initial commands
 
 % Input File or Folder Name
-InputF = 'Input/MATSimInputx.xlsx';  
-%InputF = 'Input/PlatStud'; 
-File_List = dir(InputF);
+InputF = 'Input/PlatStud60m';  %InputF = 'Input/MATSimInputx.xlsx'; 
+File_List = dir(InputF); Folder_Name = '';
+% If you don't close all the files in the input folder you'll get a temp
+% file error... could add code to prevent (ignore if starts with ~)
 
 if File_List(1).isdir
     File_List(1:2) = [];  Folder_Name = InputF(6:end);
-else
-    Folder_Name = '';
 end
 
 for g = 1:length(File_List)
 
 % Read simulation data from Input File
 [BaseData,LaneData,TrData,FolDist] = ReadInputFile(['Input' Folder_Name '/' File_List(g).name]);
+
+% Switch from 20% to 40% penetration rate
+TrData.TrDistr.PlatPct = TrData.TrDistr.PlatPct*.4/.2;
+TrData.TrDistr.PlatPct(TrData.TrDistr.TrDistr < 0.03) = 0;
 
 % Get key variables from imported data
 [BatchSize,Num.Batches,FixVars,PlatPct,Num.Lanes,LaneTrDistr] = GetKeyVars(BaseData,TrData.TrDistr,LaneData);
@@ -42,7 +44,7 @@ for g = 1:length(File_List)
 MATSimWarnings(TrDistCu, BaseData.BunchFactor, BaseData.RunPlat); VirtualWIM = []; OverMax = []; ApercuOverMax = [];
 
 % Initialize parpool if necessary and initialize progress bar
-if BaseData.Parallel > 0, gcp; clc; end, m = StartProgBar(BaseData.NumSims, Num.Batches);
+if BaseData.Parallel > 0, gcp; clc; end, m = StartProgBar(BaseData.NumSims, Num.Batches); tic; st = now;
 
 parfor (v = 1:BaseData.NumSims, BaseData.Parallel*100)
 %for v = 1:BaseData.NumSims  
@@ -142,83 +144,45 @@ PrintSummary(BaseData,BatchSize,PlatPct,TrData,Num,VirtualWIM,Time,LaneTrDistr)
 % Create folders where there are none
 CreateFolders(Folder_Name)
 
+TName = datestr(now,'mmmdd-yy HHMM');
+
 % Write results to a file (put into function)
 if BaseData.Save == 1
-    SaveSummary([Folder_Name '/' File_List(g).name],BaseData,BatchSize,PlatPct,TrData,VirtualWIM,Time,UniqInf,FolDist,LaneData,ESIM,OverMax,LaneTrDistr)
+    SaveSummary(strcat('Output', Folder_Name, '/MSOut', File_List(g).name(12:end-5),'_',TName, '.xlsx'),BaseData,BatchSize,PlatPct,TrData,VirtualWIM,Time,UniqInf,FolDist,LaneData,ESIM,OverMax,LaneTrDistr);
 end
 
 % Convert VirtualWIMs to tables and save if necessary
 if BaseData.VWIM == 1
     PD = array2table(VirtualWIM,'VariableNames',{'AllAxSpCu','AllAxLoads','AllVehNum','AllLaneNum','AllVehBeg','AllVehPlat','AllVehPSwap','AllVehTyp','AllBatchNum','AllSimNum','ZST','JJJJMMTT','T','ST','HHMMSS','FZG_NR','FS','SPEED','LENTH','CS','CSF','GW_TOT','AX','AWT01','AWT02','AWT03','AWT04','AWT05','AWT06','AWT07','AWT08','AWT09','AWT10','W1_2','W2_3','W3_4','W4_5','W5_6','W6_7','W7_8','W8_9','W9_10'});
-    save(['VirtualWIM' Folder_Name '/WIM_' datestr(now,'mmmdd HHMM')], 'PD')
+    save(['VirtualWIM' Folder_Name '/WIM_' TName], 'PD')
 end
 
 % Covert Apercus to tables and save if necessary
 if BaseData.Apercu == 1
     PD = array2table(ApercuOverMax,'VariableNames',{'AllAxSpCu','AllAxLoads','AllVehNum','AllLaneNum','AllVehBeg','AllVehPlat','AllVehPSwap','AllVehTyp','AllBatchNum','AllSimNum','ZST','JJJJMMTT','T','ST','HHMMSS','FZG_NR','FS','SPEED','LENTH','CS','CSF','GW_TOT','AX','AWT01','AWT02','AWT03','AWT04','AWT05','AWT06','AWT07','AWT08','AWT09','AWT10','W1_2','W2_3','W3_4','W4_5','W5_6','W6_7','W7_8','W8_9','W9_10','InfCase','SimNum'});
-    save(['Apercu' Folder_Name '/AWIM_' datestr(now,'mmmdd HHMM')], 'PD')
+    save(['Apercu' Folder_Name '/AWIM_' TName], 'PD')
 end
 
+% Save structure variable with essential simulation information
+OutInfo.Name = TName;
+OutInfo.BaseData = BaseData;
+OutInfo.ESIA = ESIA;
+OutInfo.ESIM = ESIM;
+OutInfo.Mean = mean(OverMax);
+OutInfo.Std = std(OverMax);
+OutInfo.OverMax = OverMax;
+OutInfo.OverMAXT = OverMAXT;
+OutInfo.InfNames = InfNames;
+
+save(['Output' Folder_Name '/' OutInfo.Name], 'OutInfo')
+
 end
 
-% Thoughts... we can't post process the results of batches on our own. We
-% need the help of matlab. We should save certain variables, so that we can
-% load them again for quick generation of charts comparing analysis results
-% together. Could re-read excel files back in if necessary.
+% Run Apercu to see critical case
+% if BaseData.Apercu == 1
+%     %T = GetApercu(ApercuOverMax,Num.InfCasesInfv,InfLanes,LaneTrDistr,BaseData.RunDyn,UniqInfs,UniqInfi);
+%     [T, OverMx] = GetApercu(ApercuOverMax,OverMAXT,Num.InfCases,Infx,Infv,InfLanes,LaneTrDistr,BaseData.RunDyn,UniqInfs,UniqInfi,ESIA)
+% end
 
-% Each file generated should have its own unique name (date + time stamp)
 
-% Simple Steps
-% - Save OverMAXT in Apercu folder (OMT_Jan16 1815)
-% - Save one other variable which is a Struct
-%       - Name (Jan16 1815)
-%       - Keyvars Traffic Loc
-%       - Keyvars All BaseData Vars (14)
-%       - Keyvars Results (mean)
-%       - Keyvars Results (stdev)
-%       - Keyvars Results (ESIA)
-%       - Keyvars Results (ESIM)
 
-% We can recreate this variable in post for the 3 completed analyses
-% Then test out on a new one (logical next after Jan16 1912)
-
-% Also rerun MC WIMs for Tessin Bridges to compare
-
-% Next big step after doing what is above and below...
-% Add in the ability to have big trucks have a different lane dist
-% Then rerun and confirm AGB 2005/002
-
-% We should also put the below into a function
-if BaseData.Apercu == 1
-    
-    % Convert VirtualWIMOverMax to PD
-    PD = array2table(ApercuOverMax,'VariableNames',{'AllAxSpCu','AllAxLoads','AllVehNum','AllLaneNum','AllVehBeg','AllVehPlat','AllVehPSwap','AllVehTyp','AllBatchNum','AllSimNum','ZST','JJJJMMTT','T','ST','HHMMSS','FZG_NR','FS','SPEED','LENTH','CS','CSF','GW_TOT','AX','AWT01','AWT02','AWT03','AWT04','AWT05','AWT06','AWT07','AWT08','AWT09','AWT10','W1_2','W2_3','W3_4','W4_5','W5_6','W6_7','W7_8','W8_9','W9_10','InfCase','SimNum'});
-    % Take only results from governing simulation
-    PD = PD(PD.SimNum == BaseData.NumSims,:); PD = PD(PD.SimNum == 160 & PD.InfCase == 1,:);
-    OverMaxxx = []; % Initialize
-    % Necessary for WIMtoAllTrAx
-    PDC = Classify(PD); PDC = Daytype(PDC,2015);
-    % Convert PDC to AllTrAx
-    [PDC, AllTrAx, TrLineUp] = WIMtoAllTrAx(PDC,100);
-    % Round TrLineUp first row, move unrounded to fifth row
-    TrLineUp(:,5) = TrLineUp(:,1); TrLineUp(:,1) = round(TrLineUp(:,1));
-    
-    % Later adaprt for t = each infcase
-    for t = 1
-        % Subject Influence Line to Truck Axle Stream
-        [MaxLEx,DLFx,BrStIndx,AxonBrx,FirstAxIndx,FirstAxx] = GetMaxLE(AllTrAx,Infv,InfLanes,[80 20],BaseData.RunDyn,t,UniqInfs,UniqInfi);
-        % Record Maximums
-        OverMaxxx = [OverMaxxx; [t, 2015, MaxLEx, DLFx, BrStIndx, FirstAxIndx, FirstAxx]];
-    end
-    
-    % [Delete vehicles involved in maximum case, and re-analyze]
-    
-    % Convert Results to Table
-    OverMAXTx = array2table(OverMaxxx,'VariableNames',{'InfCase','Year','MaxLE','MaxDLF','MaxBrStInd','MaxFirstAxInd','MaxFirstAx'});
-    
-    % Get ESIA from function
-    ESIAx = GetESia(IntInfv,MaxInfv,InfLanes,UniqInfs);
-    
-    T = Apercu(PDC,'Trial',Infx,Infv(:,1),BrStIndx,TrLineUp,MaxLEx/ESIAx(1),DLFx);
-    %T = Apercu(PDC,'Trial',Infx,Infv,BrStIndx,TrLineUp,MaxLEx/ESIAx,DLFx);
-end

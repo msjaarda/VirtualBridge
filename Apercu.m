@@ -3,6 +3,8 @@ function T = Apercu(PDC,Title,Infx,Infv,BrStInd,TrLineUp,PEsia,DLF)
 
 % Can this be done for a MatSim Results file?
 
+figure
+
 % Get number of lanes
 Lanes = unique(PDC.FS);
 
@@ -12,12 +14,13 @@ Col{4} = [.94 .28 .18]; Col{5} = [.12 .45 .82]; Col{6} = [.27 .83 .19];
 
 % Plot Influence Line
 subplot(length(Lanes)+2,1,length(Lanes)+2)
-plot(Infx,-Infv,'Color',[0 0 0],'LineWidth',1.5)
+plot(Infx,flip(-Infv),'Color',[0 0 0],'LineWidth',1.5)
 xlabel('Distance Along Bridge (m)'); ylabel('Inf Line')
 text(1,-max(Infv)+max(Infv)/5,sprintf('%.0f%% of E_{SIA}',PEsia*100),'FontSize',11,'FontWeight','bold','Color','k')
 set(gca,'ytick',[]); set(gca,'yticklabel',[])
 
 % Overall plot title
+% FIX OVERALL TITLE
 sgtitle([Title ' Critical Case']);
 
 % Define Q, an excerpt of TrLineUp with just those vehicles on the bridge
@@ -62,7 +65,8 @@ xlim([0 max(Infx)])
 ylim([0 ceil(max(max(barp/9.81))/5)*5])
 ylabel('Axle Loads (t)')
 % Could add total weight on the bridge and DLA
-text(1,ceil(max(max(barp/9.81))/5)*5-3,sprintf('Total: %.0f kN (DLF = %.2f)',sum(sum(barp)),DLF),'FontSize',11,'FontWeight','bold','Color','k')
+% SHEAR CALCS ARE WRONG BECAUSE WE DON"T KNOW WHAT IS AT position ZERO FIX!
+text(1,ceil(max(max(barp/9.81))/5)*5-3,sprintf('Total: %.0f (DLF = %.2f)',sum(sum(barp(1:end-1,:).*flip(Infv(1:end-1)))),DLF),'FontSize',11,'FontWeight','bold','Color','k')
 
 for i = 1:length(Lanes)
     h(i).FaceColor = Col{i};
