@@ -9,8 +9,9 @@ figure
 Lanes = unique(PDC.FS);
 
 % Define Plot Colors
-Col{1} = [.94 .28 .18]; Col{2} = [.12 .45 .82]; Col{3} = [.27 .83 .19];
-Col{4} = [.94 .28 .18]; Col{5} = [.12 .45 .82]; Col{6} = [.27 .83 .19];
+%Col{1} = [.94 .28 .18]; Col{2} = [.12 .45 .82]; Col{3} = [.27 .83 .19];
+Col{1} = [.99 .67 0]; Col{2} = [0 .447 .74]; Col{3} = [.27 .83 .19];
+Col{4} = Col{1}; Col{5} = Col{2}; Col{6} = Col{3};
 
 % Plot Influence Line
 subplot(length(Lanes)+2,1,length(Lanes)+2)
@@ -28,6 +29,7 @@ Q = TrLineUp(TrLineUp(:,1) > BrStInd & TrLineUp(:,1) < BrStInd+length(Infv)-1,:)
 % Define T, an excerpt of WIM/VWIM PDC with just vehicles on the bridge
 T = PDC(unique(Q(:,3)),:);
 
+   
 % Add each lane in loop q is a subset of Q, vc is vehicle corners
 for i = 1:length(Lanes)
     q{i} = Q(Q(:,4) == Lanes(i),:);
@@ -35,8 +37,15 @@ for i = 1:length(Lanes)
     q{i}(:,1) = q{i}(:,1) - BrStInd;
     q{i}(:,5) = q{i}(:,5) - BrStInd;
     [a, b] = unique(q{i}(:,3));
-    V = TrLineUp(TrLineUp(:,4) == i,5) - BrStInd;
-    negflag = V(1) < 0;
+    %V = TrLineUp(TrLineUp(:,4) == Lanes(i),5) - BrStInd;
+    V = Q(Q(:,4) == Lanes(i),1) - BrStInd;
+    if isempty(V)
+        netflag = 0;
+        NoVeh = i;
+    else
+        negflag = V(1) < 0;
+        NoVeh = 100; % just some high number
+    end
     if length(b) > 0
         for j = 1:length(b)
             ac{i}(:,j) = accumarray(q{i}(q{i}(:,3) == a(j),1),q{i}(q{i}(:,3) == a(j),2),[length(Infx) 1]);
@@ -66,10 +75,13 @@ ylim([0 ceil(max(max(barp/9.81))/5)*5])
 ylabel('Axle Loads (t)')
 % Could add total weight on the bridge and DLA
 % SHEAR CALCS ARE WRONG BECAUSE WE DON"T KNOW WHAT IS AT position ZERO FIX!
-text(1,ceil(max(max(barp/9.81))/5)*5-3,sprintf('Total: %.0f (DLF = %.2f)',sum(sum(barp(1:end-1,:).*flip(Infv(1:end-1)))),DLF),'FontSize',11,'FontWeight','bold','Color','k')
+text(1,ceil(max(max(barp/9.81))/5)*5-3,sprintf('Total: %.0f (DLF = %.2f)',sum(sum(barp)),DLF),'FontSize',11,'FontWeight','bold','Color','k')
+text(1,2,sprintf('Load Effect: %.0f',DLF*sum(sum(barp(1:end-1,:).*flip(Infv(1:end-1))))),'FontSize',11,'FontWeight','bold','Color','k')
 
 for i = 1:length(Lanes)
-    h(i).FaceColor = Col{i};
+    if NoVeh ~= i
+        h(i).FaceColor = Col{i};
+    end
 end
 
 for j = 1:length(Lanes)
@@ -79,7 +91,7 @@ for j = 1:length(Lanes)
         fill([vc{j}(i,1) vc{j}(i,1) vc{j}(i,2) vc{j}(i,2)],[2 8 8 2],Col{j},'EdgeColor','k','LineWidth',1.5);
         fill([vc{j}(i,2)-0.1 vc{j}(i,2)-0.1 vc{j}(i,2)+0.1 vc{j}(i,2)+0.1],[2.5 7.5 7.5 2.5],'k','EdgeColor','k','LineWidth',1.5);
         fill([vc{j}(i,1)-0.7 vc{j}(i,1)-0.7 vc{j}(i,1) vc{j}(i,1)],[3.75 6.25 7 3],'k','EdgeColor','k','LineWidth',1.5);
-        text((vc{j}(i,1)+vc{j}(i,2))/2,5,sprintf('%i ax | %.1f t',t{j}.AX(i),t{j}.GW_TOT(i)/1000),'FontSize',11,'FontWeight','bold','HorizontalAlignment','center','Color',[.7 .7 .7])
+        text((vc{j}(i,1)+vc{j}(i,2))/2,5,sprintf('%i ax | %.1f t',t{j}.AX(i),t{j}.GW_TOT(i)/1000),'FontSize',11,'FontWeight','bold','HorizontalAlignment','center','Color','k')
         text((vc{j}(i,1)+vc{j}(i,2))/2,9,sprintf('%.0f kph',t{j}.SPEED(i)/100),'FontSize',11,'FontWeight','bold','HorizontalAlignment','center','Color','k')
     end
     hold on
@@ -91,3 +103,5 @@ for j = 1:length(Lanes)
     ylabel(['Lane ' num2str(Lanes(j))]); set(gca,'ytick',[]); set(gca,'yticklabel',[]) 
 end
 set(gcf,'Position',[100 100 900 750])
+% Include close all if you don't want to see the output (waste, i know)
+close all
