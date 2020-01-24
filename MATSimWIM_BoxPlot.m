@@ -8,7 +8,7 @@
 tic, clear, clc, close all, format long g, rng('shuffle'); st = now;
 
 % Input File Name
-InputFile = 'Input/MATSimInputx.xlsx';
+InputFile = 'Input/MATSimInputxTes.xlsx';
 
 % Read simulation data from Input File
 [BaseData,LaneData,~,~] = ReadInputFile(InputFile); OverMax = [];
@@ -32,7 +32,7 @@ for i = 1:length(Year)
     PDC = Classify(PD); PDC = Daytype(PDC,Year(i)); clear('PD')
     
     % We treat each station separately [edit Stations(1) to Stations(2)]
-    Stations = unique(PDC.ZST); Station = Stations(2);
+    Stations = unique(PDC.ZST); Station = Stations(1);
     
     PDCx = PDC(PDC.ZST == Station,:); clear('PDC')
     
@@ -63,7 +63,7 @@ for i = 1:length(Year)
         % Get ESIA from function
         ESIA = GetESia(IntInfv,MaxInfv,InfLanes,UniqInfs);
         
-        T = Apercu(PDCx,[num2str(Year(i)) ' ' SName ' Station ' num2str(Station)],Infx,Infv,BrStInd,TrLineUp,MaxLE/ESIA,DLF);
+        %T = Apercu(PDCx,[num2str(Year(i)) ' ' SName ' Station ' num2str(Station)],Infx,Infv,BrStInd,TrLineUp,MaxLE/ESIA,DLF);
         
         % Delete vehicle entries from TrLineUp
         TrLineUp(TrLineUp(:,1) > BrStInd & TrLineUp(:,1) < BrStInd + Infx(end),:) = [];
@@ -115,11 +115,11 @@ text(1,1-0.05,sprintf('E_{SIA}'),'FontSize',11,'FontWeight','bold','Color','r')
 hold on
 plot([0 9],.72*[1 1],'-.k')
 text(1,0.72*1+0.05,sprintf('72%% E_{SIA}'),'FontSize',11,'FontWeight','bold','Color','k')
-ylim([0.3 1])
+ylim([0 1])
 ytickformat('%g')
 xlabel('Year')
 ylabel('Moment (kNm)')
-title('Ceneri 409 Max LEs [10/Year] | 40 m Simple Span')
+title('Ceneri 408 Max LEs [100/Year] | Fornaci')
 
 % figure
 % scatter(OverMAXT.Year,OverMAXT.MaxLE,'+k')

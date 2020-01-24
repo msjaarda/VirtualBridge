@@ -2,7 +2,7 @@
 %                              MATSim2019
 % ------------------------------------------------------------------------
 % Simulate traffic over a bridge to find maximum load effects
-%       - To be used with MATSimInput spreadsheet
+%       - To be used with MATSimInput spreadsheet or folder containing
 %       - Platooning only supported in Lane 1
 %       - Whole number resolution supported (minimum 1m) (improve?)
 %       - Improve output and directional support
@@ -10,23 +10,19 @@
 clear, clc, close all, format long g, rng('shuffle'); % Initial commands
 
 % Input File or Folder Name
-InputF = 'Input/PlatStud60m';  %InputF = 'Input/MATSimInputx.xlsx'; 
-File_List = dir(InputF); Folder_Name = '';
-% If you don't close all the files in the input folder you'll get a temp
-% file error... could add code to prevent (ignore if starts with ~)
+%InputF = 'PlatStud60m';  
+InputF = 'MATSimInputx.xlsx'; 
 
+% Get details of directory, if it is a directory
+File_List = dir(['Input/' InputF]); Folder_Name = '';
 if File_List(1).isdir
-    File_List(1:2) = [];  Folder_Name = InputF(6:end);
+    File_List(1:2) = [];  File_List(cell2mat({File_List.bytes})<1000) = []; Folder_Name = InputF;
 end
 
 for g = 1:length(File_List)
 
 % Read simulation data from Input File
 [BaseData,LaneData,TrData,FolDist] = ReadInputFile(['Input' Folder_Name '/' File_List(g).name]);
-
-% Switch from 20% to 40% penetration rate
-TrData.TrDistr.PlatPct = TrData.TrDistr.PlatPct*.4/.2;
-TrData.TrDistr.PlatPct(TrData.TrDistr.TrDistr < 0.03) = 0;
 
 % Get key variables from imported data
 [BatchSize,Num.Batches,FixVars,PlatPct,Num.Lanes,LaneTrDistr] = GetKeyVars(BaseData,TrData.TrDistr,LaneData);
@@ -179,10 +175,9 @@ save(['Output' Folder_Name '/' OutInfo.Name], 'OutInfo')
 end
 
 % Run Apercu to see critical case
-% if BaseData.Apercu == 1
-%     %T = GetApercu(ApercuOverMax,Num.InfCasesInfv,InfLanes,LaneTrDistr,BaseData.RunDyn,UniqInfs,UniqInfi);
-%     [T, OverMx] = GetApercu(ApercuOverMax,OverMAXT,Num.InfCases,Infx,Infv,InfLanes,LaneTrDistr,BaseData.RunDyn,UniqInfs,UniqInfi,ESIA)
-% end
+if BaseData.Apercu == 1
+    [T, OverMx] = GetApercu(ApercuOverMax,OverMAXT,Num.InfCases,Infx,Infv,InfLanes,LaneTrDistr,BaseData.RunDyn,UniqInfs,UniqInfi,ESIA);
+end
 
 
 

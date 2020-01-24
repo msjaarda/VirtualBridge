@@ -1,8 +1,6 @@
 function [T, OverMx] = GetApercu(ApercuOverMax,OverMAXT,NumInfCases,Infx,Infv,InfLanes,LaneTrDistr,RunDyn,UniqInfs,UniqInfi,ESIA)
 %GETAPERCU Visually display some of the more interesting results...
 %   We will have to decide how (just peaks, etc).
-% Should we also include the box and whisker plots here?
-% Needs work! i.e. doesn't work at the moment.
 
 % Dummy year
 Year = 2020;
@@ -10,7 +8,7 @@ Year = 2020;
 % Convert VirtualWIMOverMax to PD
 PD = array2table(ApercuOverMax,'VariableNames',{'AllAxSpCu','AllAxLoads','AllVehNum','AllLaneNum','AllVehBeg','AllVehPlat','AllVehPSwap','AllVehTyp','AllBatchNum','AllSimNum','ZST','JJJJMMTT','T','ST','HHMMSS','FZG_NR','FS','SPEED','LENTH','CS','CSF','GW_TOT','AX','AWT01','AWT02','AWT03','AWT04','AWT05','AWT06','AWT07','AWT08','AWT09','AWT10','W1_2','W2_3','W3_4','W4_5','W5_6','W6_7','W7_8','W8_9','W9_10','InfCase','SimNum'});
 
-OverMaxxx = []; % Initialize
+OverMax = []; % Initialize
 
 % Later adapt for t = each infcase
 for t = 1:NumInfCases
@@ -32,7 +30,7 @@ for t = 1:NumInfCases
     % Subject Influence Line to Truck Axle Stream
     [MaxLEx,DLFx,BrStIndx,AxonBrx,FirstAxIndx,FirstAxx] = GetMaxLE(AllTrAx,Infv,InfLanes,LaneTrDistr,RunDyn,t,UniqInfs,UniqInfi);
     % Record Maximums
-    OverMaxxx = [OverMaxxx; [t, Year, MaxLEx, DLFx, BrStIndx, FirstAxIndx, FirstAxx]];
+    OverMax = [OverMax; [t, Year, MaxLEx, DLFx, BrStIndx, FirstAxIndx, FirstAxx, MaxSimNum]];
     
     T = Apercu(PDC,'Trial',Infx,Infv(:,t),BrStIndx,TrLineUp,MaxLEx/ESIA(t),DLFx);
     
@@ -41,7 +39,7 @@ end
 % [Delete vehicles involved in maximum case, and re-analyze]
 
 % Convert Results to Table
-OverMx = array2table(OverMaxxx,'VariableNames',{'InfCase','Year','MaxLE','MaxDLF','MaxBrStInd','MaxFirstAxInd','MaxFirstAx'});
+OverMx = array2table(OverMax,'VariableNames',{'InfCase','Year','MaxLE','MaxDLF','MaxBrStInd','MaxFirstAxInd','MaxFirstAx','SimNum'});
 
 
 end

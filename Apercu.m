@@ -103,5 +103,4 @@ for j = 1:length(Lanes)
     ylabel(['Lane ' num2str(Lanes(j))]); set(gca,'ytick',[]); set(gca,'yticklabel',[]) 
 end
 set(gcf,'Position',[100 100 900 750])
-% Include close all if you don't want to see the output (waste, i know)
-close all
+
