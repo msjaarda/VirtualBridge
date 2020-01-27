@@ -10,13 +10,13 @@
 clear, clc, close all, format long g, rng('shuffle'); % Initial commands
 
 % Input File or Folder Name
-%InputF = 'PlatStud60m';  
-InputF = 'MATSimInputx.xlsx'; 
+InputF = 'PlatStud60m';  
+%InputF = 'MATSimInputx.xlsx'; 
 
 % Get details of directory, if it is a directory
 File_List = dir(['Input/' InputF]); Folder_Name = '';
 if File_List(1).isdir
-    File_List(1:2) = [];  File_List(cell2mat({File_List.bytes})<1000) = []; Folder_Name = InputF;
+    File_List(1:2) = [];  File_List(cell2mat({File_List.bytes})<1000) = []; Folder_Name = ['\' InputF];
 end
 
 for g = 1:length(File_List)
@@ -169,6 +169,7 @@ OutInfo.Std = std(OverMax);
 OutInfo.OverMax = OverMax;
 OutInfo.OverMAXT = OverMAXT;
 OutInfo.InfNames = InfNames;
+OutInfo.PlatPct = max(PlatPct);
 
 save(['Output' Folder_Name '/' OutInfo.Name], 'OutInfo')
 
