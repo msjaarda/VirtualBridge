@@ -10,7 +10,7 @@
 clear, clc, close all, format long g, rng('shuffle'); % Initial commands
 
 % Input File or Folder Name
-InputF = 'PlatStud60m';  
+InputF = 'PlatStud456045m';  
 %InputF = 'MATSimInputx.xlsx'; 
 
 % Get details of directory, if it is a directory
