@@ -27,6 +27,8 @@ for g = 1:length(File_List)
 % Get key variables from imported data
 [BatchSize,Num.Batches,FixVars,PlatPct,Num.Lanes,LaneTrDistr] = GetKeyVars(BaseData,TrData.TrDistr,LaneData);
 
+PlatPct =PlatPct*0.4/0.2;
+
 % Get Influence Line Details
 [InfLanes,InfNames,UniqInf,UniqInfs,UniqInfi,Num.InfCases,Infx,Infv,IntInfv,MaxInfv] = GetInfLines(LaneData,BaseData);
 
