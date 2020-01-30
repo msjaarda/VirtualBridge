@@ -3,12 +3,24 @@
 % ------------------------------------------------------------------------
 % Run real traffic over a bridge to find maximum load effects
 %       - To be used with MATSimInput spreadsheet for Inf Lines
+%       - Can be used for both VWIM and WIM
 
 
 % Could add the main bits into a function? Reference the same fcn [V]WIM?
 
 % Initial commands
 tic, clear, clc, close all, format long g, rng('shuffle'); st = now;
+
+% The bottom line is that we need BaseData and LaneData
+% If VWIM this has to match the output file
+% We need a name for our plot(s)
+% We need to know if we want to do Stage2Prune or ClassOnly
+% We need a WIM or a VWIM file
+% If the file is WIM this involves SName and the Year
+% If the file is VWIM this involes InfCase and SimNum
+
+
+
 
 % Input File Name
 FolderName = 'PlatStud60m';

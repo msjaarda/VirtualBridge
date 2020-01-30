@@ -4,8 +4,7 @@
 % Simulate traffic over a bridge to find maximum load effects
 %       - To be used with MATSimInput spreadsheet or folder containing
 %       - Platooning only supported in Lane 1
-%       - Whole number resolution supported (minimum 1m) (improve?)
-%       - Improve output and directional support
+%       - Whole number resolution supported (minimum 1m)
 
 clear, clc, close all, format long g, rng('shuffle'); % Initial commands
 

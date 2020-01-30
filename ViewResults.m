@@ -2,10 +2,11 @@
 % Script to open and manipulate platooning results files 
 
 % Initial commands
-clear, clc, close all, format long g, rng('shuffle');
+%clear, clc, close all, format long g, rng('shuffle');
 
 % Input File or Folder Name
-Folder_Name = 'PlatStud60m'; %Folder_Name = 'PlatStud456045m';
+%Folder_Name = 'PlatStud60m'; 
+Folder_Name = 'PlatStud456045m';
 
 % Ensure file list is succinct
 File_List = dir(['Output/' Folder_Name]); File_List(1:2) = []; i = 1;
@@ -86,7 +87,7 @@ for i = 1:length(OutInfo.InfNames)
         end
 
     end
-    text(6.5,1.23,sprintf('Span: %s Simple Span',Folder_Name(end-2:end)))
+    text(6.5,1.23,sprintf('Span: %s Continuous',Folder_Name(end-2:end)))
     text(6.5,1.21,sprintf('IL: %s',ILname))
     text(6.5,1.19,sprintf('TrRate: %.2f',OutInfo.BaseData.TrRate))
     text(6.5,1.17,sprintf('Traf: %s','Ceneri 2017'))
@@ -134,7 +135,7 @@ for i = 1:length(OutInfo.InfNames)
     xlabel('Platoon Size (#)')
     xlim([1 4])
     set(gca, 'XTick', 1:4)
-    text(2.5,1.235,sprintf('Span: %s Simple Span',Folder_Name(end-2:end)))
+    text(2.5,1.235,sprintf('Span: %s Simple Span',Folder_Name(end-6:end)))
     text(2.5,1.22,sprintf('IL: %s',ILname))
     text(2.5,1.205,sprintf('TrRate: %.2f',OutInfo.BaseData.TrRate))
     text(2.5,1.19,sprintf('Traf: %s','Ceneri 2017'))
