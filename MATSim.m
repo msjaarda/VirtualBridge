@@ -9,8 +9,9 @@
 clear, clc, close all, format long g, rng('shuffle'); % Initial commands
 
 % Input File or Folder Name
-InputF = 'PlatStud608060m';  
+InputF = 'PlatStud20m';  
 %InputF = 'MATSimInputOFROUDenges.xlsx'; 
+%Rerun 20m and 608060m for 40% rate
 
 % Get details of directory, if it is a directory
 File_List = dir(['Input/' InputF]); Folder_Name = '';
@@ -27,7 +28,7 @@ for g = 1:length(File_List)
 [BatchSize,Num.Batches,FixVars,PlatPct,Num.Lanes,LaneTrDistr] = GetKeyVars(BaseData,TrData.TrDistr,LaneData);
 
 % Intervention
-%PlatPct =PlatPct*0.4/0.2;
+PlatPct =PlatPct*0.4/0.2;
 
 % Get Influence Line Details
 [InfLanes,InfNames,UniqInf,UniqInfs,UniqInfi,Num.InfCases,Infx,Infv,IntInfv,MaxInfv] = GetInfLines(LaneData,BaseData);
