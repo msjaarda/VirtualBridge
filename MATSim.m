@@ -9,8 +9,8 @@
 clear, clc, close all, format long g, rng('shuffle'); % Initial commands
 
 % Input File or Folder Name
-%InputF = 'PlatStud456045m';  
-InputF = 'MATSimInputOFROUDenges.xlsx'; 
+InputF = 'PlatStud608060m';  
+%InputF = 'MATSimInputOFROUDenges.xlsx'; 
 
 % Get details of directory, if it is a directory
 File_List = dir(['Input/' InputF]); Folder_Name = '';
@@ -26,10 +26,20 @@ for g = 1:length(File_List)
 % Get key variables from imported data
 [BatchSize,Num.Batches,FixVars,PlatPct,Num.Lanes,LaneTrDistr] = GetKeyVars(BaseData,TrData.TrDistr,LaneData);
 
+% Intervention
 %PlatPct =PlatPct*0.4/0.2;
 
 % Get Influence Line Details
 [InfLanes,InfNames,UniqInf,UniqInfs,UniqInfi,Num.InfCases,Infx,Infv,IntInfv,MaxInfv] = GetInfLines(LaneData,BaseData);
+
+% Intervention
+load('InfLib.mat')
+%Infx = InfLib.x;
+%Infv = InfLib.c80_60_80mn;
+Infx = InfLib.x(1:21);
+Infv = InfLib{1:21,2:3};
+InfNames{1} = 'Mp';
+InfNames{2} = 'V';
 
 % Define truck type specific properties
 [Num.TrTyp,TrDistCu,TrTyp] = GetTrPpties(TrData);
@@ -171,6 +181,7 @@ OutInfo.OverMax = OverMax;
 OutInfo.OverMAXT = OverMAXT;
 OutInfo.InfNames = InfNames;
 OutInfo.PlatPct = max(PlatPct);
+OutInfo.LaneData = LaneData;
 
 save(['Output' Folder_Name '/' OutInfo.Name], 'OutInfo')
 
