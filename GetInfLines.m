@@ -5,13 +5,22 @@ InfLanes = LaneData.Lane(LaneData.InfNum<100); InfNames = LaneData.Name(LaneData
 
 % New influence line procedure necessary
 NumInf = max(LaneData.InfNum);
-%length(unique(InfNames))
 [UniqInf, UniqInfs, UniqInfi] = unique(InfNames,'stable');
 % Start with the simple cases, when Lane == 0
 NumInfCases = length(UniqInf);
 
 Infx = LaneData.x(1):BaseData.ILRes:LaneData.x(end);
 Infv = zeros(length(Infx),NumInf);
+
+% Before deciding to switch signs, get 
+for i = 1:NumInfCases
+    
+    
+end
+
+
+
+
 
 % Refine influence lines, one column for each influence line
 for i = 1:NumInf

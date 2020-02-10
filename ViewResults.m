@@ -2,11 +2,14 @@
 % Script to open and manipulate platooning results files 
 
 % Initial commands
-%clear, clc, close all, format long g, rng('shuffle');
+clear, clc, format long g, rng('shuffle');
+close all
 
 % Input File or Folder Name
 %Folder_Name = 'PlatStud60m'; 
 Folder_Name = 'PlatStud456045m';
+%Folder_Name = 'PlatStud20m';
+%Folder_Name = 'PlatStud608060m';
 
 % Ensure file list is succinct
 File_List = dir(['Output/' Folder_Name]); File_List(1:2) = []; i = 1;
@@ -36,6 +39,12 @@ PlatPcts = cat(1,OInfo.PlatPct); UPlatPcts = unique(PlatPcts);
 Col{1} = [0 0 0]; Col{2} = [1 0 0];
 % Predefine line styles, or patterns
 Pat{1} = ':'; Pat{2} = '-'; Pat{3} = '--';
+
+if length(OutInfo.InfNames) == 1
+    BridgeName = Folder_Name(end-6:end);
+else
+    BridgeName = Folder_Name(end-2:end);
+end
 
 % Plot generation - for each influence line action effect
 for i = 1:length(OutInfo.InfNames)
@@ -87,7 +96,7 @@ for i = 1:length(OutInfo.InfNames)
         end
 
     end
-    text(6.5,1.23,sprintf('Span: %s Continuous',Folder_Name(end-2:end)))
+    text(6.5,1.23,sprintf('Structure: %s',BridgeName))
     text(6.5,1.21,sprintf('IL: %s',ILname))
     text(6.5,1.19,sprintf('TrRate: %.2f',OutInfo.BaseData.TrRate))
     text(6.5,1.17,sprintf('Traf: %s','Ceneri 2017'))
@@ -135,13 +144,12 @@ for i = 1:length(OutInfo.InfNames)
     xlabel('Platoon Size (#)')
     xlim([1 4])
     set(gca, 'XTick', 1:4)
-    text(2.5,1.235,sprintf('Span: %s Simple Span',Folder_Name(end-6:end)))
+    text(2.5,1.235,sprintf('Structure: %s',BridgeName))
     text(2.5,1.22,sprintf('IL: %s',ILname))
     text(2.5,1.205,sprintf('TrRate: %.2f',OutInfo.BaseData.TrRate))
     text(2.5,1.19,sprintf('Traf: %s','Ceneri 2017'))
     text(2.5,1.175,sprintf('Mean of n = 500 maximums'))
     text(2.5,1.16,sprintf('500k vehicles simulated'))
-    ytickformat('%.2f')
     legend({'5 m IVD (20%)','7.5 m IVD (20%)','5 m IVD (40%)','7.5 m IVD (40%)'},'Location','west')
     legend('boxoff')
     movegui(gcf,'north')

@@ -1,4 +1,4 @@
-function  [TrLineUpMaster] = AssembleLineUps(AllLaneLineUp,RunPlat,BatchSize,NumLanes,LaneData,BaseData)
+function  [TrLineUpMaster] = AssembleLineUps(AllLaneLineUp,BatchSize,NumLanes,LaneData,BaseData)
 %AssembleLineUps Does a little virtual WIM compiling
 AllLaneLineUp = AllLaneLineUp(~cellfun('isempty',AllLaneLineUp));
 % Assemble lane specific data and sort by axle position
@@ -7,7 +7,7 @@ AllLaneLineUp = AllLaneLineUp(~cellfun('isempty',AllLaneLineUp));
 % Experiment for case of no platoons and all lanes same dir
 B = LaneData.Direction(LaneData.Direction < 100);
 
-if RunPlat == 0 && all(B == B(1))
+if BaseData.RunPlat == 0 && all(B == B(1))
     [s,~] = size(AllLaneLineUp);
     for i = 1:s
         %if ~isempty(AllLaneLineUp{i})
@@ -44,7 +44,7 @@ VehLineUp(VehLineUp(:,5) == 1,5) = 1:length(VehLineUp(VehLineUp(:,5) == 1,5));
 % If we have platoons (couldn't estimate length perfectly, hence Suprlus variable) trim to length
 % Should we be careful here if we didn't run certain lanes which had no
 % vehs?
-if RunPlat == 1
+if BaseData.RunPlat == 1
     VehLineUp = VehLineUp(1:find(VehLineUp(:,5)==BatchSize),:);
 end
 
