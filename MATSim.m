@@ -9,7 +9,7 @@
 clear, clc, close all, format long g, rng('shuffle'); % Initial commands
 
 % Input File or Folder Name 
-InputF = 'MATSimInputNEW.xlsx'; Folder_Name = '/Trial';
+InputF = 'MATSimInputNEWx.xlsx'; Folder_Name = '/Trial';
 
 % Read in simulation data
 [BaseData,LaneData,TrData,FolDist] = ReadInputFile(['Input/' InputF]);
@@ -43,7 +43,7 @@ for g = 1:height(BaseData)
 [BatchSize,Num.Batches,FixVars,PlatPct,Num.Lanes,LaneTrDistr] = GetKeyVars(BaseData(g,:),TrData.TrDistr,LaneData);
 
 % Get Influence Line Details
-[InfLanes,InfNames,UniqInf,UniqInfs,UniqInfi,Num.InfCases,Infx,Infv,IntInfv,MaxInfv] = GetInfLines(LaneData,BaseData(g,:));
+[InfLanes,InfNames,UniqInf,UniqInfs,UniqInfi,Num.InfCases,Infx,Infv,ESIA] = GetInfLines(LaneData,BaseData(g,:));
 
 % % Intervention
 % load('InfLib.mat')
@@ -154,9 +154,8 @@ if BaseData.NumSims(g) == 1
     OverMax = [OverMax; OverMax];
 end
 
-% Get ESIM and ESIA (from function)
-ESIM = 1.1*prctile(OverMax,99);
-ESIA = GetESia(IntInfv,MaxInfv,InfLanes,UniqInfs); Ratio = ESIM./ESIA; Ratio(Ratio > 10) = 0;
+% Get ESIM and Ratio
+ESIM = 1.1*prctile(OverMax,99); Ratio = ESIM./ESIA;
 
 % Print Summary Stats to Command Window
 PrintSummary(BaseData(g,:),BatchSize,PlatPct,TrData,Num,VirtualWIM,Time,LaneTrDistr)

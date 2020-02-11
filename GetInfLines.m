@@ -1,40 +1,97 @@
-function [InfLanes,InfNames,UniqInf,UniqInfs,UniqInfi,NumInfCases,Infx,Infv,IntInfv,MaxInfv] = GetInfLines(LaneData,BaseData)
-%GETINFLINES
+function [InfLanes,InfNames,UniqInf,UniqInfs,UniqInfi,NumInfCases,Infx,Infv,ESIA] = GetInfLines(LaneData,BaseData)
+% GetInfLines takes in LaneData and BaseData and rounds influence lines to
+% desired refinement level, switches signs, and returns ESia as well
 
+% Get total number of lanes
+NumLanes = max(LaneData.LaneNum(LaneData.LaneNum > 0));
+% Get which lanes each line applies to - 0 means all lanes
 InfLanes = LaneData.Lane(LaneData.InfNum<100); InfNames = LaneData.Name(LaneData.InfNum>0); 
-
-% New influence line procedure necessary
+% Get total number of influence lines
 NumInf = max(LaneData.InfNum);
+
+% In the end, we want each IL to have an "x" col, and a "y/value" col
+% We should be able to call on them simply, or as before in the complex way
+% Since lane distribution (ex. 80-20-0) actually changes the random
+%   traffic, we can't have it change for each IL (should actually be input
+%   in the BaseData sheet).
+
+% UniqInf is the unique names, UniqInfs is the starting indices, UniqInfi are the actual indices
 [UniqInf, UniqInfs, UniqInfi] = unique(InfNames,'stable');
-% Start with the simple cases, when Lane == 0
+
+% Get total number of InfCases
 NumInfCases = length(UniqInf);
 
-Infx = LaneData.x(1):BaseData.ILRes:LaneData.x(end);
+% Set Infx, rounded to desired refinement level (ILRes)
+Infx = LaneData.x(1):BaseData.ILRes:LaneData.x(end); Infx = Infx';
+% Initialize Infv
 Infv = zeros(length(Infx),NumInf);
+
+% Find starting column of Inf values in the LaneData Table
+StartCol = find(strcmpi(LaneData.Properties.VariableNames,'x'));
+
+% Initialize Maximum and Integrals (for ESIA)
+MaxInfv = zeros(NumLanes,NumInfCases);
+IntInfv = zeros(NumLanes,NumInfCases);
 
 % Before deciding to switch signs, get 
 for i = 1:NumInfCases
-    
-    
-end
-
-
-
-
-
-% Refine influence lines, one column for each influence line
-for i = 1:NumInf
-    Infv(:,i) = interp1(LaneData.x,LaneData{:,7+i},Infx);
-    % Switch sign of ILs if maximum is a negative value... only if Lane = 0
-    % Still need to make sure non 0 ILs have the correct sense!
-    if abs(max(Infv(:,i))) < abs(min(Infv(:,i))) && InfLanes(i) == 0
-        Infv(:,i) = -Infv(:,i);
+    % Start and End of InfCase Influence Lines
+    Start = StartCol+UniqInfs(i); End = StartCol+UniqInfs(i)+sum(UniqInfi == i)-1;
+    % Switch signs if necessary (program works when + is the maximum LE
+    % Here we assume that the overall max value is on the side with max LE
+    if abs(max(max(LaneData{:,Start}))) < abs(min(min(LaneData{:,Start})))
+        LaneData{:,Start:End} = -LaneData{:,Start:End};
     end
-    % Grab Integration for Esia
-    IntInfv(i) = trapz(Infx(Infv(:,i)>0),Infv(Infv(:,i)>0,i));
+    % Now we interpolate the influence lines and populate Infv
+    Infv(:,Start-StartCol:End-StartCol) = interp1(LaneData.x,LaneData{:,Start:End},Infx);
+    
+    [a, ~] = max(Infv(:,Start-StartCol:End-StartCol));
+    
+    % If we give 0... we assume same IL for all lanes. If we give just
+    % Shear in lane 2, for example, we assume 0 for all other lanes.
+    if InfLanes(UniqInfs(i)) == 0
+        MaxInfv(:,i) = repmat(a,NumLanes,1);
+    else
+        MaxInfv(InfLanes(UniqInfi == i),i) = a';
+    end
 end
 
-% Calculate SIA Parameters
-MaxInfv = max(Infv);
+% Initialize Integration
+Integration = zeros(1,NumInf);
+
+% Calculate + only integrals for each IL
+for i = 1:NumInf
+    Integration(i) = trapz(Infx(Infv(:,i)>0),Infv(Infv(:,i)>0,i));
+end
+
+% Assign integral values into IntInfv
+for i = 1:NumInfCases
+    if InfLanes(UniqInfs(i)) == 0
+        IntInfv(:,i) = repmat(Integration(UniqInfs(i)),NumLanes,1);
+    else
+        IntInfv(InfLanes(UniqInfi == i),i) = Integration(UniqInfi == i)';
+    end
+end
+
+% Do ESIA while we are here...
+ESIA = zeros(1,NumInfCases);
+% Define ESIA details
+LaneWidth = 3; % m
+Qk = zeros(NumLanes,1);
+qk = 2.5*ones(NumLanes,1);
+Qk(1) = 300; qk(1) = 9; % kN, kN/m2
+if NumLanes > 1
+    Qk(2) = 200;
+end
+Alpha = 0.9;
+
+% Don't have to sort these! Just getting the worst effects...
+for i = 1:NumInfCases
+    %Maxv = sort(MaxInfv(:,i),'descend');
+    %Intv = sort(IntInfv(:,i),'descend');
+    Maxv = MaxInfv(:,i);
+    Intv = IntInfv(:,i);
+    ESIA(i) = 1.5*Alpha*(Maxv'*Qk*2+Intv'*qk*LaneWidth);
+end
   
 end
