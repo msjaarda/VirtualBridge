@@ -61,7 +61,7 @@ else
     LaneTrRate = LaneAvgNumTr./LaneAvgNumVeh;
     % Transition probabilities totally go out the window here...
     
-    TrTrTransProb = LaneTrRate*BaseData.BunchFactor;
+    TrTrTransProb = min(0.98,LaneTrRate*BaseData.BunchFactor);
     TrCarTransProb = 1-TrTrTransProb;
     CarTrTransProb = LaneTrRate.*(1-TrTrTransProb)./(1-LaneTrRate);
     CarCarTransProb = 1-CarTrTransProb;
@@ -93,7 +93,7 @@ else
         
         % Still use regular formulas here for platoon lane... because
         % swapping hasn't occured
-        TrTrTransProb = LaneTrRate*BaseData.BunchFactor;
+        TrTrTransProb = min(0.98,LaneTrRate*BaseData.BunchFactor);
         TrCarTransProb = 1-TrTrTransProb;
         CarTrTransProb = LaneTrRate.*(1-TrTrTransProb)./(1-LaneTrRate);
         CarCarTransProb = 1-CarTrTransProb;

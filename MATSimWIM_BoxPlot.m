@@ -8,7 +8,7 @@
 tic, clear, clc, close all, format long g, rng('shuffle'); st = now;
 
 % Input File Name
-InputFile = 'Input/MATSimInputxTes.xlsx';
+InputFile = 'Input/MATSimInputx.xlsx';
 
 % Read simulation data from Input File
 [BaseData,LaneData,~,~] = ReadInputFile(InputFile); OverMax = [];
@@ -17,7 +17,7 @@ InputFile = 'Input/MATSimInputxTes.xlsx';
 [InfLanes,InfNames,UniqInf,UniqInfs,UniqInfi,Num.InfCases,Infx,Infv,IntInfv,MaxInfv] = GetInfLines(LaneData,BaseData);
 
 % WIM File
-SName = 'Ceneri'; Stage2Prune = false; ClassOnly = false; NumAnalyses = 100; Year = 2011:2018; %i = 1;
+SName = 'Ceneri'; Stage2Prune = true; ClassOnly = true; NumAnalyses = 1; Year = 2012; %i = 1;
 
 % Do for different years
 for i = 1:length(Year)
@@ -63,7 +63,7 @@ for i = 1:length(Year)
         % Get ESIA from function
         ESIA = GetESia(IntInfv,MaxInfv,InfLanes,UniqInfs);
         
-        %T = Apercu(PDCx,[num2str(Year(i)) ' ' SName ' Station ' num2str(Station)],Infx,Infv,BrStInd,TrLineUp,MaxLE/ESIA,DLF);
+        T = Apercu(PDCx,[num2str(Year(i)) ' ' SName ' Station ' num2str(Station)],Infx,Infv,BrStInd,TrLineUp,MaxLE/ESIA,DLF);
         
         % Delete vehicle entries from TrLineUp
         TrLineUp(TrLineUp(:,1) > BrStInd & TrLineUp(:,1) < BrStInd + Infx(end),:) = [];

@@ -9,26 +9,16 @@
 clear, clc, close all, format long g, rng('shuffle'); % Initial commands
 
 % Input File or Folder Name 
-InputF = 'MATSimInputNEWx.xlsx'; Folder_Name = '/Trial';
+InputF = 'MATSimInputNEW.xlsx'; Folder_Name = '/Trial';
 
 % Read in simulation data
 [BaseData,LaneData,TrData,FolDist] = ReadInputFile(['Input/' InputF]);
-
-% We can change this loop, to looping through the rows of BaseData...
-% In this way it will be much quicker to set up batch runs. DONE
 
 % We now have complex input (each excel tab), and simple input (just Base
 % and Lane). Complex will just be for 1-offs (not batch), although simple
 % can also be used for 1-offs. This maintains backwards compatibility.
 
-% Next steps for Monday
-
-% Build up our library of Flow conditions, as well as TrLib.
 % We can think about implementing same for LaneData... more complicated.
-% Next step is to improve output (don't need to save an excel file for each
-% Next step is to fix GetESia to work with multiple lanes w/ different ILs.
-%  make sure multiple lane scheme isn't sensitive to signs... test with
-%  Tessin ILs?
 
 % Next step is to implement transverse and run it for platooning case
 % (shouldn't be hard... no change of code required, just factors
@@ -61,7 +51,7 @@ for g = 1:height(BaseData)
 [LaneNumVeh, TrTrTransProb, CarCarTransProb, Surplus] = PerLaneRates(FolDist,BaseData(g,:),Num.TrTyp,FixVars.TrFront,TrData,TrTyp.NumAxPerGr,FixVars.CarFrAxRe,Num.Lanes,BatchSize,LaneTrDistr);
 
 % Check for program warnings, initialize empty vars
-MATSimWarnings(TrDistCu, BaseData.BunchFactor(g), BaseData.RunPlat(g)); VirtualWIM = []; OverMax = []; ApercuOverMax = [];
+MATSimWarnings(TrDistCu, BaseData.BunchFactor(g), BaseData.RunPlat(g), TrTrTransProb); VirtualWIM = []; OverMax = []; ApercuOverMax = [];
 
 % Initialize parpool if necessary and initialize progress bar
 if BaseData.Parallel(g) > 0, gcp; clc; end, m = StartProgBar(BaseData.NumSims(g), Num.Batches); tic; st = now;
@@ -168,7 +158,7 @@ TName = datestr(now,'mmmdd-yy HHMM');
 % Write results to a file (put into function)
 if BaseData.Save(g) == 1
     %SaveSummary(strcat('Output', Folder_Name, '/MSOut', File_List(g).name(12:end-5),'_',TName, '.xlsx'),BaseData(g,:),BatchSize,PlatPct,TrData,VirtualWIM,Time,UniqInf,FolDist,LaneData,ESIM,OverMax,LaneTrDistr);
-    SaveSummary(strcat('Output', Folder_Name, '/MSOut', InputF(12:end-5),'_',TName, '.xlsx'),BaseData(g,:),BatchSize,PlatPct,TrData,VirtualWIM,Time,UniqInf,FolDist,LaneData,ESIM,OverMax,LaneTrDistr);
+    SaveSummary(TName,strcat('Output', Folder_Name, '/MSOut', InputF(12:end-5),'.xlsx'),TrData,BaseData(g,:),Time,UniqInf,FolDist,LaneData,ESIM,ESIA,Ratio,OverMax);
 end
 
 % Convert VirtualWIMs to tables and save if necessary

@@ -23,33 +23,36 @@ tic, clear, clc, close all, format long g, rng('shuffle'); st = now;
 
 
 % Input File Name
-FolderName = 'PlatStud60m';
-OutFileName = ;
+%FolderName = 'PlatStud60m';
+%OutFileName = ;
 %InputFile = 'Input/MATSimInputx.xlsx';
 %InputFile = 'Input/PlatStud60m/MATSimInputPlatStudSS60Base.xlsx';
-InputFile = ['Input/' FolderName '/' MATSimInputPlatStudSS60Base.xlsx';
+%InputFile = ['Input/' FolderName '/' MATSimInputPlatStudSS60Base.xlsx';
+    
+InputFile = 'Input/MATSimInputx.xlsx';
 
 % Read simulation data from Input File
-[BaseData,LaneData,~,~] = ReadInputFile(InputFile); OverMax = [];
+[BaseData,LaneData,~,~] = ReadInputFile(InputFile); 
+OverMax = [];
 
 % Get Influence Line Details
 [InfLanes,InfNames,UniqInf,UniqInfs,UniqInfi,Num.InfCases,Infx,Infv,IntInfv,MaxInfv] = GetInfLines(LaneData,BaseData);
 
 % WIM File
-SName = 'Platooning Investigation'; Stage2Prune = false; ClassOnly = false; Year = 2020;
+SName = 'Ceneri'; Stage2Prune = false; ClassOnly = false; Year = 2015;
 
 for i = 1:length(Year)
 
 % Load WIM File [OR VWIM File]
-%load(['PrunedS1 WIM/',SName,'/',SName,'_',num2str(Year(i)),'.mat']);
+load(['PrunedS1 WIM/',SName,'/',SName,'_',num2str(Year(i)),'.mat']);
 %load('WIM_Jan14 1130.mat');
-load('Apercu\PlatStud60m\AWIM_Jan24-20 1049.mat');
+%load('Apercu\PlatStud60m\AWIM_Jan24-20 1049.mat');
 % when doing with VWIM, you need to know the sim #
-load('Output\PlatStud60m\Jan24-20 1049.mat')
-IC = 1;
-[a, b] = max(OutInfo.OverMAXT.MaxLE(OutInfo.OverMAXT.InfCase == IC));
-SN = OutInfo.OverMAXT.SimNum(b);
-PD = PD(PD.SimNum == SN & PD.InfCase == IC,:);
+%load('Output\PlatStud60m\Jan24-20 1049.mat')
+%IC = 1;
+%[a, b] = max(OutInfo.OverMAXT.MaxLE(OutInfo.OverMAXT.InfCase == IC));
+%SN = OutInfo.OverMAXT.SimNum(b);
+%PD = PD(PD.SimNum == SN & PD.InfCase == IC,:);
 
 % Only needs to be done to WIM
 
@@ -75,7 +78,7 @@ end
 % Round TrLineUp first row, move unrounded to fifth row
 TrLineUp(:,5) = TrLineUp(:,1); TrLineUp(:,1) = round(TrLineUp(:,1));
         
-for t = IC
+for t = 2
     % Subject Influence Line to Truck Axle Stream
     [MaxLE,DLF,BrStInd,AxonBr,FirstAxInd,FirstAx] = GetMaxLE(AllTrAx,Infv,InfLanes,[80 20],BaseData.RunDyn,t,UniqInfs,UniqInfi);
     % Record Maximums

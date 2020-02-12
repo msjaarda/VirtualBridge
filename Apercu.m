@@ -1,6 +1,8 @@
 function T = Apercu(PDC,Title,Infx,Infv,BrStInd,TrLineUp,PEsia,DLF)
 % Plot A Series of WIM or VWIM Vehicles on a Bridge
 
+% Fix for vehicles travelling in another direction
+
 figure
 
 % Get number and name of lanes

@@ -49,7 +49,7 @@ for i = 1:NumTrTyp
 end
 
 % Add FloDist values between vehicles (truck rears included already in AxDists)
-AllAxSp(AllVehBeg==1) = AllAxSp(AllVehBeg==1) + Flo.Dist;
+AllAxSp(AllVehBeg == 1) = AllAxSp(AllVehBeg == 1) + Flo.Dist;
 % NB: index i spacings represents spacing BEFORE axle i (but AxDists' incides were for the one after, hence the shift)
 AllAxSp(AllAxSp == 0) = CarFrAxRe(2); AllAxSp(1) = 0;
 

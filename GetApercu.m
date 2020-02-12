@@ -17,6 +17,8 @@ for t = 1:NumInfCases
     MaxSimNum = MaxInd;
     % Take only results from governing simulation
     PDx = PD(PD.SimNum == MaxSimNum,:);
+    % Take only results from current InfCase
+    PDx = PDx(PDx.InfCase == t,:);
     % Necessary for WIMtoAllTrAx
     PDC = Classify(PDx); PDC = Daytype(PDC,Year);
     % Convert PDC to AllTrAx
