@@ -9,7 +9,7 @@
 clear, clc, close all, format long g, rng('shuffle'); % Initial commands
 
 % Input File or Folder Name 
-InputF = 'MATSimInputNEW.xlsx'; Folder_Name = '/Trial';
+InputF = 'MATSimInputFigure4p4l.xlsx'; Folder_Name = '/AGB/F4p4';
 
 % Read in simulation data
 [BaseData,LaneData,TrData,FolDist] = ReadInputFile(['Input/' InputF]);
@@ -28,6 +28,17 @@ InputF = 'MATSimInputNEW.xlsx'; Folder_Name = '/Trial';
 % now that we will have transverse working.
 
 for g = 1:height(BaseData)
+
+% if ismember('LaneTrDistr', BaseData.Properties.VariableNames)
+%     LaneTrDistr =  cellfun(@str2num,split(BaseData.LaneTrDistr{g},','));
+%     Direction =  cellfun(@str2num,split(BaseData.Direction{g},','));
+%     Num.Lanes = length(LaneTrDistr);
+% end
+
+if ismember('Traffic', BaseData.Properties.VariableNames)
+    load('TrLib.mat')
+    TrData = TrLib.(BaseData.Traffic{g});
+end
 
 % Get key variables from imported data
 [BatchSize,Num.Batches,FixVars,PlatPct,Num.Lanes,LaneTrDistr] = GetKeyVars(BaseData(g,:),TrData.TrDistr,LaneData);
@@ -54,7 +65,7 @@ for g = 1:height(BaseData)
 MATSimWarnings(TrDistCu, BaseData.BunchFactor(g), BaseData.RunPlat(g), TrTrTransProb); VirtualWIM = []; OverMax = []; ApercuOverMax = [];
 
 % Initialize parpool if necessary and initialize progress bar
-if BaseData.Parallel(g) > 0, gcp; clc; end, m = StartProgBar(BaseData.NumSims(g), Num.Batches); tic; st = now;
+if BaseData.Parallel(g) > 0, gcp; clc; end, m = StartProgBar(BaseData.NumSims(g), Num.Batches, g, height(BaseData)); tic; st = now;
 
 parfor (v = 1:BaseData.NumSims(g), BaseData.Parallel(g)*100)
 %for v = 1:BaseData.NumSims(g)  

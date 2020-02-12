@@ -10,6 +10,11 @@ function [MaxLE,DLF,BrStInd,AxonBr,FirstAxInd,FirstAx] = GetMaxLE(AllTrAx,Infv,I
 
 % Allow function to make its own inference about one or more inflns
 
+% If the influence line applies to all lanes, take simple AllTrAx (end col)
+% If not, take lane specific AllTrAx (all but end)
+
+
+
 if InfLanes(UniqInfs(t)) == 0
     AllTrAx = AllTrAx(:,end);
     InfLanes = 1;
@@ -19,6 +24,11 @@ else
 end
 
 Infv = Infv(:,UniqInfi == t);
+Infv = Infv(~isnan(Infv));    % Added experimentally 12/02/2020
+
+% if length(Infv) > 55            % Added experimentally 12/02/2020
+%     RunDyn = 0; 
+% end
 
 uDLF = ones(length(Infv),1);
 

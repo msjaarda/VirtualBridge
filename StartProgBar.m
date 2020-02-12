@@ -1,4 +1,4 @@
-function [m] = StartProgBar(NumSims, NumBatches)
+function [m] = StartProgBar(NumSims, NumBatches, g, TotalLoops)
 %GETKEYVARS Grabs key variables
 
 if NumSims < 10
@@ -20,7 +20,7 @@ else
     m = D(ind);    
 end
 
-fprintf('Progress:'); fprintf(['\n' repmat('.',1,m) '\nStarting']);
+fprintf(['Progress ' num2str(g) '/' num2str(TotalLoops) ':']); fprintf(['\n' repmat('.',1,m) '\nStarting']);
 
 end
 

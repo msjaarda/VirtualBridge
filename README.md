@@ -1,4 +1,0 @@
-# SwissTraffic
-
-# Description of project: 
-###
