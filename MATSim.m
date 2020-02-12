@@ -158,7 +158,7 @@ TName = datestr(now,'mmmdd-yy HHMM');
 % Write results to a file (put into function)
 if BaseData.Save(g) == 1
     %SaveSummary(strcat('Output', Folder_Name, '/MSOut', File_List(g).name(12:end-5),'_',TName, '.xlsx'),BaseData(g,:),BatchSize,PlatPct,TrData,VirtualWIM,Time,UniqInf,FolDist,LaneData,ESIM,OverMax,LaneTrDistr);
-    SaveSummary(TName,strcat('Output', Folder_Name, '/MSOut', InputF(12:end-5),'.xlsx'),TrData,BaseData(g,:),Time,UniqInf,FolDist,LaneData,ESIM,ESIA,Ratio,OverMax);
+    SaveSummary(TName,strcat('Output', Folder_Name, '/MATSimOutput', InputF(12:end-5),'.xlsx'),TrData,BaseData(g,:),Time,UniqInf,FolDist,LaneData,ESIM,ESIA,Ratio,OverMax);
 end
 
 % Convert VirtualWIMs to tables and save if necessary

@@ -8,10 +8,10 @@ TrData.TrBetAx.Properties.VariableNames = {'AAA1' 'BBB1' 'aaa1' 'bbb1' 'AAA2' 'B
 TrInput = [TrData.TrDistr, TrData.TrLinFit, TrData.TrAllo, TrData.TrBetAx, TrData.TrWitAx];
 
 warning('OFF', 'MATLAB:xlswrite:AddSheet');
-writetable(BaseData,filename,'Sheet',TName,'Range','B12');
-writetable(TrInput,filename,'Sheet',TName,'Range','B15');
-writetable(FolDist,filename,'Sheet',TName,'Range','B31');
-writetable(LaneData,filename,'Sheet',TName,'Range','B37');
+writetable(BaseData,filename,'Sheet',TName,'Range','B9');
+writetable(TrInput,filename,'Sheet',TName,'Range','B12');
+writetable(FolDist,filename,'Sheet',TName,'Range','B28');
+writetable(LaneData,filename,'Sheet',TName,'Range','B34');
 
 [~, b] = xlsfinfo(filename);
 if any(strcmp(b, 'Sheet1'))
