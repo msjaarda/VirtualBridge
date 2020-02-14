@@ -27,6 +27,8 @@ InputF = 'MATSimInputFigure4p4l.xlsx'; Folder_Name = '/AGB/F4p4';
 % Finally, we can replicate AGB charts, both for Box beams and bi-poutres,
 % now that we will have transverse working.
 
+% Next step to try deterministic vehicles?
+
 for g = 1:height(BaseData)
 
 % if ismember('LaneTrDistr', BaseData.Properties.VariableNames)
