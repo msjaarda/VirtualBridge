@@ -9,7 +9,7 @@
 clear, clc, close all, format long g, rng('shuffle'); % Initial commands
 
 % Input File or Folder Name 
-InputF = 'MATSimInput.xlsx'; Folder_Name = '';
+InputF = 'MATSimInputFigure4p4lsecond.xlsx'; Folder_Name = '/AGB/F4p4';
 
 % Read in simulation data
 [BaseData,LaneData,TrData,FolDist] = ReadInputFile(['Input/' InputF]);
@@ -69,8 +69,8 @@ MATSimWarnings(TrDistCu, BaseData.BunchFactor(g), BaseData.RunPlat(g), TrTrTrans
 % Initialize parpool if necessary and initialize progress bar
 if BaseData.Parallel(g) > 0, gcp; clc; end, m = StartProgBar(BaseData.NumSims(g), Num.Batches, g, height(BaseData)); tic; st = now;
 
-%parfor (v = 1:BaseData.NumSims(g), BaseData.Parallel(g)*100)
-for v = 1:BaseData.NumSims(g)  
+parfor (v = 1:BaseData.NumSims(g), BaseData.Parallel(g)*100)
+%for v = 1:BaseData.NumSims(g)  
     
     AllLaneLineUp = cell(Num.Lanes,1); ApercuMax = [];
     % Initialize variables outside of batch simulation loop
