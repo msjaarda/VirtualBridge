@@ -9,7 +9,7 @@
 clear, clc, close all, format long g, rng('shuffle'); % Initial commands
 
 % Input File or Folder Name 
-InputF = 'MATSimInputFigure4p3r.xlsx'; Folder_Name = '/AGB';
+InputF = 'MATSimInputFigure4p3rNEW.xlsx'; Folder_Name = '/AGB';
 
 % Read in simulation data
 [BaseData,LaneData,TrData,FolDist] = ReadInputFile(['Input/' InputF]);

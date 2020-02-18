@@ -26,10 +26,6 @@ end
 Infv = Infv(:,UniqInfi == t);
 Infv = Infv(~isnan(Infv));    % Added experimentally 12/02/2020
 
-% if length(Infv) > 55            % Added experimentally 12/02/2020
-%     RunDyn = 0; 
-% end
-
 uDLF = ones(length(Infv),1);
 
 % First, we establish how many influence lines we are given... NumLaneLines
