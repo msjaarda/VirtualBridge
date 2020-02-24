@@ -9,7 +9,7 @@
 clear, clc, close all, format long g, rng('shuffle'); % Initial commands
 
 % Input File or Folder Name 
-InputF = 'MATSimInputFigure4p3rNEW.xlsx'; Folder_Name = '/AGB';
+InputF = 'MATSimInputFigure4p5.xlsx'; Folder_Name = '/AGB';
 
 % Read in simulation data
 [BaseData,LaneData,TrData,FolDist] = ReadInputFile(['Input/' InputF]);
@@ -19,43 +19,137 @@ InputF = 'MATSimInputFigure4p3rNEW.xlsx'; Folder_Name = '/AGB';
 % can also be used for 1-offs. This maintains backwards compatibility.
 
 % We can think about implementing same for LaneData... more complicated.
-
-% Next step is to implement transverse and run it for platooning case
-% (shouldn't be hard... no change of code required, just factors
-% applied to ILs)
-
-% Finally, we can replicate AGB charts, both for Box beams and bi-poutres,
-% now that we will have transverse working.
-
-% Next step to try deterministic vehicles?
+% Try deterministic vehicles?
 
 for g = 1:height(BaseData)
 
-% if ismember('LaneTrDistr', BaseData.Properties.VariableNames)
-%     LaneTrDistr =  cellfun(@str2num,split(BaseData.LaneTrDistr{g},','));
-%     Direction =  cellfun(@str2num,split(BaseData.Direction{g},','));
-%     Num.Lanes = length(LaneTrDistr);
-% end
+LaneData = [];  % For testing  
+    
+if ismember('LaneTrDistr', BaseData.Properties.VariableNames)
+%     if ismember('LaneTrDistr', LaneData.Properties.VariableNames)
+%         fprintf('\nWarning: Two input locations for same parameter(s)\n\n')
+%     end
+    LaneTrDistr =  cellfun(@str2num,split(BaseData.LaneTrDistr{g},','));
+    Direction =  cellfun(@str2num,split(BaseData.Direction{g},','));
+    Num.Lanes = length(LaneTrDistr);
+    LaneData.LaneNum = 1:Num.Lanes; LaneData.LaneNum = LaneData.LaneNum';
+end
+
+if ismember('TransILx', BaseData.Properties.VariableNames)
+    % Gotta solve this..
+    if ~iscell(BaseData.TransILx(g))
+        LaneFact = 1;
+    else
+        TransILx = cellfun(@str2num,split(BaseData.TransILx{g},','));
+    TransILy = cellfun(@str2num,split(BaseData.TransILy{g},','));
+    LaneCen = cellfun(@str2num,split(BaseData.LaneCen{g},','));
+        LaneFact = interp1(TransILx,TransILy,LaneCen,'linear','extrap');
+    end
+    % We gain info on LaneData.Lane here 1:length(LaneFact)
+else
+    LaneFact = 1;
+    % We gain info on LaneData.Lane here 0
+end
+
+if ismember('ILs', BaseData.Properties.VariableNames)
+    ILs = split(BaseData.ILs{g},',');
+    if ~exist('InfLib','var')
+        load('InfLib.mat')
+    end
+    % Here we create Infx and Infv just as they would be in LaneData form
+    % A generic 'V', 'Mp', or 'Mn' means all ILs for that Library
+    % A specific 'Mp20' or 'V80' means just that one
+    % Note that 'Mn' has the largest library at present
+    % Do Infv first?
+    
+    % We can create simpler libraries in the future (with individual lines)
+    % No need to make this crazy complicated
+    % Make sure all ILs use 0.5 step for now
+    LaneData.LaneTrDistr = LaneTrDistr;
+    LaneData.Direction = Direction;
+    LaneData.InfNum = [];
+    LaneData.Name = [];
+    LaneData.Lane = [];
+    LaneData.Infv = [];
+    LaneData.x = [];
+    for i = 1:length(ILs)
+        [a, b] = size(InfLib.(ILs{i}).Infv);
+        [c, d] = size(LaneData.Infv);
+        z = nan(max(a,c),b);
+        z(1:a,1:b) = InfLib.(ILs{i}).Infv;
+        if a > c && c > 0
+            LaneData.Infv(c+1:a,:) = nan;
+        end
+        LaneData.Infv = [LaneData.Infv, z];
+        if length(InfLib.(ILs{i}).Infx) > length(LaneData.x)
+            LaneData.x = InfLib.(ILs{i}).Infx;
+        end
+        LaneData.Name = [LaneData.Name, InfLib.(ILs{i}).Name];
+    end
+    [~, NumInf] = size(LaneData.Infv);
+    % Now that we have Infv and Infx, we need to create InfLanes and
+    % InfNames as well as InfNum
+    if LaneFact == 1
+        LaneData.Lane = zeros(NumInf,1);
+        LaneData.InfNum = 1:NumInf; 
+    else
+        LaneData.Infv = LaneData.Infv*LaneFact(1);
+        LaneData.Lane = ones(NumInf,1);
+        LaneData.Name = repmat(LaneData.Name,1,length(LaneFact));
+        LaneData.InfNum = repmat(1:NumInf,1,length(LaneFact));
+        for i = 2:length(LaneFact)
+            LaneData.Infv = [LaneData.Infv, LaneData.Infv*LaneFact(i)];
+            LaneData.Lane = [LaneData.Lane; i*ones(NumInf,1)];
+        end
+    end
+end
+
+LaneData.Name = LaneData.Name';
+LaneData.InfNum = LaneData.InfNum';
+
+% Add nans and convert struct2table
+LaneData.LaneTrDistr(length(LaneData.LaneTrDistr)+1:a) = nan;
+LaneData.Direction(length(LaneData.Direction)+1:a) = nan;
+LaneData.LaneNum(length(LaneData.LaneNum)+1:a) = nan;
+LaneData.Lane(length(LaneData.Lane)+1:a) = nan;
+LaneData.InfNum(length(LaneData.InfNum)+1:a) = nan;
+for i = length(LaneData.Name)+1:a
+    LaneData.Name{i} = '';
+end
+
+Y = array2table(LaneData.Infv);
+LaneData = rmfield(LaneData,'Infv');
+LaneData = struct2table(LaneData);
+LaneData = [LaneData Y];
+
+% Now we have to sort InfName, Name, and Lane
+[LaneData.InfNum, B] = sort(LaneData.InfNum);
+LaneData.Name = LaneData.Name(B);
+LaneData.Lane = LaneData.Lane(B);
+
+% Take the new sorted order and rearrange Var1:end
+Z = B(LaneData.InfNum > 0);
+LaneData(:,[8:end]) = LaneData(:,[Z+8-1]);
+
+LaneData.InfNum(LaneData.InfNum>0) = 1:length(LaneData.InfNum(LaneData.InfNum>0));
 
 if ismember('Traffic', BaseData.Properties.VariableNames)
-    load('TrLib.mat')
-    TrData = TrLib.(BaseData.Traffic{g});
+    if ~exist('TrLib','var')
+        load('TrLib.mat')
+    end
+    TrData = TrLib.(BaseData.Traffic{g});  % Overwrites...
 end
+
+%LaneDir = LaneData.Direction;
+
+% Load simplified variable information if necessary (fcn)
+ %= LoadSimplified();
 
 % Get key variables from imported data
 [BatchSize,Num.Batches,FixVars,PlatPct,Num.Lanes,LaneTrDistr] = GetKeyVars(BaseData(g,:),TrData.TrDistr,LaneData);
 
 % Get Influence Line Details
 [InfLanes,InfNames,UniqInf,UniqInfs,UniqInfi,Num.InfCases,Infx,Infv,ESIA] = GetInfLines(LaneData,BaseData(g,:));
-
-% % Intervention
-% load('InfLib.mat')
-% %Infx = InfLib.x;
-% %Infv = InfLib.c80_60_80mn;
-% Infx = InfLib.x(1:21);
-% Infv = InfLib{1:21,2:3};
-% InfNames{1} = 'Mp';
-% InfNames{2} = 'V';
 
 % Define truck type specific properties
 [Num.TrTyp,TrDistCu,TrTyp] = GetTrPpties(TrData);
