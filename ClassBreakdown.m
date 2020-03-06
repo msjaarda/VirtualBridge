@@ -34,34 +34,17 @@ PDC.CLASS(PDC.CLASS > 39 & PDC.CLASS < 50) = 0;
 PDC.CLASS(PDC.CLASS == 119) = 0;
 
 vector = [11 12 22 23 111 11117 1127 12117 122 11127 1128 1138 1238 0];
+w = zeros(length(vector),1); x = w;
 
 for i = 1:length(vector)
-    wx(i) = sum(PDC.GW_TOT(PDC.CLASS == vector(i)));
-    nx(i) = sum(PDC.CLASS == vector(i));
+    w(i) = sum(PDC.GW_TOT(PDC.CLASS == vector(i)));
+    x(i) = sum(PDC.CLASS == vector(i));
 end
-wx = wx';
-
-
-% Get the sum of the weight of each vehicle class
-w = [sum(PDC.GW_TOT(PDC.CLASS == 11)) sum(PDC.GW_TOT(PDC.CLASS == 12))...
-    sum(PDC.GW_TOT(PDC.CLASS == 22)) sum(PDC.GW_TOT(PDC.CLASS == 23)) sum(PDC.GW_TOT(PDC.CLASS == 111))...
-    sum(PDC.GW_TOT(PDC.CLASS == 11117)) sum(PDC.GW_TOT(PDC.CLASS == 1127)) sum(PDC.GW_TOT(PDC.CLASS == 12117))...
-    sum(PDC.GW_TOT(PDC.CLASS == 122)) sum(PDC.GW_TOT(PDC.CLASS == 11127)) sum(PDC.GW_TOT(PDC.CLASS == 1128))...
-    sum(PDC.GW_TOT(PDC.CLASS == 1138)) sum(PDC.GW_TOT(PDC.CLASS == 1238)) sum(PDC.GW_TOT(PDC.CLASS == 0))];
-
-g = [w' wx];
 
 % Get total weight of trucks, TW
 TW = sum(w);
 % Get number of trucks, NT
 NT = height(PDC);
-
-% Get number of vehicles in each class
-x = [sum(PDC.CLASS == 11) sum(PDC.CLASS == 12)...
-    sum(PDC.CLASS == 22) sum(PDC.CLASS == 23) sum(PDC.CLASS == 111)...
-    sum(PDC.CLASS == 11117) sum(PDC.CLASS == 1127) sum(PDC.CLASS == 12117)...
-    sum(PDC.CLASS == 122) sum(PDC.CLASS == 11127) sum(PDC.CLASS == 1128)...
-    sum(PDC.CLASS == 1138) sum(PDC.CLASS == 1238) sum(PDC.CLASS == 0)];
 
 % Labels with percentages (by # vehicles)
 labelsn = {sprintf('[11] %.1f%%', 100*x(1)/NT)...

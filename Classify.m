@@ -224,65 +224,73 @@ Weight = PDC.GW_TOT >= 50000 & PDC.GW_TOT < 100000;
 Type = logical(UnClass.*Axles.*Dist12.*Dist23.*Dist34.*Dist45.*Dist56.*Weight);
 PDC.CLASS(Type,:) = 42;
 
-% Type 43) 72 tonne crane truck from Veicoli Standard Spreadsheet
-UnClass = PDC.CLASS == 0;
-Axles = PDC.AX == 7;
-Dist12 = PDC.W1_2 >= 80 & PDC.W1_2 < 340;
-Dist23 = PDC.W2_3 >= 80 & PDC.W2_3 < 340;
-Dist34 = PDC.W3_4 >= 340 & PDC.W3_4 < 640;
-Dist45 = PDC.W4_5 >= 60 & PDC.W4_5 < 240;
-Dist56 = PDC.W5_6 >= 60 & PDC.W5_6 < 240;
-Dist67 = PDC.W6_7 >= 60 & PDC.W6_7 < 240;
-%Weight = PDC.GW_TOT >= 65000 & PDC.GW_TOT < 78000;
-Weight = PDC.GW_TOT >= 50000 & PDC.GW_TOT < 100000;
-Type = logical(UnClass.*Axles.*Dist12.*Dist23.*Dist34.*Dist45.*Dist56.*Dist67.*Weight);
-PDC.CLASS(Type,:) = 43;
+if ismember('W6_7', PDC.Properties.VariableNames)
 
-% Type 44) 84 tonne crane truck from Veicoli Standard Spreadsheet
-UnClass = PDC.CLASS == 0;
-Axles = PDC.AX == 8;
-Dist12 = PDC.W1_2 >= 80 & PDC.W1_2 < 340;
-Dist23 = PDC.W2_3 >= 80 & PDC.W2_3 < 340;
-Dist34 = PDC.W3_4 >= 80 & PDC.W3_4 < 340;
-Dist45 = PDC.W4_5 >= 440 & PDC.W4_5 < 740;
-Dist56 = PDC.W5_6 >= 60 & PDC.W5_6 < 240;
-Dist67 = PDC.W6_7 >= 60 & PDC.W6_7 < 240;
-Dist78 = PDC.W7_8 >= 60 & PDC.W7_8 < 240;
-%Weight = PDC.GW_TOT >= 78000 & PDC.GW_TOT < 90000;
-Weight = PDC.GW_TOT >= 50000 & PDC.GW_TOT < 100000;
-Type = logical(UnClass.*Axles.*Dist12.*Dist23.*Dist34.*Dist45.*Dist56.*Dist67.*Dist78.*Weight);
-PDC.CLASS(Type,:) = 44;
+    % Type 43) 72 tonne crane truck from Veicoli Standard Spreadsheet
+    UnClass = PDC.CLASS == 0;
+    Axles = PDC.AX == 7;
+    Dist12 = PDC.W1_2 >= 80 & PDC.W1_2 < 340;
+    Dist23 = PDC.W2_3 >= 80 & PDC.W2_3 < 340;
+    Dist34 = PDC.W3_4 >= 340 & PDC.W3_4 < 640;
+    Dist45 = PDC.W4_5 >= 60 & PDC.W4_5 < 240;
+    Dist56 = PDC.W5_6 >= 60 & PDC.W5_6 < 240;
+    Dist67 = PDC.W6_7 >= 60 & PDC.W6_7 < 240;
+    %Weight = PDC.GW_TOT >= 65000 & PDC.GW_TOT < 78000;
+    Weight = PDC.GW_TOT >= 50000 & PDC.GW_TOT < 100000;
+    Type = logical(UnClass.*Axles.*Dist12.*Dist23.*Dist34.*Dist45.*Dist56.*Dist67.*Weight);
+    PDC.CLASS(Type,:) = 43;
+    
+    if ismember('W7_8', PDC.Properties.VariableNames)
+        % Type 44) 84 tonne crane truck from Veicoli Standard Spreadsheet
+        UnClass = PDC.CLASS == 0;
+        Axles = PDC.AX == 8;
+        Dist12 = PDC.W1_2 >= 80 & PDC.W1_2 < 340;
+        Dist23 = PDC.W2_3 >= 80 & PDC.W2_3 < 340;
+        Dist34 = PDC.W3_4 >= 80 & PDC.W3_4 < 340;
+        Dist45 = PDC.W4_5 >= 440 & PDC.W4_5 < 740;
+        Dist56 = PDC.W5_6 >= 60 & PDC.W5_6 < 240;
+        Dist67 = PDC.W6_7 >= 60 & PDC.W6_7 < 240;
+        Dist78 = PDC.W7_8 >= 60 & PDC.W7_8 < 240;
+        %Weight = PDC.GW_TOT >= 78000 & PDC.GW_TOT < 90000;
+        Weight = PDC.GW_TOT >= 50000 & PDC.GW_TOT < 100000;
+        Type = logical(UnClass.*Axles.*Dist12.*Dist23.*Dist34.*Dist45.*Dist56.*Dist67.*Dist78.*Weight);
+        PDC.CLASS(Type,:) = 44;
+        
+        % Type 46) 96 tonne crane truck from FA.8 AGB 2002/005
+        UnClass = PDC.CLASS == 0;
+        Axles = PDC.AX == 8;
+        Dist12 = PDC.W1_2 >= 60 & PDC.W1_2 < 340;
+        Dist23 = PDC.W2_3 >= 60 & PDC.W2_3 < 340;
+        Dist34 = PDC.W3_4 >= 100 & PDC.W3_4 < 360;
+        Dist45 = PDC.W4_5 >= 60 & PDC.W4_5 < 340;
+        Dist56 = PDC.W5_6 >= 60 & PDC.W5_6 < 340;
+        Dist67 = PDC.W6_7 >= 80 & PDC.W6_7 < 350;
+        Dist78 = PDC.W7_8 >= 60 & PDC.W7_8 < 340;
+        %Weight = PDC.GW_TOT >= 90000 & PDC.GW_TOT < 100000;
+        Weight = PDC.GW_TOT >= 50000 & PDC.GW_TOT < 100000;
+        Type = logical(UnClass.*Axles.*Dist12.*Dist23.*Dist34.*Dist45.*Dist56.*Dist67.*Dist78.*Weight);
+        PDC.CLASS(Type,:) = 46;
+        
+        if ismember('W8_9', PDC.Properties.VariableNames)
+            % Type 45) 96 tonne crane truck from Veicoli Standard Spreadsheet
+            UnClass = PDC.CLASS == 0;
+            Axles = PDC.AX == 9;
+            Dist12 = PDC.W1_2 >= 80 & PDC.W1_2 < 340;
+            Dist23 = PDC.W2_3 >= 60 & PDC.W2_3 < 340;
+            Dist34 = PDC.W3_4 >= 60 & PDC.W3_4 < 340;
+            Dist45 = PDC.W4_5 >= 440 & PDC.W4_5 < 740;
+            Dist56 = PDC.W5_6 >= 60 & PDC.W5_6 < 240;
+            Dist67 = PDC.W6_7 >= 60 & PDC.W6_7 < 240;
+            Dist78 = PDC.W7_8 >= 60 & PDC.W7_8 < 240;
+            Dist89 = PDC.W8_9 >= 60 & PDC.W8_9 < 240;
+            %Weight = PDC.GW_TOT >= 90000 & PDC.GW_TOT < 100000;
+            Weight = PDC.GW_TOT >= 50000 & PDC.GW_TOT < 100000;
+            Type = logical(UnClass.*Axles.*Dist12.*Dist23.*Dist34.*Dist45.*Dist56.*Dist67.*Dist78.*Dist89.*Weight);
+            PDC.CLASS(Type,:) = 45;
+        end
+    end
 
-% Type 45) 96 tonne crane truck from Veicoli Standard Spreadsheet
-UnClass = PDC.CLASS == 0;
-Axles = PDC.AX == 9;
-Dist12 = PDC.W1_2 >= 80 & PDC.W1_2 < 340;
-Dist23 = PDC.W2_3 >= 60 & PDC.W2_3 < 340;
-Dist34 = PDC.W3_4 >= 60 & PDC.W3_4 < 340;
-Dist45 = PDC.W4_5 >= 440 & PDC.W4_5 < 740;
-Dist56 = PDC.W5_6 >= 60 & PDC.W5_6 < 240;
-Dist67 = PDC.W6_7 >= 60 & PDC.W6_7 < 240;
-Dist78 = PDC.W7_8 >= 60 & PDC.W7_8 < 240;
-Dist89 = PDC.W8_9 >= 60 & PDC.W8_9 < 240;
-%Weight = PDC.GW_TOT >= 90000 & PDC.GW_TOT < 100000;
-Weight = PDC.GW_TOT >= 50000 & PDC.GW_TOT < 100000;
-Type = logical(UnClass.*Axles.*Dist12.*Dist23.*Dist34.*Dist45.*Dist56.*Dist67.*Dist78.*Dist89.*Weight);
-PDC.CLASS(Type,:) = 45;
-
-% Type 46) 96 tonne crane truck from FA.8 AGB 2002/005 
-UnClass = PDC.CLASS == 0;
-Axles = PDC.AX == 8;
-Dist12 = PDC.W1_2 >= 60 & PDC.W1_2 < 340;
-Dist23 = PDC.W2_3 >= 60 & PDC.W2_3 < 340;
-Dist34 = PDC.W3_4 >= 100 & PDC.W3_4 < 360;
-Dist45 = PDC.W4_5 >= 60 & PDC.W4_5 < 340;
-Dist56 = PDC.W5_6 >= 60 & PDC.W5_6 < 340;
-Dist67 = PDC.W6_7 >= 80 & PDC.W6_7 < 350;
-Dist78 = PDC.W7_8 >= 60 & PDC.W7_8 < 340;
-%Weight = PDC.GW_TOT >= 90000 & PDC.GW_TOT < 100000;
-Weight = PDC.GW_TOT >= 50000 & PDC.GW_TOT < 100000;
-Type = logical(UnClass.*Axles.*Dist12.*Dist23.*Dist34.*Dist45.*Dist56.*Dist67.*Dist78.*Weight);
-PDC.CLASS(Type,:) = 46;
+end
 
 end
 

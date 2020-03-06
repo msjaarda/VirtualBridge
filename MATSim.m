@@ -2,172 +2,50 @@
 %                              MATSim2019
 % ------------------------------------------------------------------------
 % Simulate traffic over a bridge to find maximum load effects
-%       - To be used with MATSimInput spreadsheet or folder containing
+%       - To be used with Simple or Complete MATSimInput spreadsheet
 %       - Platooning only supported in Lane 1
-%       - Whole number resolution supported (minimum 1m)
 
-clear, clc, close all, format long g, rng('shuffle'); % Initial commands
+% Initializing commands
+clear, clc, close all, format long g, rng('shuffle');
 
 % Input File or Folder Name 
-InputF = 'MATSimInputFigure4p5.xlsx'; Folder_Name = '/AGB';
+InputF = 'MATSimInputSimple.xlsx'; Folder_Name = '/';
 
 % Read in simulation data
 [BaseData,LaneData,TrData,FolDist] = ReadInputFile(['Input/' InputF]);
 
-% We now have complex input (each excel tab), and simple input (just Base
-% and Lane). Complex will just be for 1-offs (not batch), although simple
-% can also be used for 1-offs. This maintains backwards compatibility.
-
-% We can think about implementing same for LaneData... more complicated.
-% Try deterministic vehicles?
-
+% Each row of BaseData represents one analysis
 for g = 1:height(BaseData)
 
-LaneData = [];  % For testing  
+% Update analysis data for current row of BaseData
+[Num.Lanes,Lane,LaneData,TrData,FolDist] = UpdateData(BaseData(g,:),LaneData,TrData,FolDist);   
     
-if ismember('LaneTrDistr', BaseData.Properties.VariableNames)
-%     if ismember('LaneTrDistr', LaneData.Properties.VariableNames)
-%         fprintf('\nWarning: Two input locations for same parameter(s)\n\n')
-%     end
-    LaneTrDistr =  cellfun(@str2num,split(BaseData.LaneTrDistr{g},','));
-    Direction =  cellfun(@str2num,split(BaseData.Direction{g},','));
-    Num.Lanes = length(LaneTrDistr);
-    LaneData.LaneNum = 1:Num.Lanes; LaneData.LaneNum = LaneData.LaneNum';
-end
-
-if ismember('TransILx', BaseData.Properties.VariableNames)
-    % Gotta solve this..
-    if ~iscell(BaseData.TransILx(g))
-        LaneFact = 1;
-    else
-        TransILx = cellfun(@str2num,split(BaseData.TransILx{g},','));
-    TransILy = cellfun(@str2num,split(BaseData.TransILy{g},','));
-    LaneCen = cellfun(@str2num,split(BaseData.LaneCen{g},','));
-        LaneFact = interp1(TransILx,TransILy,LaneCen,'linear','extrap');
-    end
-    % We gain info on LaneData.Lane here 1:length(LaneFact)
-else
-    LaneFact = 1;
-    % We gain info on LaneData.Lane here 0
-end
-
-if ismember('ILs', BaseData.Properties.VariableNames)
-    ILs = split(BaseData.ILs{g},',');
-    if ~exist('InfLib','var')
-        load('InfLib.mat')
-    end
-    % Here we create Infx and Infv just as they would be in LaneData form
-    % A generic 'V', 'Mp', or 'Mn' means all ILs for that Library
-    % A specific 'Mp20' or 'V80' means just that one
-    % Note that 'Mn' has the largest library at present
-    % Do Infv first?
-    
-    % We can create simpler libraries in the future (with individual lines)
-    % No need to make this crazy complicated
-    % Make sure all ILs use 0.5 step for now
-    LaneData.LaneTrDistr = LaneTrDistr;
-    LaneData.Direction = Direction;
-    LaneData.InfNum = [];
-    LaneData.Name = [];
-    LaneData.Lane = [];
-    LaneData.Infv = [];
-    LaneData.x = [];
-    for i = 1:length(ILs)
-        [a, b] = size(InfLib.(ILs{i}).Infv);
-        [c, d] = size(LaneData.Infv);
-        z = nan(max(a,c),b);
-        z(1:a,1:b) = InfLib.(ILs{i}).Infv;
-        if a > c && c > 0
-            LaneData.Infv(c+1:a,:) = nan;
-        end
-        LaneData.Infv = [LaneData.Infv, z];
-        if length(InfLib.(ILs{i}).Infx) > length(LaneData.x)
-            LaneData.x = InfLib.(ILs{i}).Infx;
-        end
-        LaneData.Name = [LaneData.Name, InfLib.(ILs{i}).Name];
-    end
-    [~, NumInf] = size(LaneData.Infv);
-    % Now that we have Infv and Infx, we need to create InfLanes and
-    % InfNames as well as InfNum
-    if LaneFact == 1
-        LaneData.Lane = zeros(NumInf,1);
-        LaneData.InfNum = 1:NumInf; 
-    else
-        LaneData.Infv = LaneData.Infv*LaneFact(1);
-        LaneData.Lane = ones(NumInf,1);
-        LaneData.Name = repmat(LaneData.Name,1,length(LaneFact));
-        LaneData.InfNum = repmat(1:NumInf,1,length(LaneFact));
-        for i = 2:length(LaneFact)
-            LaneData.Infv = [LaneData.Infv, LaneData.Infv*LaneFact(i)];
-            LaneData.Lane = [LaneData.Lane; i*ones(NumInf,1)];
-        end
-    end
-end
-
-LaneData.Name = LaneData.Name';
-LaneData.InfNum = LaneData.InfNum';
-
-% Add nans and convert struct2table
-LaneData.LaneTrDistr(length(LaneData.LaneTrDistr)+1:a) = nan;
-LaneData.Direction(length(LaneData.Direction)+1:a) = nan;
-LaneData.LaneNum(length(LaneData.LaneNum)+1:a) = nan;
-LaneData.Lane(length(LaneData.Lane)+1:a) = nan;
-LaneData.InfNum(length(LaneData.InfNum)+1:a) = nan;
-for i = length(LaneData.Name)+1:a
-    LaneData.Name{i} = '';
-end
-
-Y = array2table(LaneData.Infv);
-LaneData = rmfield(LaneData,'Infv');
-LaneData = struct2table(LaneData);
-LaneData = [LaneData Y];
-
-% Now we have to sort InfName, Name, and Lane
-[LaneData.InfNum, B] = sort(LaneData.InfNum);
-LaneData.Name = LaneData.Name(B);
-LaneData.Lane = LaneData.Lane(B);
-
-% Take the new sorted order and rearrange Var1:end
-Z = B(LaneData.InfNum > 0);
-LaneData(:,[8:end]) = LaneData(:,[Z+8-1]);
-
-LaneData.InfNum(LaneData.InfNum>0) = 1:length(LaneData.InfNum(LaneData.InfNum>0));
-
-if ismember('Traffic', BaseData.Properties.VariableNames)
-    if ~exist('TrLib','var')
-        load('TrLib.mat')
-    end
-    TrData = TrLib.(BaseData.Traffic{g});  % Overwrites...
-end
-
-%LaneDir = LaneData.Direction;
-
-% Load simplified variable information if necessary (fcn)
- %= LoadSimplified();
-
 % Get key variables from imported data
-[BatchSize,Num.Batches,FixVars,PlatPct,Num.Lanes,LaneTrDistr] = GetKeyVars(BaseData(g,:),TrData.TrDistr,LaneData);
+[BatchSize,Num.Batches,FixVars,PlatPct] = GetKeyVars(BaseData(g,:),TrData.TrDistr);
 
 % Get Influence Line Details
-[InfLanes,InfNames,UniqInf,UniqInfs,UniqInfi,Num.InfCases,Infx,Infv,ESIA] = GetInfLines(LaneData,BaseData(g,:));
+[Inf,Num.InfCases,Inf.x,Inf.v,ESIA] = GetInfLines(LaneData,BaseData(g,:),Num.Lanes);
 
 % Define truck type specific properties
-[Num.TrTyp,TrDistCu,TrTyp] = GetTrPpties(TrData);
+[Num.TrTyp,TrTyp] = GetTrPpties(TrData);
 
-% Get Per Lane Rates include TRs and TransProbs
-[LaneNumVeh, TrTrTransProb, CarCarTransProb, Surplus] = PerLaneRates(FolDist,BaseData(g,:),Num.TrTyp,FixVars.TrFront,TrData,TrTyp.NumAxPerGr,FixVars.CarFrAxRe,Num.Lanes,BatchSize,LaneTrDistr);
+% Get Per Lane Rates including TRs and TransProbs
+[Lane.NumVeh, TransPrTT, TransPrCC, Surplus] = PerLaneRates(FolDist,BaseData(g,:),Num,FixVars,TrData,TrTyp.NumAxPerGr,BatchSize,Lane);
 
 % Check for program warnings, initialize empty vars
-MATSimWarnings(TrDistCu, BaseData.BunchFactor(g), BaseData.RunPlat(g), TrTrTransProb); VirtualWIM = []; OverMax = []; ApercuOverMax = [];
+MATSimWarnings(TrTyp.DistCu, BaseData.BunchFactor(g), BaseData.RunPlat(g), TransPrTT); 
+
+% Initialize empty vars
+[VirtualWIM, OverMax, ApercuOverMax] = deal([]);
 
 % Initialize parpool if necessary and initialize progress bar
 if BaseData.Parallel(g) > 0, gcp; clc; end, m = StartProgBar(BaseData.NumSims(g), Num.Batches, g, height(BaseData)); tic; st = now;
 
-parfor (v = 1:BaseData.NumSims(g), BaseData.Parallel(g)*100)
-%for v = 1:BaseData.NumSims(g)  
+%parfor (v = 1:BaseData.NumSims(g), BaseData.Parallel(g)*100)
+for v = 1:BaseData.NumSims(g)  
     
-    AllLaneLineUp = cell(Num.Lanes,1); ApercuMax = [];
     % Initialize variables outside of batch simulation loop
+    LaneAxLineUp = cell(Num.Lanes,1); LaneVehLineUp = cell(Num.Lanes,1); ApercuMax = [];
     [MaxVec, Maxk, MaxDLF, MaxBrStInd, MaxFirstAxInd, MaxFirstAx] = deal(zeros(1,Num.InfCases));
             
     for k = 1:Num.Batches
@@ -176,48 +54,53 @@ parfor (v = 1:BaseData.NumSims(g), BaseData.Parallel(g)*100)
           
         for q = 1:Num.Lanes
             
-            if LaneTrDistr(q) ~= 0
+            if Lane.TrDistr(q) ~= 0 || FixVars.CarWgt > 0
 
-                % 1) Get flow of Cars (0s) and Trucks (#s 1 to Num.TrTyp)
-                [Flo.Veh, Flo.Trans] = GetFloVeh(LaneNumVeh,TrTrTransProb,CarCarTransProb,BaseData.BunchFactor(g),q,Num.TrTyp,TrDistCu);
+                % 1) Flo.Veh/Trans | Get Flow of Cars (0s) and Trucks (#s 1 to Num.TrTyp)
+                Flo = GetFloVeh(Lane.NumVeh,TransPrTT,TransPrCC,BaseData.BunchFactor(g),q,TrTyp.DistCu);
                 
-                % 2) Get Truck / Axle Weights (kN) and Inter-Axle Distances (m)
-                Flo.Wgt = GetFloWgt(Num.TrTyp,LaneNumVeh(q),Flo.Veh,TrData.TrDistr);
+                % 2) Flo.Wgt | Get Truck / Axle Weights (kN)
+                Flo = GetFloWgt(Num.TrTyp,Lane.NumVeh(q),Flo,TrData.TrDistr);
                 
-                % 2bis) Modify Flos for Platooning
-                Flo = SwapforPlatoons(Flo,BaseData.RunPlat(g),q,Num.TrTyp,BaseData.PlatSize(g),PlatPct,TrData.TrDistr,BatchSize,Surplus,BaseData.TrRate(g),LaneTrDistr);
+                % 2)bis Flo.Plat/PTrail/PLead/PPrime/Swap | Modify Flo for Platooning
+                if BaseData.RunPlat(g) == 1
+                    Flo = SwapforPlatoons(Flo,BaseData(g,:),q,Num.TrTyp,PlatPct,TrData.TrDistr,BatchSize,Surplus,Lane);
+                end
                 
-                % 3) Get Intervehicle Distances (mm) according to Simon Bailey NB: TC means Truck, followed by a Car (<<<Truck<<Car)
-                Flo.Dist = GetFloDist(FolDist,FixVars,Flo.Trans,Flo.Plat,Flo.PPrime,Flo.PTrail,BaseData.PlatFolDist(g));
+                % 3) Flo.Dist | Get Intervehicle Distances (m) TC is the Car following a Truck (<<<Truck<<Car)
+                Flo = GetFloDist(FolDist,FixVars,Flo,BaseData.PlatFolDist(g));
                 
                 % 4) Assemble Axle Loads and Axle Spacings vectors - populate Axle Weights (kN) and Inter-Axle Distances (m) within
-                AllLaneLineUp{q} = GetAllLaneLineUp(Num.TrTyp,TrTyp,LaneData.Direction,q,Flo,FixVars.CarFrAxRe,k,v,BaseData(g,:),TrData);
+                [Flo, LaneAxLineUp{q}, LaneVehLineUp{q}, TableNames] = GetLaneLineUp(TrTyp,Lane.Dir,q,Flo,FixVars,k,v,BaseData(g,:),TrData);
                 
             end
             
         end % END OF LANE SPECIFIC TRAFFIC GENERATION
         
-        % Assemble lane specific data and sort by axle position
-        TrLineUpMaster = AssembleLineUps(AllLaneLineUp,BatchSize,Num.Lanes,LaneData,BaseData(g,:));
+        % Assemble lane specific data, flip for direction, sort by axle position
+        [AxLineUp, VehLineUp] = AssembleLineUps(LaneAxLineUp,LaneVehLineUp,BatchSize,Num.Lanes,BaseData(g,:),Lane.Dir,FixVars);
         
-        % Log Virtual WIM if necessary. Virtual WIM takes only first axle row for each truck, is cummulative...
-        if BaseData.VWIM(g) == 1 || BaseData.Apercu(g) == 1
-            VirtualWIM = [VirtualWIM; TrLineUpMaster(TrLineUpMaster(:,5)>0,:)];
+        % Log Virtual WIM if necessary... cummulative
+        if BaseData.VWIM(g) == 1
+            VirtualWIM = [VirtualWIM; VehLineUp];
         end
         
         % ----- END OF RANDOM TRAFFIC GENERATION -----
         % ----- START OF LOAD EFFECT CALCULATION -----
         
         if BaseData.Analysis(g) == 1
-            [AllTrAx] = GetAllTrAx(TrLineUpMaster,BaseData.ILRes(g),Num.Lanes);
+            [AllTrAx] = GetAllTrAx(AxLineUp,BaseData.ILRes(g),Lane,FixVars);
             for t = 1:Num.InfCases
-                % 5) Subject Influence Line to Truck Axle Stream, lane specific influence line procedure included in GetMaxLE
-                [MaxLE,DLF,BrStInd,AxonBr,FirstAxInd,FirstAx] = GetMaxLE(AllTrAx,Infv,InfLanes,LaneTrDistr,BaseData.RunDyn(g),t,UniqInfs,UniqInfi);
+                % Subject Influence Line to Axle Stream, lane specific influence line procedure included in GetMaxLE
+                [MaxLE,MaxLEStatic,DLF,BrStInd,AxonBr,FirstAxInd,FirstAx] = GetMaxLE(AllTrAx,Inf,BaseData.RunDyn(g),t);
                 % Update Maximums if they are exceeded
                 if MaxLE > MaxVec(t)
                     [MaxVec(t),Maxk(t),MaxDLF(t),MaxBrStInd(t),MaxFirstAxInd(t),MaxFirstAx(t)] = UpMaxes(MaxLE,k,DLF,BrStInd,FirstAxInd,FirstAx);            
                     % Save results for Apercu
-                    ApercuMax{t} = TrLineUpMaster(TrLineUpMaster(:,5)>0 & TrLineUpMaster(:,1)>(BrStInd - 10) & TrLineUpMaster(:,1)<(BrStInd + Infx(end) + 10),:);
+                    if BaseData.Apercu(g) == 1
+                        % Must account for ILRes here... /ILRes
+                        ApercuMax{t} = VehLineUp(VehLineUp(:,1)/BaseData.ILRes(g)>(BrStInd - 20) & VehLineUp(:,1)/BaseData.ILRes(g)<(BrStInd + Inf.x(end) + 20),:);
+                    end
                 end
             end 
         end
@@ -229,10 +112,13 @@ parfor (v = 1:BaseData.NumSims(g), BaseData.Parallel(g)*100)
        
     end % END OF TRAFFIC BATCH
 
-    % Log overall maximum cases into OverMax and 
+    % Log overall maximum cases into OverMax and ApercuOverMax if necessary
     for i = 1:Num.InfCases
         OverMax = [OverMax; [i, v, MaxVec(i), Maxk(i), MaxDLF(i), MaxBrStInd(i), MaxFirstAxInd(i), MaxFirstAx(i)]];
-        ApercuOverMax = [ApercuOverMax; [ApercuMax{i}, repmat(i,size(ApercuMax{i},1),1), repmat(v,size(ApercuMax{i},1),1)]]; 
+        % Save VWIM to ApercuOverMax, and add column for InfCase
+        if BaseData.Apercu(g) == 1
+            ApercuOverMax = [ApercuOverMax; [ApercuMax{i}, repmat(i,size(ApercuMax{i},1),1)]]; 
+        end
     end
        
 end % END OF SIMULATION
@@ -255,7 +141,7 @@ end
 ESIM = 1.1*prctile(OverMax,99); Ratio = ESIM./ESIA;
 
 % Print Summary Stats to Command Window
-PrintSummary(BaseData(g,:),BatchSize,PlatPct,TrData,Num,VirtualWIM,Time,LaneTrDistr)
+PrintSummary(BaseData(g,:),BatchSize,PlatPct,TrData,Num,VirtualWIM,Time,Lane.TrDistr)
 
 % Create folders where there are none
 CreateFolders(Folder_Name)
@@ -264,42 +150,38 @@ TName = datestr(now,'mmmdd-yy HHMM');
 
 % Write results to a file (put into function)
 if BaseData.Save(g) == 1
-    %SaveSummary(strcat('Output', Folder_Name, '/MSOut', File_List(g).name(12:end-5),'_',TName, '.xlsx'),BaseData(g,:),BatchSize,PlatPct,TrData,VirtualWIM,Time,UniqInf,FolDist,LaneData,ESIM,OverMax,LaneTrDistr);
-    SaveSummary(TName,strcat('Output', Folder_Name, '/MATSimOutput', InputF(12:end-5),'.xlsx'),TrData,BaseData(g,:),Time,UniqInf,FolDist,LaneData,ESIM,ESIA,Ratio,OverMax);
+    SaveSummary(TName,strcat('Output', Folder_Name, '/MATSimOutput', InputF(12:end-5),'.xlsx'),TrData,BaseData(g,:),Time,Inf.UniqNames,FolDist,LaneData,ESIM,ESIA,Ratio,OverMax);
 end
 
 % Convert VirtualWIMs to tables and save if necessary
 if BaseData.VWIM(g) == 1
-    PD = array2table(VirtualWIM,'VariableNames',{'AllAxSpCu','AllAxLoads','AllVehNum','AllLaneNum','AllVehBeg','AllVehPlat','AllVehPSwap','AllVehTyp','AllBatchNum','AllSimNum','ZST','JJJJMMTT','T','ST','HHMMSS','FZG_NR','FS','SPEED','LENTH','CS','CSF','GW_TOT','AX','AWT01','AWT02','AWT03','AWT04','AWT05','AWT06','AWT07','AWT08','AWT09','AWT10','W1_2','W2_3','W3_4','W4_5','W5_6','W6_7','W7_8','W8_9','W9_10'});
+    PD = array2table(VirtualWIM,'VariableNames',TableNames);    
     save(['VirtualWIM' Folder_Name '/WIM_' TName], 'PD')
 end
 
 % Covert Apercus to tables and save if necessary
 if BaseData.Apercu(g) == 1
-    PD = array2table(ApercuOverMax,'VariableNames',{'AllAxSpCu','AllAxLoads','AllVehNum','AllLaneNum','AllVehBeg','AllVehPlat','AllVehPSwap','AllVehTyp','AllBatchNum','AllSimNum','ZST','JJJJMMTT','T','ST','HHMMSS','FZG_NR','FS','SPEED','LENTH','CS','CSF','GW_TOT','AX','AWT01','AWT02','AWT03','AWT04','AWT05','AWT06','AWT07','AWT08','AWT09','AWT10','W1_2','W2_3','W3_4','W4_5','W5_6','W6_7','W7_8','W8_9','W9_10','InfCase','SimNum'});
+    PD = array2table(ApercuOverMax,'VariableNames',[TableNames 'InfCase']);   
     save(['Apercu' Folder_Name '/AWIM_' TName], 'PD')
 end
 
 % Save structure variable with essential simulation information
-OutInfo.Name = TName;
-OutInfo.BaseData = BaseData(g,:);
-OutInfo.ESIA = ESIA;
-OutInfo.ESIM = ESIM;
-OutInfo.Mean = mean(OverMax);
-OutInfo.Std = std(OverMax);
-OutInfo.OverMax = OverMax;
-OutInfo.OverMAXT = OverMAXT;
-OutInfo.InfNames = InfNames;
-OutInfo.PlatPct = max(PlatPct);
+OutInfo.Name = TName; OutInfo.BaseData = BaseData(g,:);
+OutInfo.ESIA = ESIA; OutInfo.ESIM = ESIM;
+OutInfo.Mean = mean(OverMax); OutInfo.Std = std(OverMax);
+OutInfo.OverMax = OverMax; OutInfo.OverMAXT = OverMAXT;
+OutInfo.InfNames = Inf.Names; OutInfo.PlatPct = max(PlatPct);
 OutInfo.LaneData = LaneData;
 
-save(['Output' Folder_Name '/' OutInfo.Name], 'OutInfo')
+if BaseData.Save(g) == 1
+    save(['Output' Folder_Name '/' OutInfo.Name], 'OutInfo')
+end
 
 end
 
 % Run Apercu to see critical case
 if BaseData.Apercu(g) == 1
-    [T, OverMx] = GetApercu(ApercuOverMax,OverMAXT,Num.InfCases,Infx,Infv,InfLanes,LaneTrDistr,BaseData.RunDyn(g),UniqInfs,UniqInfi,ESIA);
+    [T, OverMx, AllTrAxx] = GetApercu(PD,OverMAXT,Num.InfCases,Inf,BaseData.RunDyn(g),ESIA,Lane.Dir,BaseData.ILRes(g));
 end
 
 

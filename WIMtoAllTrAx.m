@@ -1,10 +1,12 @@
-function [PDCx, AllTrAx, TrLineUp] = WIMtoAllTrAx(PDCx,SpaceSaver)
-% WIMTOALLTRAX
+function [PDCx, AllTrAx, TrLineUp] = WIMtoAllTrAx(PDCx,SpaceSaver,LaneDir,ILRes)
+% WIMTOALLTRAX Translates WIM or VWIM data into AllTrAx and TrLineUp
+% Also returns PDC (in the form of PDCx) with some mods
 
 % This function could use a lot of work
 %   - Organization
 %   - Runtime optimization
 %   - Smart detection of decimal seconds
+%   - Directional support
 
 % We have to treat the lanes together this is the only way to preserve the 
 % interaction between lanes (otherwise one lane will grow or shrink too much,
@@ -12,18 +14,26 @@ function [PDCx, AllTrAx, TrLineUp] = WIMtoAllTrAx(PDCx,SpaceSaver)
 
 % Head describes the vehicle number... including light vehicles. It resets
 % to zero randomly, so it is difficult to know actually how many vehicles
-% pass by in the year.
+% pass by in the year. Additionally, it is not lane specific, so it is a
+% little bit useless, except to estimate TR.
 
+% Detect type of WIM file
+% Determine if we have Enhanced or VWIM cases
 EnhancedWIM = ismember('HH', PDCx.Properties.VariableNames);
-VWIM = ismember('AllAxSpCu', PDCx.Properties.VariableNames);
+% ApercuOverMax counts as VWIM
+VWIM = ismember('SpCu', PDCx.Properties.VariableNames);
+% Regular WIM is when it doesn't have the other two
+RegularWIM = ~EnhancedWIM && ~VWIM;
 
 % Clean up WIM data (if enhanced WIM file)
 if EnhancedWIM
-    % First fix PDCx.Head
+    
+    % Fix PDCx.Head
     % Find indices where it resets to zero
     Q = [0; diff(PDCx.Head)];
     Q(Q < 0) = PDCx.Head(Q < 0);
     PDCx.Head = cumsum(Q);
+    % Solve for TR (as an estimate)... not reported right now
     TR = height(PDCx)/PDCx.Head(end);
     
     % Fix decimal seconds
@@ -33,20 +43,27 @@ if EnhancedWIM
     PDCx.Properties.VariableNames{'HEADx'} = 'LnHead';
     PDCx.Properties.VariableNames{'GAP'} = 'LnGap';
     
+    % Sort by timestamp
     PDCx = sortrows(PDCx,{'JJJJMMTT','HHMMSS','HH'});
+    
 elseif ~VWIM
+    
+    % Sort by timestamp (VWIM need not be sorted)
     PDCx = sortrows(PDCx,{'JJJJMMTT','HHMMSS'});
+    
 end
 
-% For some reason additing sortrows changes the result!
-% 0428 at 201136 is when we have 4 vehicles close
+% For some reason adding sortrows changes the result! Legacy... hope it is fixed!
 
+% Get Lanes
 Lanes = unique(PDCx.FS);
 
 % We notice that two vehicles can arrive at the same time in the same lane... SO 
 % we can try a crude method of simply assigning vehicles that arrive at the same 
 % second as others and early and late decimal value (0.15, and 0.85 for example).
-if ~EnhancedWIM
+
+% We should only do this if it is RegularWIM
+if RegularWIM
     % Must be a lane-specific procedure
     for i = 1:length(Lanes)
         
@@ -65,15 +82,18 @@ if ~EnhancedWIM
     end
 end
 
+% Old Note... doesn't make sense:
 % Repeat even if vehicles are in different lanes (WIM station logged one
 % before the other for a reason... although they could have the same time
 
 % We don't need this stuff if we have VWIM
-
 if VWIM
-    PDCx.CumDist = PDCx.AllAxSpCu;
     
-    % Could add space-saver like properties here... can't use Dist
+    PDCx.CumDist = PDCx.SpCu;
+    
+    % Could add space-saver like properties here... but can't use Dist
+    % For now, don't give VWIM SpaceSaver ability
+    % Legacy below
 %     if SpaceSaver > 0
 %         PDCx.Dist(PDCx.Dist > SpaceSaver) = SpaceSaver;
 %     end
@@ -97,29 +117,43 @@ end
 PDCx.LnTrSpacing = zeros(height(PDCx),1);
 PDCx.LnTrBtw = zeros(height(PDCx),1);
 
-for i = 1:length(Lanes)
-    % Find indices of the lane we are working in
-    LaneInds = PDCx.FS == Lanes(i);
-    
-    % Find all locations where truck i and i - 1 arrived at the same time
-    AA = [0; diff(PDCx.CumDist(LaneInds))];
-    
-    PDCx.LnTrSpacing(LaneInds) = AA;
-    PDCx.LnTrBtw(LaneInds) = AA - PDCx.LENTH(circshift(find(LaneInds == 1),1))/100;
-    
+% Some kind of filter for making sure trucks don't encroach on one
+% another.. skip for VWIM
+if ~VWIM
+    for i = 1:length(Lanes)
+        
+        % Find indices of the lane we are working in
+        LaneInds = PDCx.FS == Lanes(i);
+        
+        % Find all locations where truck i and i - 1 arrived at the same time
+        AA = [0; diff(PDCx.CumDist(LaneInds))];
+        
+        PDCx.LnTrSpacing(LaneInds) = AA;
+        PDCx.LnTrBtw(LaneInds) = AA - PDCx.LENTH(circshift(find(LaneInds == 1),1))/100;
+        
+    end
 end
 
 % Create wheelbase and axle load vectors
-if VWIM
-    WBL = PDCx{:,34:40}/100;
-    AX = PDCx{:,24:31}/102;
-else
-    WBL = PDCx{:,24:30}/100;
-    AX = PDCx{:,14:21}/102;
+WBL = PDCx{:,strncmp(PDCx.Properties.VariableNames,'W',1)}/100;
+AX = PDCx{:,strncmp(PDCx.Properties.VariableNames,'AW',2)}/102;
+
+% Make wheelbase length cummulative
+WBL = cumsum(WBL,2);
+
+% This may be where direction matters...
+for i = 1:length(Lanes)
+    
+    % Find indices of the lane we are working in
+    LaneInds = PDCx.FS == Lanes(i);
+    
+    % Change the sign of the WBL for those in directin 2
+    if LaneDir(i) == 2
+        WBL(LaneInds,:) = -WBL(LaneInds,:);
+    end
+    
 end
 
-
-WBL = cumsum(WBL,2);
 WB = [PDCx.CumDist PDCx.CumDist+WBL];
 
 % Must eliminate useless WB values
@@ -129,6 +163,7 @@ TrNum = 1:size(WB,1); TrNum = TrNum';
 Q = repmat(TrNum,1,size(T,2));
 TrNum = Q.*T;
 
+% What is going on here with LaneNum?!
 LaneNum = PDCx.FS;
 Q = repmat(LaneNum,1,size(T,2));
 LaneNum = Q.*T;
@@ -144,13 +179,16 @@ AXv = AXv(AXv > 0);
 TrNum = TrNum(TrNum > 0);
 LaneNum = LaneNum(LaneNum > 0);
 
-%AllLaneLineUp = [AllAxSpCu(1) AllAxLoads(2) AllVehNum(3) AllLaneNum(4)...
+% Update the below
+%AllLaneLineUp = [SpCu(1) AllAxLoads(2) AllVehNum(3) AllLaneNum(4)...
 TrLineUp = [WBv AXv TrNum LaneNum];
 
-% Round to 1
-TrLineUp(:,1) = round(TrLineUp(:,1));
+% The way that the indexing and accumarray is working, we have wasted stuff
+% at the start of the AllTrAx... and it is much too long (when using VWIM)
 
-% % Make a separate axle stream vector for each lane, and last one for all
+TrLineUp(:,1) = round(TrLineUp(:,1)/ILRes);
+
+% Make a separate axle stream vector for each lane, and last one for all
 AllTrAx = zeros(max(TrLineUp(:,1)),length(Lanes)+1);
 
 for i = 1:length(Lanes)
@@ -160,141 +198,10 @@ end
 
 AllTrAx(:,end) = sum(AllTrAx(:,1:end-1),2);
 
-% If we want to output exact axle locations
+% Return TrLineUp first row unrounded
 TrLineUp(:,1) = WBv;
 
-
-
-% % % % Take HHMMSS and convert to time
-% % % dys = PDCx.Daycount-1; hrs = floor(PDCx.HHMMSS/10000); mns = floor(rem(PDCx.HHMMSS,10000)/100);
-% % % 
-% % % 
-% % % if EnhancedWIM
-% % %     PDCx.HHMMSS = PDCx.HHMMSS + str2double(PDCx.HH)/100;
-% % %     scs = rem(PDCx.HHMMSS,100);
-% % % else
-% % %     scs = rem(PDCx.HHMMSS,100);% + rand(length(dys),1);
-% % % end
-
-
-% % % % Add time together
-% % % Time = 60*60*24*dys + 60*60*hrs + 60*mns + scs;
-
-% We notice is that three vehicles never arrive at the same second... SO 
-% we can try a crude method of simply assigning vehicles that
-% arrive at the same second as others and early and late mil (0.15, and
-% 0.85 for example).
-
-% If we have decimal second data, it is already added
-
-% % % % Nowe we split into a lane-specific procedure
-% % % for i = 1:length(Lanes)
-% % %     % Find indeces of the lane we are working in
-% % %     LaneInds = PDC.FS == Lanes(i);
-% % %     
-% % %     % Find all locations where truck i and i - 1 arrived at the same time
-% % %     % Note that with decimal second data, this will never happen
-% % %     AA = [1; diff(PDC.HHMMSS(LaneInds))];
-% % %     
-% % %     scsS{i}(find(AA == 0)-1) = scs(find(AA == 0)-1) + 0.15;
-% % %     scsS{i}(find(AA == 0)) = scs(find(AA == 0)) + 0.85;
-% % %     
-% % % end
-
-
-% dtime = zeros(length(time),1);
-% speed = zeros(length(time),1);
-
-% for i = 1:length(Lanes)
-%     dtime(PDC.FS == Lanes(i)) = [0; diff(time(PDC.FS == Lanes(i)))];
-%     PDC.dtime(PDC.FS == Lanes(i)) = dtime(PDC.FS == Lanes(i));
-%     speed(PDC.FS == Lanes(i)) = (mean([PDC.SPEED(PDC.FS == Lanes(i)) circshift(PDC.SPEED(PDC.FS == Lanes(i)),1)],2)/100)*0.2777777777778;
-%     PDC.Dist(PDC.FS == Lanes(i)) = dtime(PDC.FS == Lanes(i)).*speed(PDC.FS == Lanes(i));
-%     PDC.DistBw(PDC.FS == Lanes(i)) = PDC.Dist(PDC.FS == Lanes(i))-circshift(PDC.LENTH(PDC.FS == Lanes(i)),1)/100;
-%     % Problem is... PDC.Dist is now lane specific. Spacesaver won't work
-% end
-
-%         histogram(PDC.SPEED/100,'Normalization','pdf','BinWidth',1,'EdgeColor','r','FaceColor',[0.4 0.4 0.4],'FaceAlpha',1)
-%
-%         title([SName ' ' num2str(Year) ' Speed'])
-%         xlabel('Speed (kph)')
-%         xlim([0 120])
-%         ylabel('PDF')
-%         set(gca,'ytick',[])
-%         set(gca,'yticklabel',[])
-
-
-% figure(2)
-% histogram(PDCx.LnTrBtw(PDCx.FS == 4),'Normalization','pdf','BinWidth',1,'EdgeColor','r','FaceColor',[0.4 0.4 0.4],'FaceAlpha',1)
-% 
-% %title([SName ' ' num2str(Year) ' Time of Day'])
-% xlabel('Time (hrs)')
-% %xlim([0 100])
-% ylabel('PDF')
-% set(gca,'ytick',[])
-% set(gca,'yticklabel',[])
-
-% Now turn it into a AllTrAx!
-
-% Find a way to convert time to distance?
-
-
-
-
-% Put summa this garbage into other functions
-
-
-% Decide what to do with these guys...
-%         PDCx.Dist(PDCx.Dist < 0) = 52.22222222;
-%         PDCx.Dist(PDCx.Dist > 10000) = 52.22222222;
-
-%X = PDCx.Dist(PDCx.Dist > 0 & PDCx.Dist < 6000);
-%X = PDCx.Dist;
-
-% Right now we use PDCx.LENTH, not WBLen + TrFront + TrEnd
-%PDCx.WBLen = sum(PDCx{:,24:32},2);
-
-%figure(2)
-%         count = count + 1;
-%         subplot(length(Stations),length(Lanes),count)
-%         histogram(X,'Normalization','pdf','BinWidth',5,'EdgeColor','r','FaceColor',[0.4 0.4 0.4],'FaceAlpha',1)
-%
-%         title([num2str(Station) ' ' num2str(Lanes(j))])
-%         xlabel('Distance (m)')
-%         xlim([0 200])
-%         ylabel('PDF')
-%         set(gca,'ytick',[])
-%         set(gca,'yticklabel',[])
-
-%dtime(dtime <= 0) = NaN;
-
-%         figure(3)
-%         histogram(speed,'Normalization','pdf','BinWidth',0.25,'EdgeColor','r','FaceColor',[0.4 0.4 0.4],'FaceAlpha',1)
-%
-%         title([SName ' ' num2str(Year) ' '])
-%         xlabel('Distance (m)')
-%         xlim([18 28])
-%         ylabel('PDF')
-%         set(gca,'ytick',[])
-%         set(gca,'yticklabel',[])
-
-
-
-%WBv = round(WBv);
-
-% accumarray
-% Things to return (if made into a function)
-
-
-% Might be able to get rid of this loop... build like ALlLaneLineUp
-% with the 4 (or 3 if we don't do AllVehNum) columns, and then
-% separate at the end!
-
-%end
-
-%sgtitle([SName ' ' num2str(Year) ' Distance Between Trucks ']);
-% fprintf('\n\n');
-
+end
 
 
 

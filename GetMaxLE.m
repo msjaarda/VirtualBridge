@@ -1,72 +1,85 @@
-function [MaxLE,DLF,BrStInd,AxonBr,FirstAxInd,FirstAx] = GetMaxLE(AllTrAx,Infv,InfLanes,LaneTrDistr,RunDyn,t,UniqInfs,UniqInfi)
+function [MaxLE,MaxLEStatic,DLF,BrStInd,AxonBr,FirstAxInd,FirstAx] = GetMaxLE(AllTrAx,Inf,RunDyn,InfCase)
 %GETMAXLE This function computes the maximum load effect on the bridge
-%   The function takes in a stream of axle loads, in the form of a matrix
-%   with column 1 being the locations, and column 2 being the loads at
-%   those locations. It also takes in an influence line. The stream of axle
-%   loads and the influence line shall both be
+% It does this through convolution of the load, v, and influence, u
+% v must be constructed from AllTrAx, depending on InfCase
+% u is constructed from Inf.v, depending on InfCase
 
-%   Function can also handle receiving more than one influence line in, and
-%   AllTrAx having more columns than 1.
-
-% Allow function to make its own inference about one or more inflns
+% AllTrAx has a column for each lane with weight in it (each lane with
+% trucks, or, when cars have weight, each lane). Then, the last column of
+% AllTrAx is the sum of all cols.
 
 % If the influence line applies to all lanes, take simple AllTrAx (end col)
-% If not, take lane specific AllTrAx (all but end)
-
-
-
-if InfLanes(UniqInfs(t)) == 0
-    AllTrAx = AllTrAx(:,end);
+if Inf.Lanes(Inf.UniqStartInds(InfCase)) == 0
+    TrAx = AllTrAx(:,end);
     InfLanes = 1;
+% If not, take lane specific AllTrAx (all but end)
 else
-    AllTrAx = AllTrAx(:,1:end-1);
-    InfLanes = InfLanes(UniqInfi == t);
+    TrAx = AllTrAx(:,1:end-1);
+    InfLanes = Inf.Lanes(Inf.UniqInds == InfCase);
 end
 
-Infv = Infv(:,UniqInfi == t);
-Infv = Infv(~isnan(Infv));    % Added experimentally 12/02/2020
+% Take only the influence lines that apply to the current InfCase
+Infv = Inf.v(:,Inf.UniqInds == InfCase);
+% Remove nans (added experimentally 12/02/2020.. fixed 05/03)
+FirstNan = find(isnan(Infv));
+if ~isempty(FirstNan)
+    Infv = Infv(1:FirstNan-1,:);
+end
 
+% Influence ordinates for dynamic effects are simply 1
 uDLF = ones(length(Infv),1);
+% Get full weight on bridge for DLA
+vDLF = AllTrAx(:,end);
 
-% First, we establish how many influence lines we are given... NumLaneLines
-[~, NumLaneLines] = size(Infv);
-
-AllTrAxFW = sum(AllTrAx,2);
-
-for j = 1:NumLaneLines
+% Compute maximum load effects
+for i = 1:size(Infv,2)
     
-    if LaneTrDistr(InfLanes(j)) > 0
-        
-        v = AllTrAx(:,InfLanes(j));
-        u = Infv(:,j);
-        R(:,:,j) = conv(u,v);
-            
-    end
-    
+    % Create v, and u, the vectors that will be convoluted
+    v = TrAx(:,InfLanes(i));
+    u = Infv(:,i);
+    % Load, v, and Influence, u, convolution into R
+    R(:,:,i) = conv(u,v);
+     
 end
 
-if NumLaneLines > 1
+% If there is more than one ifluence line, perform first sum
+if size(Infv,2) > 1
     R = sum(R,3);
 end
 
+% If we want, we can include the static and dynamic results separately...
+% This would add a comparison to AGB 2005
+
+% Find MaxLE and location, StLoc
+[MaxLEStatic, ~] = max(R);
+
+% Could add other stuff here from below, if we want static location info
+
+
+% If we have dynamic effects, convolute vDLF with uDLF
 if RunDyn == 1
     
-    vDLF = AllTrAxFW;
-    WeightResult = conv(uDLF,vDLF);
-    % Convert WeightResult into DLA
-    DLFResult = 1.5-WeightResult/3000;
-    DLFResult(WeightResult > 1500) = 1;
-    DLFResult(WeightResult < 300) = 1.4;
-
+    % Load, v, and Influence, u, convolution into R to get Weight Result WR
+    WR = conv(uDLF,vDLF);
+    % Convert WeightResult into DLA using formula from Bailey
+    DLFResult = 1.5-WR/3000;
+    DLFResult(WR > 1500) = 1;
+    DLFResult(WR < 300) = 1.4;
+    
+    % Multiply DLFResult by static result, R
     R = R.*DLFResult;
     
 end
 
+% Find MaxLE and location, StLoc
 [MaxLE, StLoc] = max(R);
 
-BrStInd = StLoc-length(Infv)+1;
-%BrStInd = StLoc-length(Infv)+2;
+% Compute Location Info
 
+% Get Bridge Start Index
+BrStInd = StLoc-length(Infv)+1;
+
+% Get Axles on Bridge... a little tricky because of indexing
 if BrStInd-1+length(Infv) > length(AllTrAx)
     AxonBr = zeros(length(Infv),1);
     AxonBr(1:length(AllTrAx((BrStInd):end))) = AllTrAx((BrStInd):end);
@@ -74,23 +87,26 @@ elseif BrStInd < 1
     AxonBr = zeros(length(Infv),1);
     AxonBr(end-length(AllTrAx(1:(BrStInd-1)+length(Infv)))+1:end) = AllTrAx(1:(BrStInd-1)+length(Infv));
 else
-    AxonBr = AllTrAx((BrStInd):(BrStInd-1)+length(Infv));
+    AxonBr = TrAx((BrStInd):(BrStInd-1)+length(Infv),:);
 end
 
+% Find indexes for AxonBr
 AxonBrInds = find(AxonBr);
 FirstAxInd = BrStInd+AxonBrInds(1)-1;
 FirstAx = AxonBr(AxonBrInds(1));
 
-% if FirstAxInd > length(AllTrAx)
-%     FirstAxInd = FirstAxInd-length(AllTrAx);
-% end
+% We report BrStInd and not all indices, because sometimes these indices
+% wrap around start and finish
 
+% Return Dynamic Load Factor of Result
 if RunDyn == 1
     DLF = DLFResult(StLoc);
 else
     DLF = 1;   
 end
 
+% NB: In fact... this whole MaxLE thing doesn't care about direction at all
+% Axles are just single points, at single locations, with no directions
     
 end
 

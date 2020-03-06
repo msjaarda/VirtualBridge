@@ -1,31 +1,42 @@
-function [AllTrAx] = GetAllTrAx(TrLineUpMaster,ResIL,NumLanes)
+function [AllTrAx] = GetAllTrAx(AxLineUp,ILRes,Lane,FixVars)
 %GetAllTrAx Find the vector of all truck axles in their positions.
+% AllTrAx has a column for each lane with weight in it (each lane with
+% trucks, or, when cars have weight, each lane). Then, the last column of
+% AllTrAx is the sum of all cols.
 
-% Last column is all lanes together, 1:end-1 are each lane invididually
+% AxLineUp has [AxSpCu AxLoads LaneAxVehNum AxLaneNum AxVehNum]
+%                 1       2         3           4         5
 
-% Why the hek is TrLineUp Starting in the 200s?
+% Get NumLanes
+NumLanes = size(Lane.TrDistr,1);
 
-% Round master truck line up to desired refinement level
-TrLineUp = TrLineUpMaster(:,1:4);
-%TrLineUp(:,1) = ResIL*round(TrLineUp(:,1)/ResIL);
-TrLineUp(:,1) = round(TrLineUp(:,1)/ResIL);
-
-% % Add to avoid subscript 0 for indexing
-% At the moment it is always a car so it isn't a problem
-% if TrLineUp(1,1) < ResILs
-%     TrLineUp(:,1) = TrLineUp(:,1)+(ResILs-TrLineUp(1,1));
-% end
-
-% Make a separate axle stream vector for each lane, and last one for all
-%AllTrAx = zeros(max(TrLineUp(:,1))/(ResIL),NumLanes+1);
-AllTrAx = zeros(max(TrLineUp(:,1)),NumLanes+1);
-
-for i = 1:NumLanes
-    A = accumarray(TrLineUp(TrLineUp(:,4)==i,1),TrLineUp(TrLineUp(:,4)==i,2));
-    %AllTrAx(1:length(A(ResIL:ResIL:end)),i) = A(ResIL:ResIL:end);   
-    AllTrAx(1:length(A),i) = A;   
+% Get NumLoadedLanes
+if FixVars.CarWgt> 0
+    NumLoadedLanes = NumLanes;
+else
+    NumLoadedLanes = sum(Lane.TrDistr > 0);
+    LoadedLanesInds = find(Lane.TrDistr > 0);
 end
 
+% Round master truck line up to desired refinement level
+TrLineUp = AxLineUp(:,1:4);
+TrLineUp(:,1) = round(TrLineUp(:,1)/ILRes);
+
+% Add to avoid subscript 0 for indexing
+if TrLineUp(1,1) < ILRes
+    TrLineUp(:,1) = TrLineUp(:,1)+(ResILs-TrLineUp(1,1));
+end
+
+% Initialize AllTrAx
+AllTrAx = zeros(max(TrLineUp(:,1)),NumLoadedLanes+1);
+
+% May need to use NumLoadedLanes and LoadedLanesInds in more places
+for i = 1:NumLoadedLanes
+    A = accumarray(TrLineUp(TrLineUp(:,4) == LoadedLanesInds(i),1),TrLineUp(TrLineUp(:,4) == LoadedLanesInds(i),2));
+    AllTrAx(1:length(A),i) = A;    
+end
+
+% Sum rows for final column (used for action effects that aren't lane dependant
 AllTrAx(:,end) = sum(AllTrAx(:,1:end-1),2);   
             
 end

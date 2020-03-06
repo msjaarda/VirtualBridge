@@ -1,68 +1,87 @@
-function  [TrLineUpMaster] = AssembleLineUps(AllLaneLineUp,BatchSize,NumLanes,LaneData,BaseData)
-%AssembleLineUps Does a little virtual WIM compiling
-AllLaneLineUp = AllLaneLineUp(~cellfun('isempty',AllLaneLineUp));
-% Assemble lane specific data and sort by axle position
-% SORTROW
+function  [AxLineUp, VehLineUp] = AssembleLineUps(LaneAxLineUp,LaneVehLineUp,BatchSize,NumLanes,BaseData,LaneDir,FixVars)
+%AssembleLineUps Merges LaneLineUps (Ax and Veh)
+%LaneAx is for the bridge, LaneVeh is for the VWIM
 
-% Experiment for case of no platoons and all lanes same dir
-B = LaneData.Direction(LaneData.Direction < 100);
+% LaneAxLineUp has [LaneAxSpCu LaneAxLoads LaneAxVehNum LaneAxLaneNum LaneAxVehBeg]
+%                       1           2           3             4           5
 
-if BaseData.RunPlat == 0 && all(B == B(1))
-    [s,~] = size(AllLaneLineUp);
-    for i = 1:s
-        %if ~isempty(AllLaneLineUp{i})
-            AllLaneLineUp{i} = AllLaneLineUp{i}(AllLaneLineUp{i}(:,2)>0,:);
-        %end
-    end
-end
+% Take only the non-empty cells of LaneAxLineUp
+LaneAxLineUp = LaneAxLineUp(~cellfun('isempty',LaneAxLineUp));
 
-if BaseData.VWIM == 1 || BaseData.Apercu == 1
-    VehLineUp = cat(1,AllLaneLineUp{:});
-    VehLineUp = sortrows(VehLineUp);
-    
-    tmp3 = zeros(size(AllLaneLineUp{1},1)+size(AllLaneLineUp{2},1),size(AllLaneLineUp{2},2));
-
-    [~,tmp2] = sort([AllLaneLineUp{1}(:,1) ;  AllLaneLineUp{2}(:,1)]);
-    % tmp2 = merge_sorted(AllLaneLineUp{1}(:,1) ,  AllLaneLineUp{2}(:,1));
-    
-    tmp3(tmp2<=size(AllLaneLineUp{1},1),:) = AllLaneLineUp{1};
-    tmp3(tmp2>size(AllLaneLineUp{1},1),:) = AllLaneLineUp{2};
-    
-    
-else
-    %AA = cellfun(@(x) x(:,1:5),AllLaneLineUp,'UniformOutput',false);
-    %VehLineUp = cat(1,AA{:});
-    VehLineUp = cat(1,AllLaneLineUp{:});
-    VehLineUp = sortrows(VehLineUp);
-end
-
-
-
-% Assign a sequential number to each vehicle (fifth col is veh starts only)
-VehLineUp(VehLineUp(:,5) == 1,5) = 1:length(VehLineUp(VehLineUp(:,5) == 1,5));
-
-% If we have platoons (couldn't estimate length perfectly, hence Suprlus variable) trim to length
-% Should we be careful here if we didn't run certain lanes which had no
-% vehs?
-if BaseData.RunPlat == 1
-    VehLineUp = VehLineUp(1:find(VehLineUp(:,5)==BatchSize),:);
-end
+% Assemble lane specific data
+AxLineUp = cat(1,LaneAxLineUp{:});
 
 % Swap vehicles going in opposite direction, then sort again
-for i = 1:NumLanes
-    if LaneData.Direction(i) ~= 1
-        VehLineUp(VehLineUp(:,4) == i,1) = VehLineUp(end,1) + 5 - VehLineUp(VehLineUp(:,4) == i,1);
-        VehLineUp = sortrows(VehLineUp);
+% for i = 1:NumLanes
+%     if LaneDir(i) ~= 1
+%         %AxLineUp(AxLineUp(:,4) == i,1) = AxLineUp(end,1) + 5 - AxLineUp(AxLineUp(:,4) == i,1);
+%         % Also switch the LaneAxVehBeg
+%         X = AxLineUp(AxLineUp(:,4) == i,:);
+%         X(:,6) = X(end,1) + 5 - X(:,1);
+%         X(:,7) = [diff(X(:,5)); 1];
+%         X(X(:,7)<0,7) = 0;
+%         
+%         AxLineUp(AxLineUp(:,4) == i,1) = X(:,6);
+%         AxLineUp(AxLineUp(:,4) == i,5) = X(:,7);
+%         
+%     end
+% end
+
+% Sort by axle position
+AxLineUp = sortrows(AxLineUp);
+
+% Assign a sequential number to each vehicle (replace fifth col...was VehBeg)
+AxLineUp(AxLineUp(:,5) == 1,5) = 1:length(AxLineUp(AxLineUp(:,5) == 1,5));
+
+% If we have platoons (couldn't estimate length perfectly, hence Suprlus variable) trim to length
+if BaseData.RunPlat == 1
+    if FixVars.CarWgt == 0
+        AxLineUp = AxLineUp(1:find(AxLineUp(:,5) == BatchSize*BaseData.TrRate),:);
+    else
+        AxLineUp = AxLineUp(1:find(AxLineUp(:,5) == BatchSize),:);
     end
 end
 
 
-% For cases without platooning (hense no surplus... and cases with vehicles
-% moving in the same direction, we could remove cars first to save time
-% with "sortrows" (still expensive)
 
-% Creation TruckLineUp by removing vehicles
-TrLineUpMaster = VehLineUp(VehLineUp(:,2)>0,:);
+
+
+% Done creating AxLineUp... now create VehLineUp if necessary
+if BaseData.VWIM == 1 || BaseData.Apercu == 1
+  
+    % Take only the non-empty cells of LaneVehLineUp
+    LaneVehLineUp = LaneVehLineUp(~cellfun('isempty',LaneVehLineUp));
+    
+ 
+    
+    % Assemble lane specific data
+    VehLineUp = cat(1,LaneVehLineUp{:});
+    
+%     % Swap vehicles going in opposite direction, then sort again
+%     for i = 1:NumLanes
+%         if LaneDir(i) ~= 1
+%             % Works as long as col4 stays as 'FS' or LaneNum
+%             
+%             X = VehLineUp(VehLineUp(:,4) == i,:);
+%             
+%             
+%             VehLineUp(VehLineUp(:,4) == i,1) = VehLineUp(end,1) + 5 - VehLineUp(VehLineUp(:,4) == i,1);
+%         end
+%     end
+    
+    % Sort by axle position
+    VehLineUp = sortrows(VehLineUp);
+    
+    % If we have platoons (couldn't estimate length perfectly, hence Suprlus variable) trim to length
+    if BaseData.RunPlat == 1
+        if FixVars.CarWgt == 0
+            VehLineUp = VehLineUp(1:BatchSize*BaseData.TrRate,:);
+        else
+            VehLineUp = VehLineUp(1:BatchSize,:);
+        end
+    end
+
+end
 
 end
 

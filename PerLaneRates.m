@@ -1,4 +1,4 @@
-function [LaneAvgNumVeh, TrTrTransProb, CarCarTransProb, Surplus] = PerLaneRates(FolDist,BaseData,NumTrTyp,TrFront,TrData,TrTypNumAxPerGr,CarFrAxRe,NumLanes,NumVeh,LaneTrDistr)
+function [LaneAvgNumVeh, TrTrTransProb, CarCarTransProb, Surplus] = PerLaneRates(FolDist,BaseData,Num,FixVars,TrData,TrTypNumAxPerGr,NumVeh,Lane)
 %PERLANERATES Computes Truck Rates and Transition Probabilities for each lane
 
 % Detect if we have multiple lanes... if so, we reset TrRates
@@ -8,15 +8,23 @@ function [LaneAvgNumVeh, TrTrTransProb, CarCarTransProb, Surplus] = PerLaneRates
 % been possible. Instead, we take 5% extra length and trim lane streams to
 % match.
 
+% Should PerLaneRates take into account direction? I think so... long term
+% at least
+
+% Create simpler variable names for the sake of reducing clutter
+TrFront = FixVars.TrFront;
+CarFrAxRe = FixVars.CarFrAxRe;
+
+% Initial estimates for TransProbs
 TrTrTransProb = BaseData.TrRate*BaseData.BunchFactor;
+TrCarTransProb = 1-TrTrTransProb;
+CarTrTransProb = BaseData.TrRate*(1-TrTrTransProb)/(1-BaseData.TrRate);
+CarCarTransProb = 1-CarTrTransProb;
 
-TrCarTransProb = 1-TrTrTransProb; CarTrTransProb = BaseData.TrRate*(1-TrTrTransProb)/(1-BaseData.TrRate); CarCarTransProb = 1-CarTrTransProb;
-
-if NumLanes == 1
-    
-    % State what happens when there is only one lane
+% If there is only one lane, this is very simple!
+if Num.Lanes == 1
+    % All vehicles in the one lane...
     LaneAvgNumVeh = NumVeh;
-    
 else
     
     % Estimate number of vehicles per lane
@@ -34,8 +42,8 @@ else
     WgtAvgTT = BaseData.TrRate*TrTrTransProb*AvgTT;
 
     % 2a) Find the average length of each truck type
-    AvgLenTr = zeros(NumTrTyp,1);
-    for i = 1:NumTrTyp
+    AvgLenTr = zeros(Num.TrTyp,1);
+    for i = 1:Num.TrTyp
         AvgLenTr(i) = TrFront + AvgInterAxD(TrData.TrBetAx{i,:},TrData.TrWitAx{i,:},TrTypNumAxPerGr{i});
     end
 
@@ -47,9 +55,9 @@ else
     RelLenAllTrLane = BaseData.TrRate*WgtAvgLenTr+(1-BaseData.TrRate)*sum(CarFrAxRe)+(WgtAvgTT+WgtAvgTC+WgtAvgCT+WgtAvgCC);
 
     % 3b) Adjust for each actual lane (m/veh)
-    RelLen = zeros(NumLanes,1);
-    for i = 1:NumLanes
-        RelLen(i) = RelLenCarLane + (LaneTrDistr(i)/100)*(RelLenAllTrLane - RelLenCarLane);
+    RelLen = zeros(Num.Lanes,1);
+    for i = 1:Num.Lanes
+        RelLen(i) = RelLenCarLane + (Lane.TrDistr(i)/100)*(RelLenAllTrLane - RelLenCarLane);
     end
     % Convert to veh/m
     RelVeh = 1./RelLen;
@@ -57,7 +65,7 @@ else
     % 4) Solve for expected number vehicles per lane, and lane truck rates
     x = NumVeh/sum(RelVeh);
     LaneAvgNumVeh = x*RelVeh;
-    LaneAvgNumTr = BaseData.TrRate*NumVeh*LaneTrDistr/100;
+    LaneAvgNumTr = BaseData.TrRate*NumVeh*Lane.TrDistr/100;
     LaneTrRate = LaneAvgNumTr./LaneAvgNumVeh;
     % Transition probabilities totally go out the window here...
     
@@ -88,7 +96,7 @@ else
         x = NumVeh/sum(RelVeh);
         ratio = mean(LaneAvgNumVeh./(x*RelVeh));
         LaneAvgNumVeh = x*RelVeh;
-        LaneAvgNumTr = BaseData.TrRate*NumVeh*LaneTrDistr/100;
+        LaneAvgNumTr = BaseData.TrRate*NumVeh*Lane.TrDistr/100;
         LaneTrRate = LaneAvgNumTr./LaneAvgNumVeh;
         
         % Still use regular formulas here for platoon lane... because

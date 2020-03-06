@@ -1,4 +1,4 @@
-function [Flo] = SwapforPlatoons(Flo,RunPlat,q,NumTrTyp,PlatSize,PlatPct,TrDistr,BatchSize,Surplus,TrRate,LaneTrDistr)
+function [Flo] = SwapforPlatoons(Flo,BaseData,q,NumTrTyp,PlatPct,TrDistr,BatchSize,Surplus,Lane)
 %SWAPFORPLATOONS Does platoon swapping...
 
 % START OF MAJOR PLATOONING EDITION
@@ -13,7 +13,7 @@ function [Flo] = SwapforPlatoons(Flo,RunPlat,q,NumTrTyp,PlatSize,PlatPct,TrDistr
 %FloTransTtCtTcCc(:,5:9) = false(length(Flo.Veh),5);
 
 % 2bis) Modify for platooning considerations. Only Lane 1
-if RunPlat == 1 && q == 1
+if BaseData.RunPlat == 1 && q == 1
     for i = 1:NumTrTyp
 
         % - Start with full platoons (might do empties later)
@@ -23,8 +23,8 @@ if RunPlat == 1 && q == 1
         % from both other platoons and the end of the traffic
         % stream...
         CandidacyStart = false(length(Flo.Veh),1);
-        for s = 5:length(Flo.Veh)-PlatSize-1
-            if Flo.Plat(s+PlatSize+1) ~= true
+        for s = 5:length(Flo.Veh)-BaseData.PlatSize-1
+            if Flo.Plat(s+BaseData.PlatSize+1) ~= true
                 CandidacyStart(s) = true;
             end
         end
@@ -33,7 +33,7 @@ if RunPlat == 1 && q == 1
         
         if ~isempty(find(PlatCand, 1))
 
-            for u = 1:round(PlatPct(i)*TrDistr.TrDistr(i)*BatchSize*Surplus*TrRate*(LaneTrDistr(1)/100)/PlatSize)
+            for u = 1:round(PlatPct(i)*TrDistr.TrDistr(i)*BatchSize*Surplus*BaseData.TrRate*(Lane.TrDistr(1)/100)/BaseData.PlatSize)
 
                 %   1) Select a random truck to make lead platoon vehicle
                 IndOpts = find(PlatCand);
@@ -44,7 +44,7 @@ if RunPlat == 1 && q == 1
                 PlatCand(P1Ind-2) = false;
                 PlatCand(P1Ind-3) = false;
                 PlatCand(P1Ind-4) = false;
-                PlatCand(P1Ind+PlatSize) = false;
+                PlatCand(P1Ind+BaseData.PlatSize) = false;
                 Flo.Plat(P1Ind) = true;
                 % Change properties for vehicle leading platoon
                 Flo.PLead(P1Ind-1) = true;
@@ -53,7 +53,7 @@ if RunPlat == 1 && q == 1
                 %PlatCand = Flo.Veh == i & Flo.Wgt > mean(Flo.Wgt(Flo.Veh == i)) & FloTransTtCtTcCc(:,5) == 0 & FloTransTtCtTcCc(:,6) == 0 & FloTransTtCtTcCc(:,7) == 0;
                 IndOpts = find(PlatCand);
 
-                for y = 2:PlatSize
+                for y = 2:BaseData.PlatSize
 
                     % if the next vehicle in line isn't a candidate itself (normally the case, except by coincidence)
                     if PlatCand(P1Ind+y-1) == false
@@ -139,14 +139,14 @@ if RunPlat == 1 && q == 1
                 end
 
                 % At the end we alter vehicle following the platoon
-%                 Flo.Plat(P1Ind+PlatSize) = false;
-%                 Flo.PTrail(P1Ind+PlatSize) = false;
-                if Flo.Veh(P1Ind+PlatSize) == 0
-                    Flo.Trans(P1Ind+PlatSize) = -1;
+%                 Flo.Plat(P1Ind+BaseData.PlatSize) = false;
+%                 Flo.PTrail(P1Ind+BaseData.PlatSize) = false;
+                if Flo.Veh(P1Ind+BaseData.PlatSize) == 0
+                    Flo.Trans(P1Ind+BaseData.PlatSize) = -1;
                 else
-                    Flo.Trans(P1Ind+PlatSize) = 0;
+                    Flo.Trans(P1Ind+BaseData.PlatSize) = 0;
                 end
-                Flo.PTrail(P1Ind+PlatSize) = true;
+                Flo.PTrail(P1Ind+BaseData.PlatSize) = true;
 
             end
         end

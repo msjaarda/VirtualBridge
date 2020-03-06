@@ -4,23 +4,26 @@ clc
 close all
 format long g
 
-StartY = 2003;
-EndY = 2018;
-Station = 'Ceneri';
+Year = 2003;
+SName{1} = 'Denges';
+SName{2} = 'Mattstetten';
+SName{3} = 'Gotthard';
 x = 0;
-PlotType = 'LaneDist';   % Options are 'LaneDist' or 'Weight'
+PlotType = 'Weight';   % Options are 'LaneDist' or 'Weight'
 
+Num = 3;
    
-for i = StartY:EndY
+for i = 1:3
     
     x = x+1;
     %load(strcat(Station,'_',num2str(i),'.mat'))
+    load(['PrunedS1 WIM/',SName{i},'/',SName{i},'_',num2str(Year),'.mat']);
     
     % Let the Classify function add the .CLASS column to PD
-    PDC = Classify(Station,i);
+    PDC = Classify(PD);
 
     % 1. Disqualification by weight (try under 6 or 10 tonnes)
-    PD = PDC(PDC.GW_TOT > 6000,:);
+    PD = PDC(PDC.GW_TOT > 3500,:);
     % 2. Disqualification by Swiss10 Class (exclude 2,3,4,6)
     %PD = PD(PD.CS == 1 | PD.CS == 5 | PD.CS == 7 | PD.CS == 8 | PD.CS == 9 | PD.CS == 10,:);
     
@@ -44,7 +47,7 @@ for i = StartY:EndY
         %nums{x} = nums{x}/NumTrucks(x);
         Between = mids{x}>10 & mids{x}<50;
 
-        color = ((EndY-i)/(EndY-StartY))*(200/255)*[1, 1, 1];
+        color = ((Num-i)/(Num))*(200/255)*[1, 1, 1];
         if i == 2018
             color = [0, 1, 0];
         end
@@ -103,9 +106,9 @@ else
 
 end
 
-x = StartY:EndY;
+x = 1:3;
 
-legend(string(x));
+legend(SName(x));
 
 
 hold off

@@ -1,23 +1,33 @@
-function [BatchSize,NumBatches,FixVars,PlatPct,NumLanes,LaneTrDistr] = GetKeyVars(BaseData,TrDistr,LaneData)
+function [BatchSize,NumBatches,FixVars,PlatPct] = GetKeyVars(BaseData,TrDistr)
 %GETKEYVARS Grabs key variables
 
-% Key cars to be manually defined right here:
-FixVars.TrFront = 1.5; FixVars.CarFrAxRe = [0.9 2.6 0.8]; FixVars.PlatFolDistFrRe = [4 4];
+% Fixed variables are defined here
+FixVars.TrFront = 1.5;
+FixVars.CarFrAxRe = [0.9 2.6 0.8];
+FixVars.PlatFolDistFrRe = [4 4];
+FixVars.CarWgt = 0;          % Car's weight in kN
 
+% Define maximum batch size
+BatchMax = 1000000;
+% Define Platoon percentage cutoff
+PlatCutOff = 0.02;
+
+% If PlatPct is in TrDistr, get it, otherwise, assign from BaseData (above certain threshold)
 if ismember('PlatPct', TrDistr.Properties.VariableNames)
     PlatPct = TrDistr.PlatPct;
 else
-    PlatPct = BaseData.PlatRate*(TrDistr.TrDistr > 0.02);
-end
-NumLanes = max(LaneData.LaneNum(LaneData.LaneNum>0)); LaneTrDistr = LaneData.LaneTrDistr(LaneData.LaneTrDistr<110);
-% Define Batch Size 
-K = 1:ceil(BaseData.NumVeh/2); D = [K(rem(BaseData.NumVeh,K)==0) BaseData.NumVeh];
-if BaseData.NumVeh < 1000000
-    BatchSize = BaseData.NumVeh;
-else
-    BatchSize = min(D(end-1),max(D(D<1000001))); 
+    PlatPct = BaseData.PlatRate*(TrDistr.TrDistr > PlatCutOff);
 end
 
+% Define batch size 
+K = 1:ceil(BaseData.NumVeh/2); D = [K(rem(BaseData.NumVeh,K)==0) BaseData.NumVeh];
+if BaseData.NumVeh < BatchMax
+    BatchSize = BaseData.NumVeh;
+else
+    BatchSize = min(D(end-1),max(D(D<BatchMax+1))); 
+end
+
+% Define number of batches
 NumBatches = BaseData.NumVeh/BatchSize;
 
 end

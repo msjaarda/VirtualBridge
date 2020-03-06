@@ -11,7 +11,7 @@ function [AxWeights] = WeightpAx(Weight,NumAxpGr,Priority,LinearFits,Allos)
     AxGrWeights = zeros(Num,NumAxGr);
         
     
-    % CHANGE 0 limit?
+    % CHANGE 0 limit? note 0.1 at right side...
     for j = Priority
         AxGrWeights(:,j) = max(LinearFits(j,1)*(Weight-sum(AxGrWeights,2)) + LinearFits(j,2),0.1);
     end

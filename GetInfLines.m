@@ -1,29 +1,21 @@
-function [InfLanes,InfNames,UniqInf,UniqInfs,UniqInfi,NumInfCases,Infx,Infv,ESIA] = GetInfLines(LaneData,BaseData)
-% GetInfLines takes in LaneData and BaseData and rounds influence lines to
-% desired refinement level, switches signs, and returns ESia as well
+function [Inf,NumInfCases,Infx,Infv,ESIA] = GetInfLines(LaneData,BaseData,NumLanes)
+% GETINFLINES Takes in LaneData and BaseData and rounds influence lines to
+% desired refinement level, switches signs, and returns ESIA
 
 % if istable(LaneData)
 %     
 % end
 
-% Get total number of lanes
-NumLanes = max(LaneData.LaneNum(LaneData.LaneNum > 0));
 % Get which lanes each line applies to - 0 means all lanes
-InfLanes = LaneData.Lane(LaneData.InfNum<100); InfNames = LaneData.Name(LaneData.InfNum>0); 
+Inf.Lanes = LaneData.Lane(LaneData.InfNum<100); Inf.Names = LaneData.Name(LaneData.InfNum>0); 
 % Get total number of influence lines
 NumInf = max(LaneData.InfNum);
 
-% In the end, we want each IL to have an "x" col, and a "y/value" col
-% We should be able to call on them simply, or as before in the complex way
-% Since lane distribution (ex. 80-20-0) actually changes the random
-%   traffic, we can't have it change for each IL (should actually be input
-%   in the BaseData sheet).
-
-% UniqInf is the unique names, UniqInfs is the starting indices, UniqInfi are the actual indices
-[UniqInf, UniqInfs, UniqInfi] = unique(InfNames,'stable');
+% Inf.UniqNames is the unique names, Inf.UniqStartInds is the starting indices, Inf.UniqInds are the actual indices
+[Inf.UniqNames, Inf.UniqStartInds, Inf.UniqInds] = unique(Inf.Names,'stable');
 
 % Get total number of InfCases
-NumInfCases = length(UniqInf);
+NumInfCases = length(Inf.UniqNames);
 
 % Set Infx, rounded to desired refinement level (ILRes)
 Infx = LaneData.x(1):BaseData.ILRes:LaneData.x(end); Infx = Infx';
@@ -41,7 +33,7 @@ IntInfv = zeros(NumLanes,NumInfCases);
 % Before deciding to switch signs, get 
 for i = 1:NumInfCases
     % Start and End of InfCase Influence Lines
-    Start = StartCol+UniqInfs(i); End = StartCol+UniqInfs(i)+sum(UniqInfi == i)-1;
+    Start = StartCol+Inf.UniqStartInds(i); End = StartCol+Inf.UniqStartInds(i)+sum(Inf.UniqInds == i)-1;
     % Switch signs if necessary (program works when + is the maximum LE
     % Here we assume that the overall max value is on the side with max LE
     
@@ -53,7 +45,7 @@ for i = 1:NumInfCases
     % Now we interpolate the influence lines and populate Infv
     Infv(:,Start-StartCol:End-StartCol) = interp1(LaneData.x,LaneData{:,Start:End},Infx);
     
-    [a, k] = max(Infv(:,Start-StartCol:End-StartCol));
+    [~, k] = max(Infv(:,Start-StartCol:End-StartCol));
     
     for j = 1:End-Start + 1
         b(j) = interp1(LaneData.x,LaneData{:,Start+j-1},Infx(k(j))+0.6);
@@ -66,10 +58,10 @@ for i = 1:NumInfCases
     
     % If we give 0... we assume same IL for all lanes. If we give just
     % Shear in lane 2, for example, we assume 0 for all other lanes.
-    if InfLanes(UniqInfs(i)) == 0
+    if Inf.Lanes(Inf.UniqStartInds(i)) == 0
         MaxInfv(:,i) = repmat(aprime,NumLanes,1);       % a to aprime 20.2
     else
-        MaxInfv(InfLanes(UniqInfi == i),i) = aprime';   % a to aprime 20.2
+        MaxInfv(Inf.Lanes(Inf.UniqInds == i),i) = aprime';   % a to aprime 20.2
     end
 end
 
@@ -83,10 +75,10 @@ end
 
 % Assign integral values into IntInfv
 for i = 1:NumInfCases
-    if InfLanes(UniqInfs(i)) == 0
-        IntInfv(:,i) = repmat(Integration(UniqInfs(i)),NumLanes,1);
+    if Inf.Lanes(Inf.UniqStartInds(i)) == 0
+        IntInfv(:,i) = repmat(Integration(Inf.UniqStartInds(i)),NumLanes,1);
     else
-        IntInfv(InfLanes(UniqInfi == i),i) = Integration(UniqInfi == i)';
+        IntInfv(Inf.Lanes(Inf.UniqInds == i),i) = Integration(Inf.UniqInds == i)';
     end
 end
 

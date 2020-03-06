@@ -1,8 +1,8 @@
-function [NumTrTyp,TrDistCu,TrTyp] = GetTrPpties(TrData)
+function [NumTrTyp,TrTyp] = GetTrPpties(TrData)
 %GETTRPPTIES Grabs truck properties
 
 NumTrTyp = height(TrData.TrDistr);
-TrDistCu = cumsum(TrData.TrDistr.TrDistr); 
+TrTyp.DistCu = cumsum(TrData.TrDistr.TrDistr); 
 
 [TrTyp.NumAxPerGr, TrTyp.Priority, TrTyp.LinFit,  TrTyp.Allos] = deal(cell(NumTrTyp,1));
 [TrTyp.NumAx, TrTyp.NumAxGr] = deal(zeros(NumTrTyp,1));

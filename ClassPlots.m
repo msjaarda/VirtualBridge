@@ -15,15 +15,17 @@ format long g
 
 % INPUT -----------
 Year = 2018;
-Station = 'Ceneri';
-Vehicle = 0; % for histograms
+SName = 'Ceneri';
+Vehicle = 99; % for histograms
 % Options include each vehicle, 0, for unclassified 99 for all
 % -----------------
+
+load(['PrunedS1 WIM/',SName,'/',SName,'_',num2str(Year),'.mat']);
 
 
 % Make functions to generate data for hitograms
 % Basically... try to replicate Traffic Analysis ResultViewer!
-% First, define DataBase (Year, Station)
+% First, define DataBase (Year, SName)
 % Then, Define Vehicle Set (Start with just the classes INCLUDING non)
 % We need total weight histogram including "OUT"
 % We need distances between axle groups
@@ -40,7 +42,7 @@ Vehicle = 0; % for histograms
 
 
 % Let the Classify function add the .CLASS column to PD
-[PDC] = Classify(Station,Year);
+[PDC] = Classify(PD);
 
 % Remove later an experiment what if we didn't include those under 10 tonnes?
 % Under10t = PDC.GW_TOT<10000;
@@ -67,7 +69,7 @@ histogram(PDC.GW_TOT(TA)/102,range);
 HistoOutput = [edges(1:end-1)' num'];
 
 % Add title
-title(sprintf('Type %i Vehicles at %s %i',Vehicle,Station,Year))
+title(sprintf('Type %i Vehicles at %s %i',Vehicle,SName,Year))
 xlabel('Truck Weight (kN)')
 ylabel('Number of Trucks')
 
