@@ -7,6 +7,7 @@ figure
 
 % Get number and name of lanes
 Lanes = unique(PDC.FS); NumLanes = length(Lanes);
+NumLanePlots = length(LaneDir);
 
 % Add speed if it has none (for visual output)
 if ~ismember('SPEED', PDC.Properties.VariableNames)
@@ -20,7 +21,7 @@ Col{4} = Col{1}; Col{5} = Col{2}; Col{6} = Col{3};
 
 % Plot Influence Line
 % Open up subplot and choose the last subplot
-subplot(NumLanes+2,1,NumLanes+2)
+subplot(NumLanePlots+2,1,NumLanePlots+2)
 % Note that trucks go the other way that is plotted... must flip ILs
 if size(Infv,2) == 1
     plot(Infx,flip(-Infv),'k','LineWidth',1.5)
@@ -68,20 +69,29 @@ for i = 1:NumLanes
             locations = q{i}(q{i}(:,3) == a(j),1);
             axlevalues = q{i}(q{i}(:,3) == a(j),2);
             % Assign initial if necessary, assign ac if necessary
-            if locations(1) == 0
-                initial(i,j) = axlevalues(1);
+            % it could be any index of locations, now that we have traffic
+            % in each direction! FIX THIS.
+%             if locations(1) == 0
+%                 initial(i,j) = axlevalues(1);
+%             else
+%                 initial(i,j) = 0;
+%             end
+            
+            if sum(locations == 0) > 0
+                initial(i,j) = axlevalues(locations == 0);
             else
                 initial(i,j) = 0;
             end
             
+            
             if sum(locations) > 0
-                if locations(1) == 0
-                    ac{i}(:,j) = accumarray(locations(2:end),axlevalues(2:end),[Infx(end) 1]);
-                else
-                    ac{i}(:,j) = accumarray(locations,axlevalues,[Infx(end) 1]);
-                end
+%                 if locations(1) == 0
+                    ac{i}(:,j) = accumarray(locations(locations ~= 0),axlevalues(locations ~= 0),[Infx(end) 1]);
+%                 else
+%                     ac{i}(:,j) = accumarray(locations,axlevalues,[Infx(end) 1]);
+%                 end
             else
-                ac{i}(:,j) = zeros([length(Infx)-1 1]);
+                ac{i}(:,j) = zeros([Infx(end) 1]);
             end
             
             Temp = TrLineUp(TrLineUp(:,3) == a(j),5);
@@ -101,13 +111,18 @@ for i = 1:NumLanes
     end
 end
 
+if size(barp,2) < NumLanePlots
+    barp(1:size(barp,1), size(barp,2)+1:NumLanePlots) = 0.01;
+end
+
 % Plot axle loads
-subplot(length(Lanes)+2,1,length(Lanes)+1)
+subplot(NumLanePlots+2,1,NumLanePlots+1)
 h = bar(0:Infx(end),barp/9.81,1.2,'grouped','EdgeColor','k');
 % fixing the xlim doesn't allow visibility of maximums
 %xlim([0 max(Infx)])
 ylim([0 ceil(max(max(barp/9.81))/5)*5])
 ylabel('Axle Loads (t)')
+
 % Could add total weight on the bridge and DLA
 % SHEAR CALCS ARE WRONG BECAUSE WE DON"T KNOW WHAT IS AT position ZERO FIX!
 text(1,ceil(max(max(barp/9.81))/5)*5-3,sprintf('Total: %.0f (DLF = %.2f)',sum(sum(barp)),DLF),'FontSize',11,'FontWeight','bold','Color','k')
@@ -133,61 +148,64 @@ if any(strcmp('AllVehPlat',T.Properties.VariableNames))
 end
 
 count = 0;
-for j = 1:NumLanes
-    subplot(length(Lanes)+2,1,j)
-    for i = 1:numel((vc{j}))/2
-        hold on
-        % Change color if vehicle is in a platoon
-        if j == 1 && any(strcmp('AllVehPlat',T.Properties.VariableNames)) && q{j}(G(i),6)
-            Fillcolor = [0.7 0 0];
-            count = count + 1;
+for j = 1:NumLanePlots
+    subplot(NumLanePlots+2,1,j)
+    if j <= length(Lanes)
+        for i = 1:numel((vc{j}))/2
+            hold on
+            % Change color if vehicle is in a platoon
+            if j == 1 && any(strcmp('AllVehPlat',T.Properties.VariableNames)) && q{j}(G(i),6)
+                Fillcolor = [0.7 0 0];
+                count = count + 1;
             else
-            Fillcolor = [0.6 0.6 0.6];
-            count = 0;
+                Fillcolor = [0.6 0.6 0.6];
+                count = 0;
+            end
+            % Truck Outline
+            fill([vc{j}(i,1) vc{j}(i,1) vc{j}(i,2) vc{j}(i,2)],[2 8 8 2],Col{j},'EdgeColor',Fillcolor,'LineWidth',1.5);
+            if LaneDir(j) == 1
+                % Back Bumper
+                fill([vc{j}(i,2)-0.1 vc{j}(i,2)-0.1 vc{j}(i,2)+0.1 vc{j}(i,2)+0.1],[2.5 7.5 7.5 2.5],'w','EdgeColor',Fillcolor,'LineWidth',1.5);
+                % Front of Truck
+                fill([vc{j}(i,1)-0.7 vc{j}(i,1)-0.7 vc{j}(i,1) vc{j}(i,1)],[3.75 6.25 7 3],'w','EdgeColor',Fillcolor,'LineWidth',1.5);
+                % Mirrors
+                fill([vc{j}(i,1)+1.1 vc{j}(i,1)+1.3 vc{j}(i,1)+1.5 vc{j}(i,1)+1.3],[2 1.5 1.5 2],'w','EdgeColor',Fillcolor,'LineWidth',1.5);
+                fill([vc{j}(i,1)+1.1 vc{j}(i,1)+1.3 vc{j}(i,1)+1.5 vc{j}(i,1)+1.3],[8 8.5 8.5 8],'w','EdgeColor',Fillcolor,'LineWidth',1.5);
+            else
+                % Back Bumper
+                fill([vc{j}(i,1)-0.1 vc{j}(i,1)-0.1 vc{j}(i,1)+0.1 vc{j}(i,1)+0.1],[2.5 7.5 7.5 2.5],'w','EdgeColor',Fillcolor,'LineWidth',1.5);
+                % Front of Truck
+                fill([vc{j}(i,2)+0.7 vc{j}(i,2)+0.7 vc{j}(i,2) vc{j}(i,2)],[3.75 6.25 7 3],'w','EdgeColor',Fillcolor,'LineWidth',1.5);
+                % Mirrors
+                fill([vc{j}(i,2)-1.1 vc{j}(i,2)-1.3 vc{j}(i,2)-1.5 vc{j}(i,2)-1.3],[2 1.5 1.5 2],'w','EdgeColor',Fillcolor,'LineWidth',1.5);
+                fill([vc{j}(i,2)-1.1 vc{j}(i,2)-1.3 vc{j}(i,2)-1.5 vc{j}(i,2)-1.3],[8 8.5 8.5 8],'w','EdgeColor',Fillcolor,'LineWidth',1.5);
+            end
+            if count > 1
+                fill([vc{j}(i,1)-1.5 vc{j}(i,1)-1.5 vc{j}(i,1)-1.5 vc{j}(i,1)-1.5],[3.2 6.8 6.8 3.2],'w','EdgeColor',Fillcolor,'LineWidth',1.5);
+                fill([vc{j}(i,1)-1.8 vc{j}(i,1)-1.8 vc{j}(i,1)-1.8 vc{j}(i,1)-1.8],[3.5 6.5 6.5 3.5],'w','EdgeColor',Fillcolor,'LineWidth',1.5);
+                fill([vc{j}(i,1)-2.1 vc{j}(i,1)-2.1 vc{j}(i,1)-2.1 vc{j}(i,1)-2.1],[3.8 6.2 6.2 3.8],'w','EdgeColor',Fillcolor,'LineWidth',1.5);
+            end
+            % Only write text if it is within the plot...
+            if (vc{j}(i,1)+vc{j}(i,2))/2 > max(Infx)/15 && (vc{j}(i,1)+vc{j}(i,2))/2 < max(Infx)-max(Infx)/15
+                text((vc{j}(i,1)+vc{j}(i,2))/2,5,sprintf('%i ax | %.1f t',t{j}.AX(i),t{j}.GW_TOT(i)/1000),'FontSize',11,'FontWeight','bold','HorizontalAlignment','center','Color','k')
+            end
+            if (vc{j}(i,1)+vc{j}(i,2))/2 > max(Infx)/15 && (vc{j}(i,1)+vc{j}(i,2))/2 < max(Infx)-max(Infx)/15
+                text((vc{j}(i,1)+vc{j}(i,2))/2,9,sprintf('%.0f kph',t{j}.SPEED(i)/100),'FontSize',11,'FontWeight','bold','HorizontalAlignment','center','Color','k')
+            end
         end
-        % Truck Outline
-        fill([vc{j}(i,1) vc{j}(i,1) vc{j}(i,2) vc{j}(i,2)],[2 8 8 2],Col{j},'EdgeColor',Fillcolor,'LineWidth',1.5);
-        if LaneDir(j) == 1
-            % Back Bumper
-            fill([vc{j}(i,2)-0.1 vc{j}(i,2)-0.1 vc{j}(i,2)+0.1 vc{j}(i,2)+0.1],[2.5 7.5 7.5 2.5],'w','EdgeColor',Fillcolor,'LineWidth',1.5);
-            % Front of Truck
-            fill([vc{j}(i,1)-0.7 vc{j}(i,1)-0.7 vc{j}(i,1) vc{j}(i,1)],[3.75 6.25 7 3],'w','EdgeColor',Fillcolor,'LineWidth',1.5);
-            % Mirrors
-            fill([vc{j}(i,1)+1.1 vc{j}(i,1)+1.3 vc{j}(i,1)+1.5 vc{j}(i,1)+1.3],[2 1.5 1.5 2],'w','EdgeColor',Fillcolor,'LineWidth',1.5);
-            fill([vc{j}(i,1)+1.1 vc{j}(i,1)+1.3 vc{j}(i,1)+1.5 vc{j}(i,1)+1.3],[8 8.5 8.5 8],'w','EdgeColor',Fillcolor,'LineWidth',1.5);
-        else
-            % Back Bumper
-            fill([vc{j}(i,1)-0.1 vc{j}(i,1)-0.1 vc{j}(i,1)+0.1 vc{j}(i,1)+0.1],[2.5 7.5 7.5 2.5],'w','EdgeColor',Fillcolor,'LineWidth',1.5);
-            % Front of Truck
-            fill([vc{j}(i,2)+0.7 vc{j}(i,2)+0.7 vc{j}(i,2) vc{j}(i,2)],[3.75 6.25 7 3],'w','EdgeColor',Fillcolor,'LineWidth',1.5);
-            % Mirrors
-            fill([vc{j}(i,2)-1.1 vc{j}(i,2)-1.3 vc{j}(i,2)-1.5 vc{j}(i,2)-1.3],[2 1.5 1.5 2],'w','EdgeColor',Fillcolor,'LineWidth',1.5);
-            fill([vc{j}(i,2)-1.1 vc{j}(i,2)-1.3 vc{j}(i,2)-1.5 vc{j}(i,2)-1.3],[8 8.5 8.5 8],'w','EdgeColor',Fillcolor,'LineWidth',1.5);
-        end       
-        if count > 1
-            fill([vc{j}(i,1)-1.5 vc{j}(i,1)-1.5 vc{j}(i,1)-1.5 vc{j}(i,1)-1.5],[3.2 6.8 6.8 3.2],'w','EdgeColor',Fillcolor,'LineWidth',1.5);
-            fill([vc{j}(i,1)-1.8 vc{j}(i,1)-1.8 vc{j}(i,1)-1.8 vc{j}(i,1)-1.8],[3.5 6.5 6.5 3.5],'w','EdgeColor',Fillcolor,'LineWidth',1.5);
-            fill([vc{j}(i,1)-2.1 vc{j}(i,1)-2.1 vc{j}(i,1)-2.1 vc{j}(i,1)-2.1],[3.8 6.2 6.2 3.8],'w','EdgeColor',Fillcolor,'LineWidth',1.5);
-        end
-        % Only write text if it is within the plot...
-        if (vc{j}(i,1)+vc{j}(i,2))/2 > max(Infx)/15 && (vc{j}(i,1)+vc{j}(i,2))/2 < max(Infx)-max(Infx)/15
-            text((vc{j}(i,1)+vc{j}(i,2))/2,5,sprintf('%i ax | %.1f t',t{j}.AX(i),t{j}.GW_TOT(i)/1000),'FontSize',11,'FontWeight','bold','HorizontalAlignment','center','Color','k')
-        end
-        if (vc{j}(i,1)+vc{j}(i,2))/2 > max(Infx)/15 && (vc{j}(i,1)+vc{j}(i,2))/2 < max(Infx)-max(Infx)/15
-            text((vc{j}(i,1)+vc{j}(i,2))/2,9,sprintf('%.0f kph',t{j}.SPEED(i)/100),'FontSize',11,'FontWeight','bold','HorizontalAlignment','center','Color','k')
-        end
+        % Add wheel locations (column 5 has actual wheel locations, column 1 would be approximate)
+        hold on
+        scatter(q{j}(:,5),7*ones(size(q{j},1),1),'filled','s','MarkerFaceColor','k')
+        hold on
+        scatter(q{j}(:,5),3*ones(size(q{j},1),1),'filled','s','MarkerFaceColor','k')
+        xlim([0 max(Infx)]); ylim([0 10])
+        ylabel(['Lane ' num2str(Lanes(j))]); set(gca,'ytick',[]); set(gca,'yticklabel',[])
+    else
+        xlim([0 max(Infx)]); ylim([0 10])
+        ylabel(['Lane ' num2str(Lanes(j-1)+1)]); set(gca,'ytick',[]); set(gca,'yticklabel',[])
     end
-    % Add wheel locations (column 5 has actual wheel locations, column 1 would be approximate)
-    hold on
-    scatter(q{j}(:,5),7*ones(size(q{j},1),1),'filled','s','MarkerFaceColor','k')
-    hold on
-    scatter(q{j}(:,5),3*ones(size(q{j},1),1),'filled','s','MarkerFaceColor','k')
-    xlim([0 max(Infx)]); ylim([0 10])
-    ylabel(['Lane ' num2str(Lanes(j))]); set(gca,'ytick',[]); set(gca,'yticklabel',[]) 
-%     if Direction(j) == 2
-%         set(gca,'xdir','reverse')
-%     end
-    % Switch based on direction?
+    
+
 end
 set(gcf,'Position',[100 100 900 750])
 

@@ -24,7 +24,7 @@ TrLineUp(:,1) = round(TrLineUp(:,1)/ILRes);
 
 % Add to avoid subscript 0 for indexing
 if TrLineUp(1,1) < ILRes
-    TrLineUp(:,1) = TrLineUp(:,1)+(ResILs-TrLineUp(1,1));
+    TrLineUp(:,1) = TrLineUp(:,1)+(ILRes-TrLineUp(1,1));
 end
 
 % Initialize AllTrAx

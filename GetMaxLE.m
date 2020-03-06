@@ -35,6 +35,7 @@ vDLF = AllTrAx(:,end);
 for i = 1:size(Infv,2)
     
     % Create v, and u, the vectors that will be convoluted
+    % PROBLEM HERE... SOMETIMES TRAX has only 1 col. TO FIX
     v = TrAx(:,InfLanes(i));
     u = Infv(:,i);
     % Load, v, and Influence, u, convolution into R
@@ -80,12 +81,12 @@ end
 BrStInd = StLoc-length(Infv)+1;
 
 % Get Axles on Bridge... a little tricky because of indexing
-if BrStInd-1+length(Infv) > length(AllTrAx)
+if BrStInd-1+length(Infv) > length(TrAx) && BrStInd > 0
     AxonBr = zeros(length(Infv),1);
-    AxonBr(1:length(AllTrAx((BrStInd):end))) = AllTrAx((BrStInd):end);
+    AxonBr(1:length(TrAx((BrStInd):end))) = TrAx((BrStInd):end);
 elseif BrStInd < 1
     AxonBr = zeros(length(Infv),1);
-    AxonBr(end-length(AllTrAx(1:(BrStInd-1)+length(Infv)))+1:end) = AllTrAx(1:(BrStInd-1)+length(Infv));
+    AxonBr(end-length(TrAx(1:(BrStInd-1)+length(Infv)))+1:end) = TrAx(1:(BrStInd-1)+length(Infv));
 else
     AxonBr = TrAx((BrStInd):(BrStInd-1)+length(Infv),:);
 end

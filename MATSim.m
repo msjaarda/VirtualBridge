@@ -9,7 +9,7 @@
 clear, clc, close all, format long g, rng('shuffle');
 
 % Input File or Folder Name 
-InputF = 'MATSimInputSimple.xlsx'; Folder_Name = '/';
+InputF = 'MATSimInputAGBSimple.xlsx'; Folder_Name = '/AGB4p4'; %'/' b4
 
 % Read in simulation data
 [BaseData,LaneData,TrData,FolDist] = ReadInputFile(['Input/' InputF]);

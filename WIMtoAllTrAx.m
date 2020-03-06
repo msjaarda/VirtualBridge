@@ -189,7 +189,8 @@ TrLineUp = [WBv AXv TrNum LaneNum];
 TrLineUp(:,1) = round(TrLineUp(:,1)/ILRes);
 
 % Make a separate axle stream vector for each lane, and last one for all
-AllTrAx = zeros(max(TrLineUp(:,1)),length(Lanes)+1);
+% Put max() function in incase one lane has no representation in TrLineUp
+AllTrAx = zeros(max(TrLineUp(:,1)),max(length(LaneDir),length(Lanes))+1);
 
 for i = 1:length(Lanes)
     A = accumarray(TrLineUp(TrLineUp(:,4)==Lanes(i),1),TrLineUp(TrLineUp(:,4)==Lanes(i),2));
