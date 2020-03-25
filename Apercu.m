@@ -130,6 +130,9 @@ text(1,ceil(max(max(barp/9.81))/5)*5-3,sprintf('Total: %.0f (DLF = %.2f)',sum(su
 if ILRes ~= 0
     xtemp = 0:1:Infx(end);
     Infvtemp = interp1(Infx,Infv,xtemp);
+    if size(Infvtemp,1) == 1
+        Infvtemp = Infvtemp';
+    end
 else
     Infvtemp = Infv;
 end

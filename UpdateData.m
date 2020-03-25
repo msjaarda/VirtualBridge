@@ -2,10 +2,14 @@ function [NumLanes,Lane,LaneData,TrData,FolDist] = UpdateData(BaseData,LaneData,
 %UPDATEDATA UpdateData, based on row-by-row input in BaseData
 
 % Get Lane Truck Distribution, Lane.TrDistr, and Lane Directions, Lane.Dir
-Lane.TrDistr =  cellfun(@str2num,split(BaseData.LaneTrDistr{:},','));
-Lane.Dir =  cellfun(@str2num,split(BaseData.LaneDir{:},','));
-% Get NumLanes
-NumLanes = length(Lane.TrDistr);
+if ismember('LaneTrDistr', BaseData.Properties.VariableNames)
+    Lane.TrDistr =  cellfun(@str2num,split(BaseData.LaneTrDistr{:},','));
+end
+if ismember('LaneDir', BaseData.Properties.VariableNames)
+    Lane.Dir =  cellfun(@str2num,split(BaseData.LaneDir{:},','));
+    % Get NumLanes
+    NumLanes = length(Lane.Dir);
+end
 
 % Update FolDist if necessary
 if ismember('Flow', BaseData.Properties.VariableNames)

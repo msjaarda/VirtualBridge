@@ -8,7 +8,7 @@ FixVars.PlatFolDistFrRe = [4 4];
 FixVars.CarWgt = 0;          % Car's weight in kN
 
 % Define maximum batch size
-BatchMax = 1000000;
+BatchMax = 1000001;
 % Define Platoon percentage cutoff
 PlatCutOff = 0.02;
 

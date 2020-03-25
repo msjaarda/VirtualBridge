@@ -83,7 +83,7 @@ for i = 1:NumInfCases
 end
 
 % Do ESIA while we are here...
-ESIA = zeros(1,NumInfCases);
+ESIA.Total = zeros(1,NumInfCases);
 % Define ESIA details
 LaneWidth = 3; % m
 Qk = zeros(NumLanes,1);
@@ -100,7 +100,9 @@ for i = 1:NumInfCases
     %Intv = sort(IntInfv(:,i),'descend');
     Maxv = MaxInfv(:,i);
     Intv = IntInfv(:,i);
-    ESIA(i) = 1.5*Alpha*(Maxv'*Qk*2+Intv'*qk*LaneWidth);
+    ESIA.Total(i) = 1.5*Alpha*(Maxv'*Qk*2+Intv'*qk*LaneWidth);
+    ESIA.EQ = Maxv.*Qk*2;
+    ESIA.Eq = Intv'*qk*LaneWidth;
 end
   
 end

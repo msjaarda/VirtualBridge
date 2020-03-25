@@ -9,7 +9,7 @@
 clear, clc, close all, format long g, rng('shuffle');
 
 % Input File or Folder Name 
-InputF = 'MATSimInputAGBSimple.xlsx'; Folder_Name = '/AGB4p4'; %'/' b4
+InputF = 'MATSimAGBSimple43.xlsx'; Folder_Name = '/AGB4p3'; %'/' b4
 
 % Read in simulation data
 [BaseData,LaneData,TrData,FolDist] = ReadInputFile(['Input/' InputF]);
@@ -30,10 +30,7 @@ for g = 1:height(BaseData)
 [Num.TrTyp,TrTyp] = GetTrPpties(TrData);
 
 % Get Per Lane Rates including TRs and TransProbs
-[Lane.NumVeh, TransPrTT, TransPrCC, Surplus] = PerLaneRates(FolDist,BaseData(g,:),Num,FixVars,TrData,TrTyp.NumAxPerGr,BatchSize,Lane);
-
-% Check for program warnings, initialize empty vars
-MATSimWarnings(TrTyp.DistCu, BaseData.BunchFactor(g), BaseData.RunPlat(g), TransPrTT); 
+[Lane.NumVeh, TransPrTT, TransPrCC, Surplus, Lane.DistCu] = PerLaneRates(FolDist,BaseData(g,:),Num,FixVars,TrData,TrTyp.NumAxPerGr,BatchSize,Lane);
 
 % Initialize empty vars
 [VirtualWIM, OverMax, ApercuOverMax] = deal([]);
@@ -41,8 +38,8 @@ MATSimWarnings(TrTyp.DistCu, BaseData.BunchFactor(g), BaseData.RunPlat(g), Trans
 % Initialize parpool if necessary and initialize progress bar
 if BaseData.Parallel(g) > 0, gcp; clc; end, m = StartProgBar(BaseData.NumSims(g), Num.Batches, g, height(BaseData)); tic; st = now;
 
-%parfor (v = 1:BaseData.NumSims(g), BaseData.Parallel(g)*100)
-for v = 1:BaseData.NumSims(g)  
+parfor (v = 1:BaseData.NumSims(g), BaseData.Parallel(g)*100)
+%for v = 1:BaseData.NumSims(g)  
     
     % Initialize variables outside of batch simulation loop
     LaneAxLineUp = cell(Num.Lanes,1); LaneVehLineUp = cell(Num.Lanes,1); ApercuMax = [];
@@ -57,7 +54,7 @@ for v = 1:BaseData.NumSims(g)
             if Lane.TrDistr(q) ~= 0 || FixVars.CarWgt > 0
 
                 % 1) Flo.Veh/Trans | Get Flow of Cars (0s) and Trucks (#s 1 to Num.TrTyp)
-                Flo = GetFloVeh(Lane.NumVeh,TransPrTT,TransPrCC,BaseData.BunchFactor(g),q,TrTyp.DistCu);
+                Flo = GetFloVeh(Lane.NumVeh,TransPrTT,TransPrCC,BaseData.BunchFactor(g),q,Lane.DistCu(:,q));
                 
                 % 2) Flo.Wgt | Get Truck / Axle Weights (kN)
                 Flo = GetFloWgt(Num.TrTyp,Lane.NumVeh(q),Flo,TrData.TrDistr);
@@ -138,7 +135,7 @@ if BaseData.NumSims(g) == 1
 end
 
 % Get ESIM and Ratio
-ESIM = 1.1*prctile(OverMax,99); Ratio = ESIM./ESIA;
+ESIM = 1.1*prctile(OverMax,99); Ratio = ESIM./ESIA.Total;
 
 % Print Summary Stats to Command Window
 PrintSummary(BaseData(g,:),BatchSize,PlatPct,TrData,Num,VirtualWIM,Time,Lane.TrDistr)
@@ -150,7 +147,7 @@ TName = datestr(now,'mmmdd-yy HHMM');
 
 % Write results to a file (put into function)
 if BaseData.Save(g) == 1
-    SaveSummary(TName,strcat('Output', Folder_Name, '/MATSimOutput', InputF(12:end-5),'.xlsx'),TrData,BaseData(g,:),Time,Inf.UniqNames,FolDist,LaneData,ESIM,ESIA,Ratio,OverMax);
+    SaveSummary(TName,strcat('Output', Folder_Name, '/MATSimOutput', InputF(12:end-5),'.xlsx'),TrData,BaseData(g,:),Time,Inf.UniqNames,FolDist,LaneData,ESIM,ESIA.Total,Ratio,OverMax);
 end
 
 % Convert VirtualWIMs to tables and save if necessary
@@ -181,7 +178,7 @@ end
 
 % Run Apercu to see critical case
 if BaseData.Apercu(g) == 1
-    [T, OverMx, AllTrAxx] = GetApercu(PD,OverMAXT,Num.InfCases,Inf,BaseData.RunDyn(g),ESIA,Lane.Dir,BaseData.ILRes(g));
+    [T, OverMx, AllTrAxx] = GetApercu(PD,OverMAXT,Num.InfCases,Inf,BaseData.RunDyn(g),ESIA.Total,Lane.Dir,BaseData.ILRes(g));
 end
 
 

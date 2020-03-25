@@ -1,11 +1,14 @@
 clear, clc, hold off, close all, format long g
 
 % File #1: Year, #, Station Name, string
-Year = 2017; SName = 'Ceneri'; 
+%Year = 2017; SName = 'Ceneri'; 
+Year = 2003; SName = 'Denges'; 
 % File #2: Year, #, Station Name, string
-Name = 'WIM_Nov14 1419';
+%Name = 'WIM_Nov14 1419';
+Year2 = 2017; SName2 = 'Denges';
 
-load(['VirtualWIM/',Name,'.mat']); PDC2 = Classify(PD);
+%load(['VirtualWIM/',Name,'.mat']); PDC2 = Classify(PD);
+load(['PrunedS1 WIM/',SName2,'/',SName2,'_',num2str(Year2),'.mat']); PDC2 = Classify(PD);
 load(['PrunedS1 WIM/',SName,'/',SName,'_',num2str(Year),'.mat']); PDC = Classify(PD);
 
 % Stage 2 Custom Pruning (two more of our own)

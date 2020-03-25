@@ -9,7 +9,7 @@ tic, clear, clc, close all, format long g, rng('shuffle'); st = now;
 
 % Input File Name
 FolderName = 'PlatStud60m';
-OutFileName = ;
+%OutFileName = ;
 %InputFile = 'Input/MATSimInputx.xlsx';
 %InputFile = 'Input/PlatStud60m/MATSimInputPlatStudSS60Base.xlsx';
 InputFile = ['Input/' FolderName '/' MATSimInputPlatStudSS60Base.xlsx';
