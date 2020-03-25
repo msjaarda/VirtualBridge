@@ -73,6 +73,7 @@ if ismember('ILs', BaseData.Properties.VariableNames)
         load('InfLib.mat')
     end
     
+    clear LaneData
     % Here we create Infx and Infv just as they would be in LaneData form
     
     % A generic 'V', 'Mp', or 'Mn' means all ILs for that Library
@@ -84,7 +85,7 @@ if ismember('ILs', BaseData.Properties.VariableNames)
     LaneData.Name = [];
     LaneData.Lane = [];
     LaneData.x = [];
-    LaneData.Infv = [];
+    LaneData.Infv = zeros(0);
     
     % Start with Infv and x
     for i = 1:length(ILs)

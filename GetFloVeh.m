@@ -21,7 +21,8 @@ if BunchFactor == 1
     Flo.Veh(rand(LaneNumVeh(q),1) < TransPrTT(q)) = 1;
        
     % First vehicle must always be a car... to avoid subscript of zero later
-    % Changed from 0 to 1 or 0... see if it ever causes an error!
+    % Changed from 0 to 1 or 0... see if it ever causes an error! not so
+    % far... could remove
     Flo.Veh(1) = randi(2) -1;
     % Place a random number at the start (doesn't matter... who knows what
     % vehicle is infront of this vehicle stream!)

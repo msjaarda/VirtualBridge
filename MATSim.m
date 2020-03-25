@@ -9,7 +9,7 @@
 clear, clc, close all, format long g, rng('shuffle');
 
 % Input File or Folder Name 
-InputF = 'MATSimAGBSimple43.xlsx'; Folder_Name = '/AGB4p3'; %'/' b4
+InputF = 'MATSimInputAGBSimple43.xlsx'; Folder_Name = '/AGB4p3'; %'/' b4
 
 % Read in simulation data
 [BaseData,LaneData,TrData,FolDist] = ReadInputFile(['Input/' InputF]);
@@ -33,7 +33,7 @@ for g = 1:height(BaseData)
 [Lane.NumVeh, TransPrTT, TransPrCC, Surplus, Lane.DistCu] = PerLaneRates(FolDist,BaseData(g,:),Num,FixVars,TrData,TrTyp.NumAxPerGr,BatchSize,Lane);
 
 % Initialize empty vars
-[VirtualWIM, OverMax, ApercuOverMax] = deal([]);
+[VirtualWIM, OverMax, ApercuOverMax, TableNames] = deal([]);
 
 % Initialize parpool if necessary and initialize progress bar
 if BaseData.Parallel(g) > 0, gcp; clc; end, m = StartProgBar(BaseData.NumSims(g), Num.Batches, g, height(BaseData)); tic; st = now;

@@ -10,11 +10,12 @@ function [MaxLE,MaxLEStatic,DLF,BrStInd,AxonBr,FirstAxInd,FirstAx] = GetMaxLE(Al
 
 % If the influence line applies to all lanes, take simple AllTrAx (end col)
 if Inf.Lanes(Inf.UniqStartInds(InfCase)) == 0
-    TrAx = AllTrAx(:,end);
-    InfLanes = 1;
+    %TrAx = AllTrAx(:,end);           Try using direct... save time
+    %InfLanes = 1;
+    InfLanes = size(AllTrAx,2);
 % If not, take lane specific AllTrAx (all but end)
 else
-    TrAx = AllTrAx(:,1:end-1);
+    %TrAx = AllTrAx(:,1:end-1);     Try using direct... save time
     InfLanes = Inf.Lanes(Inf.UniqInds == InfCase);
 end
 
@@ -29,23 +30,28 @@ end
 % Influence ordinates for dynamic effects are simply 1
 uDLF = ones(length(Infv),1);
 % Get full weight on bridge for DLA
-vDLF = AllTrAx(:,end);
+%vDLF = AllTrAx(:,end); place directly inside!
+
+% Preallocate R
+Rx = zeros(size(AllTrAx,1)+size(Infv,1)-1,size(Infv,2));
 
 % Compute maximum load effects
 for i = 1:size(Infv,2)
     
     % Create v, and u, the vectors that will be convoluted
     % PROBLEM HERE... SOMETIMES TRAX has only 1 col. TO FIX
-    v = TrAx(:,InfLanes(i));
-    u = Infv(:,i);
+    %v = AllTrAx(:,InfLanes(i));   Try using direct... save time
+    %u = Infv(:,i);                Try using direct... save time
     % Load, v, and Influence, u, convolution into R
-    R(:,:,i) = conv(u,v);
+    Rx(:,i) = conv(Infv(:,i),AllTrAx(:,InfLanes(i)));
      
 end
 
-% If there is more than one ifluence line, perform first sum
+% If there is more than one influence line, perform first sum
 if size(Infv,2) > 1
-    R = sum(R,3);
+    R = sum(Rx,2);
+else
+    R = Rx;
 end
 
 % If we want, we can include the static and dynamic results separately...
@@ -61,7 +67,7 @@ end
 if RunDyn == 1
     
     % Load, v, and Influence, u, convolution into R to get Weight Result WR
-    WR = conv(uDLF,vDLF);
+    WR = conv(uDLF,AllTrAx(:,end));
     % Convert WeightResult into DLA using formula from Bailey
     DLFResult = 1.5-WR/3000;
     DLFResult(WR > 1500) = 1;
@@ -81,14 +87,14 @@ end
 BrStInd = StLoc-length(Infv)+1;
 
 % Get Axles on Bridge... a little tricky because of indexing
-if BrStInd-1+length(Infv) > length(TrAx) && BrStInd > 0
+if BrStInd-1+length(Infv) > length(AllTrAx) && BrStInd > 0
     AxonBr = zeros(length(Infv),1);
-    AxonBr(1:length(TrAx((BrStInd):end))) = TrAx((BrStInd):end);
+    AxonBr(1:length(AllTrAx((BrStInd):end,end))) = AllTrAx((BrStInd):end,end);
 elseif BrStInd < 1
     AxonBr = zeros(length(Infv),1);
-    AxonBr(end-length(TrAx(1:(BrStInd-1)+length(Infv)))+1:end) = TrAx(1:(BrStInd-1)+length(Infv));
+    AxonBr(end-length(AllTrAx(1:(BrStInd-1)+length(Infv)))+1:end) = AllTrAx(1:(BrStInd-1)+length(Infv),end);
 else
-    AxonBr = TrAx((BrStInd):(BrStInd-1)+length(Infv),:);
+    AxonBr = AllTrAx(BrStInd:(BrStInd-1)+length(Infv),end);
 end
 
 % Find indexes for AxonBr

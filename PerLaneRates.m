@@ -182,40 +182,40 @@ else
     MATSimWarnings(cumsum(TrData.TrDistr.TrDistr), BaseData.BunchFactor, BaseData.RunPlat, TrTrTransProb); 
     
 
-    % Now that we have the TrRates and TransProbs repeat the process! It is iterative...
-    ratio = 0;
-    while abs(1-ratio) > 0.00001
-        % 1b) Find weighted average following distances considering the
-        % truck rate and the platooning rate... need them for slow and
-        % normal lane now
-        WgtAvgCC = (1-LaneTrRate).*CarCarTransProb*AvgCC;
-        WgtAvgCT = (1-LaneTrRate).*CarTrTransProb*AvgCT;
-        WgtAvgTC = LaneTrRate.*TrCarTransProb*AvgTC;
-        WgtAvgTT = LaneTrRate.*TrTrTransProb*AvgTT;
-        
-        % 3a) Define Upper/Lower Bounds for Relative Lengths (m/veh) (no trucks, all trucks)
-        RelLen = LaneTrRate*WgtAvgLenTr+(1-LaneTrRate)*sum(CarFrAxRe)+(WgtAvgTT+WgtAvgTC+WgtAvgCT+WgtAvgCC);
-        
-        % Convert to veh/m
-        RelVeh = 1./RelLen;
-
-        % 4) Solve for expected number vehicles per lane, and lane truck rates
-        x = NumVeh/sum(RelVeh);
-        ratio = mean(LaneAvgNumVeh./(x*RelVeh));
-        LaneAvgNumVeh = x*RelVeh;
-        LaneAvgNumTr = BaseData.TrRate*NumVeh*Lane.TrDistr/100;
-        LaneTrRate = LaneAvgNumTr./LaneAvgNumVeh;
-        
-        % Still use regular formulas here for platoon lane... because
-        % swapping hasn't occured
-        TrTrTransProb = min(0.98,LaneTrRate*BaseData.BunchFactor);
-        TrCarTransProb = 1-TrTrTransProb;
-        CarTrTransProb = LaneTrRate.*(1-TrTrTransProb)./(1-LaneTrRate);
-        CarCarTransProb = 1-CarTrTransProb;
-        
-        LaneAvgNumVeh = round(LaneAvgNumVeh);
-        
-    end
+%     % Now that we have the TrRates and TransProbs repeat the process! It is iterative...
+%     ratio = 0;
+%     while abs(1-ratio) > 0.00001
+%         % 1b) Find weighted average following distances considering the
+%         % truck rate and the platooning rate... need them for slow and
+%         % normal lane now
+%         WgtAvgCC = (1-LaneTrRate).*CarCarTransProb*AvgCC;
+%         WgtAvgCT = (1-LaneTrRate).*CarTrTransProb*AvgCT;
+%         WgtAvgTC = LaneTrRate.*TrCarTransProb*AvgTC;
+%         WgtAvgTT = LaneTrRate.*TrTrTransProb*AvgTT;
+%         
+%         % 3a) Define Upper/Lower Bounds for Relative Lengths (m/veh) (no trucks, all trucks)
+%         RelLen = LaneTrRate*WgtAvgLenTr+(1-LaneTrRate)*sum(CarFrAxRe)+(WgtAvgTT+WgtAvgTC+WgtAvgCT+WgtAvgCC);
+%         
+%         % Convert to veh/m
+%         RelVeh = 1./RelLen;
+% 
+%         % 4) Solve for expected number vehicles per lane, and lane truck rates
+%         x = NumVeh/sum(RelVeh);
+%         ratio = mean(LaneAvgNumVeh./(x*RelVeh));
+%         LaneAvgNumVeh = x*RelVeh;
+%         LaneAvgNumTr = BaseData.TrRate*NumVeh*Lane.TrDistr/100;
+%         LaneTrRate = LaneAvgNumTr./LaneAvgNumVeh;
+%         
+%         % Still use regular formulas here for platoon lane... because
+%         % swapping hasn't occured
+%         TrTrTransProb = min(0.98,LaneTrRate*BaseData.BunchFactor);
+%         TrCarTransProb = 1-TrTrTransProb;
+%         CarTrTransProb = LaneTrRate.*(1-TrTrTransProb)./(1-LaneTrRate);
+%         CarCarTransProb = 1-CarTrTransProb;
+%         
+%         LaneAvgNumVeh = round(LaneAvgNumVeh);
+%         
+%     end
 end
 
 

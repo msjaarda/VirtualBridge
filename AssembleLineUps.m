@@ -34,16 +34,27 @@ AxLineUp = sortrows(AxLineUp);
 AxLineUp(AxLineUp(:,5) == 1,5) = 1:length(AxLineUp(AxLineUp(:,5) == 1,5));
 
 % If we have platoons (couldn't estimate length perfectly, hence Suprlus variable) trim to length
+% Why not do regardless?
 if BaseData.RunPlat == 1
     if FixVars.CarWgt == 0
-        AxLineUp = AxLineUp(1:find(AxLineUp(:,5) == BatchSize*BaseData.TrRate),:);
+        Index = find(AxLineUp(:,5) == BatchSize*BaseData.TrRate);
+        % Add until we are at the end of that vehicle
+        while AxLineUp(Index + 1,3) == AxLineUp(Index,3)
+           Index = Index + 1; 
+        end
+        AxLineUp = AxLineUp(1:Index,:);
     else
-        AxLineUp = AxLineUp(1:find(AxLineUp(:,5) == BatchSize),:);
+        Index = find(AxLineUp(:,5) == BatchSize);
+        % Add until we are at the end of that vehicle
+        while AxLineUp(Index + 1,3) == AxLineUp(Index,3)
+           Index = Index + 1; 
+        end
+        AxLineUp = AxLineUp(1:Index,:);
     end
 end
 
 
-
+VehLineUp = [];
 
 
 % Done creating AxLineUp... now create VehLineUp if necessary
@@ -73,6 +84,7 @@ if BaseData.VWIM == 1 || BaseData.Apercu == 1
     VehLineUp = sortrows(VehLineUp);
     
     % If we have platoons (couldn't estimate length perfectly, hence Suprlus variable) trim to length
+    % Why not do regardless?
     if BaseData.RunPlat == 1
         if FixVars.CarWgt == 0
             VehLineUp = VehLineUp(1:BatchSize*BaseData.TrRate,:);
