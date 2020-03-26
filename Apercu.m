@@ -1,6 +1,11 @@
 function T = Apercu(PDC,Title,Infx,Infv,BrStInd,TrLineUp,PEsia,DLF,LaneDir,ILRes)
 % Plot A Series of WIM or VWIM Vehicles on a Bridge
 
+
+% Trim ILs
+Infv = Infv(~isnan(Infv)); Infx = Infx(~isnan(Infv));
+
+
 % Not Quite Ready for ILRes ~= 1
 
 figure
@@ -112,7 +117,7 @@ for i = 1:NumLanes
 end
 
 if size(barp,2) < NumLanePlots
-    barp(1:size(barp,1), size(barp,2)+1:NumLanePlots) = 0.01;
+    barp(1:size(barp,1), size(barp,2)+1:NumLanePlots) = 0.001;
 end
 
 % Plot axle loads
@@ -127,8 +132,9 @@ ylabel('Axle Loads (t)')
 % SHEAR CALCS ARE WRONG BECAUSE WE DON"T KNOW WHAT IS AT position ZERO FIX!
 text(1,ceil(max(max(barp/9.81))/5)*5-3,sprintf('Total: %.0f (DLF = %.2f)',sum(sum(barp)),DLF),'FontSize',11,'FontWeight','bold','Color','k')
 
-if ILRes ~= 0
+if ILRes ~= 1 % changed from 0 to 1 on 25/03... hope that hunch was right
     xtemp = 0:1:Infx(end);
+    %Infvtemp = interp1(Infx(~isnan(Infv)),Infv(~isnan(Infv)),xtemp);
     Infvtemp = interp1(Infx,Infv,xtemp);
     if size(Infvtemp,1) == 1
         Infvtemp = Infvtemp';
