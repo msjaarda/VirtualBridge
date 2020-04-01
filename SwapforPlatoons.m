@@ -1,5 +1,6 @@
 function [Flo] = SwapforPlatoons(Flo,BaseData,q,NumTrTyp,PlatPct,TrDistr,BatchSize,Surplus,Lane)
 %SWAPFORPLATOONS Does platoon swapping...
+%       - Platooning only supported in Lane 1
 
 % START OF MAJOR PLATOONING EDITION
 

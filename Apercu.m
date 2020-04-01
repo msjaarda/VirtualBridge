@@ -22,7 +22,7 @@ end
 % Define Plot Colors
 %Col{1} = [.94 .28 .18]; Col{2} = [.12 .45 .82]; Col{3} = [.27 .83 .19];   % Red and Blue
 Col{1} = [.99 .67 0]; Col{2} = [0 .447 .74]; Col{3} = [.27 .83 .19];       % Yellow and Blue
-Col{4} = Col{1}; Col{5} = Col{2}; Col{6} = Col{3};
+Col{4} = [.94 .28 .18]; Col{5} = Col{2}; Col{6} = Col{3};
 
 % Plot Influence Line
 % Open up subplot and choose the last subplot
