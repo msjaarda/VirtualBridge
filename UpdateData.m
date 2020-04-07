@@ -148,7 +148,7 @@ if ismember('ILs', BaseData.Properties.VariableNames)
         LaneData.Name = repmat(LaneData.Name,1,length(LaneFact));
         LaneData.InfNum = repmat(1:NumInf,1,length(LaneFact));
         for i = 2:length(LaneFact)
-            LaneData.Infv = [LaneData.Infv, LaneData.Infv*LaneFact(i)];
+            LaneData.Infv = [LaneData.Infv, LaneData.Infv*LaneFact(i)/LaneFact(1)];
             LaneData.Lane = [LaneData.Lane; i*ones(NumInf,1)];
         end
     end

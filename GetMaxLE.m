@@ -43,8 +43,9 @@ for i = 1:size(Infv,2)
     %v = AllTrAx(:,InfLanes(i));   Try using direct... save time
     %u = Infv(:,i);                Try using direct... save time
     % Load, v, and Influence, u, convolution into R
-    Rx(:,i) = conv(Infv(:,i),AllTrAx(:,InfLanes(i)));
-     
+    if any(AllTrAx(:,InfLanes(i)))
+        Rx(:,i) = conv(Infv(:,i),AllTrAx(:,InfLanes(i)));
+    end
 end
 
 % If there is more than one influence line, perform first sum

@@ -10,23 +10,41 @@ clear, clc, format long g, rng('shuffle'), close all; BaseData = table;
 % Input Information --------------------
 
 % Type
-BaseData.Type = 'AWIM'; % 'NWIM', 'VWIM', 'AWIM', or 'DWIM' 
+BaseData.Type = 'DWIM'; % 'NWIM', 'VWIM', 'AWIM', or 'DWIM' 
                         % Normal, Virtual, Apercu, or Deterministic
+                        
 % Necessary Inputs
 % Roadway Info
 BaseData.LaneDir = {'1,1,2,2'};
 % Influence Line Info
-BaseData.ILs = {'Mp.Mp40'};  BaseData.ILRes = 1;  InfCase = 1;
+BaseData.ILs = {'Mp'};  BaseData.ILRes = 0.1;  InfCase = 1:8;
 % Analysis Info
-BaseData.RunDyn = 1;   BaseData.MultipleCases = 1; 
+BaseData.RunDyn = 0;   BaseData.MultipleCases = 1;
+BaseData.TransILx = 0;
+BaseData.TransILy = 0;
+BaseData.LaneCen = 0;
+BaseData.NumVeh = 1000000; % use for bi or mo ...
+BaseData.LaneTrDistr = {'50,50'}; % used for split, stand, exfast, exslow 
+BaseData.TrRate = 0; % used to distinguish Det
+
+BaseData.TransILx = {'2,7'};
+BaseData.TransILy = {'0.7,0.3'};
+BaseData.LaneCen = {'1.5,4.5'};
+BaseData.Save = 1;
+BaseData.Folder = '/AGB2002x';
 
 % Non WIM Inputs
 if ~strcmp(BaseData.Type,'NWIM')
 
     FName = 'Apercu\AWIM_Mar25-20 1034.mat'; % Options
+    BaseData.LaneDir = {'1,1,2,2'};
+    FName = 'DetAll.mat';
+    BaseData.LaneDir = {'1,2'};
     % DWIM: 'Det60t.mat'
     % AWIM: 'Apercu\PlatStud60m\AWIM_Jan24-20 1049.mat'
     % VWIM: 'WIM_Jan14 1130.mat'
+    
+    
     
     Year = 1;
     BaseData.NumAnalyses = 1;
@@ -34,11 +52,13 @@ if ~strcmp(BaseData.Type,'NWIM')
     
 else % WIM Only Inputs
     
+    BaseData.LaneDir = {'1,1'};
+    
     % Station Info incl. station name, number, and year
-    Year = 2011:2018;
+    Year = 2017;
     BaseData.SName = 'Denges';
     BaseData.StationNum = 1;
-    BaseData.NumAnalyses = 5;
+    BaseData.NumAnalyses = 1;
     BaseData.Stage2Prune = false;
     BaseData.ClassOnly = false;
     
@@ -72,6 +92,10 @@ for v = 1:BaseData.MultipleCases
             load(['PrunedS1 WIM/',BaseData.SName,'/',BaseData.SName,'_',num2str(Year(i)),'.mat']);
         else
             load(FName)
+            if strcmp(BaseData.Type,'DWIM')
+                PD{PD.GW_TOT == 60000,11:15} = 1.1*PD{PD.GW_TOT == 60000,11:15};
+                PD{PD.GW_TOT == 40000,11:15} = 1.5*PD{PD.GW_TOT == 40000,11:15};
+            end
         end
         
         % VWIM Only
@@ -130,14 +154,14 @@ for v = 1:BaseData.MultipleCases
 
         for k = 1:BaseData.NumAnalyses
             
-            for t = InfCase
+            for t = 1:length(InfCase)
                 % Subject Influence Line to Truck Axle Stream
-                [MaxLE,MaxLEStatic,DLF,BrStInd,AxonBr,FirstAxInd,FirstAx] = GetMaxLE(AllTrAx,Inf,BaseData.RunDyn,t);
+                [MaxLE,MaxLEStatic,DLF,BrStInd,AxonBr,FirstAxInd,FirstAx] = GetMaxLE(AllTrAx,Inf,BaseData.RunDyn,InfCase(t));
                 % Record Maximums
-                OverMax = [OverMax; [t, Year(i), MaxLE, DLF, BrStInd, FirstAxInd, FirstAx]];
+                OverMax = [OverMax; [InfCase(t), Year(i), MaxLE, DLF, BrStInd, FirstAxInd, FirstAx]];
             end
             
-            if BaseData.NumAnalyses == 1
+            if BaseData.NumAnalyses == 1 && length(InfCase) == 1
                 T = Apercu(PDCx,BaseData.ApercuTitle,Inf.x,Inf.v(:,t),BrStInd,TrLineUp,MaxLE/ESIA.Total(t),DLF,Lane.Dir,BaseData.ILRes);
             end
             
@@ -220,6 +244,23 @@ end
 % xlabel('Year')
 % ylabel('Moment (kNm)')
 % title(sprintf('Ceneri Staion 409 Max M+ [Top %i/Year] | 40m Simple Span',BaseData.NumAnalyses))
+
+% Optional save of OutInfo (used for deterministic AGB matching)
+if strcmp(BaseData.Type,'DWIM')
+    
+    OutInfo.Name = datestr(now,'mmmdd-yy HHMM'); OutInfo.BaseData = BaseData;
+    OutInfo.ESIM = OverMAXT.MaxLE*1.3;
+    OutInfo.OverMax = OverMax; OutInfo.OverMAXT = OverMAXT;
+    OutInfo.InfNames = Inf.Names;
+    OutInfo.LaneData = LaneData;
+    
+    OutInfo.ESIA = []; OutInfo.PlatPct = 0; OutInfo.Mean = []; OutInfo.Std = [];
+    
+    if BaseData.Save == 1
+        save(['Output' BaseData.Folder '/' OutInfo.Name], 'OutInfo')
+    end
+    
+end
 
 
 

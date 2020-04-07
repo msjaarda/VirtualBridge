@@ -101,8 +101,8 @@ for i = 1:NumInfCases
     Maxv = MaxInfv(:,i);
     Intv = IntInfv(:,i);
     ESIA.Total(i) = 1.5*Alpha*(Maxv'*Qk*2+Intv'*qk*LaneWidth);
-    ESIA.EQ = Maxv.*Qk*2;
-    ESIA.Eq = Intv'*qk*LaneWidth;
+    ESIA.EQ(:,i) = Maxv.*Qk*2;
+    ESIA.Eq(i) = Intv'*qk*LaneWidth;
 end
   
 end

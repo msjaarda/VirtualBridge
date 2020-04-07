@@ -27,8 +27,10 @@ if TrLineUp(1,1) < ILRes
     TrLineUp(:,1) = TrLineUp(:,1)+(ILRes-TrLineUp(1,1));
 end
 
-% Initialize AllTrAx
-AllTrAx = zeros(max(TrLineUp(:,1)),NumLoadedLanes+1);
+% Initialize AllTrAx *NumLanes changed from NumLoadedLanes 8.4.2020 to fix
+% bug involving lane dependant actions when Lane.TrDist = 0 for one or more
+% lanes
+AllTrAx = zeros(max(TrLineUp(:,1)),NumLanes+1);
 
 % May need to use NumLoadedLanes and LoadedLanesInds in more places
 for i = 1:NumLoadedLanes
@@ -36,7 +38,8 @@ for i = 1:NumLoadedLanes
     AllTrAx(1:length(A),i) = A;    
 end
 
-% Sum rows for final column (used for action effects that aren't lane dependant
+% Sum rows for final column (used for action effects that aren't lane
+% dependant)
 AllTrAx(:,end) = sum(AllTrAx(:,1:end-1),2);   
             
 end

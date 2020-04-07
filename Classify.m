@@ -95,16 +95,25 @@ PDC.CLASS(Type,:) = 22;
 
 % only do 23 if later than 2003
 %if PDC.JJJJMMTT(1) > 20040000
-    % Type 23)
+    % Type 23) Experiment
     Axles = PDC.AX == 5;
     Dist12 = PDC.W1_2 >= 120 & PDC.W1_2 < 240;
-    Dist23 = PDC.W2_3 >= 100 & PDC.W2_3 < 340;
-    Dist34 = PDC.W3_4 >= 100 & PDC.W3_4 < 160;
-    Dist45 = PDC.W4_5 >= 100 & PDC.W4_5 < 160;
+    Dist23 = PDC.W2_3 >= 100 & PDC.W2_3 < 270;
+    Dist34 = PDC.W3_4 >= 100 & PDC.W3_4 < 170;
+    Dist45 = PDC.W4_5 >= 100 & PDC.W4_5 < 170;
     Weight = PDC.GW_TOT >= 8000 & PDC.GW_TOT < 75000;
     Type = logical(Axles.*Dist12.*Dist23.*Dist34.*Dist45.*Weight);
     PDC.CLASS(Type,:) = 23; 
 %end
+
+% Axles = PDC.AX == 5;
+% Dist12 = PDC.W1_2 >= 120 & PDC.W1_2 < 240;
+% Dist23 = PDC.W2_3 >= 100 & PDC.W2_3 < 340;
+% Dist34 = PDC.W3_4 >= 100 & PDC.W3_4 < 160;
+% Dist45 = PDC.W4_5 >= 100 & PDC.W4_5 < 160;
+% Weight = PDC.GW_TOT >= 8000 & PDC.GW_TOT < 75000;
+% Type = logical(Axles.*Dist12.*Dist23.*Dist34.*Dist45.*Weight);
+% PDC.CLASS(Type,:) = 23;
 
 % Type 111)
 Axles = PDC.AX == 3;
@@ -171,15 +180,26 @@ Weight = PDC.GW_TOT >= 8000 & PDC.GW_TOT < 60000;
 Type = logical(Axles.*Dist12.*Dist23.*Dist34.*Weight);
 PDC.CLASS(Type,:) = 1128;
 
-% Type 113a)
+% Type 113a) experiment
 Axles = PDC.AX == 5;
 Dist12 = PDC.W1_2 >= 320 & PDC.W1_2 < 450;
-Dist23 = PDC.W2_3 >= 360 & PDC.W2_3 < 860;
-Dist34 = PDC.W3_4 >= 60 & PDC.W3_4 < 240;
-Dist45 = PDC.W4_5 >= 60 & PDC.W4_5 < 240;
+Dist23 = PDC.W2_3 >= 360 & PDC.W2_3 < 760;
+Dist34 = PDC.W3_4 >= 120 & PDC.W3_4 < 220;
+Dist45 = PDC.W4_5 >= 120 & PDC.W4_5 < 220;
 Weight = PDC.GW_TOT >= 9000 & PDC.GW_TOT < 75000;
 Type = logical(Axles.*Dist12.*Dist23.*Dist34.*Dist45.*Weight);
 PDC.CLASS(Type,:) = 1138; 
+
+% % Type 113a)
+% Axles = PDC.AX == 5;
+% Dist12 = PDC.W1_2 >= 320 & PDC.W1_2 < 450;
+% Dist23 = PDC.W2_3 >= 360 & PDC.W2_3 < 860;
+% Dist34 = PDC.W3_4 >= 60 & PDC.W3_4 < 240;
+% Dist45 = PDC.W4_5 >= 60 & PDC.W4_5 < 240;
+% Weight = PDC.GW_TOT >= 9000 & PDC.GW_TOT < 75000;
+% Type = logical(Axles.*Dist12.*Dist23.*Dist34.*Dist45.*Weight);
+% PDC.CLASS(Type,:) = 1138; 
+
 
 % Type 123a)
 Axles = PDC.AX == 6;
