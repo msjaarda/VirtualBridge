@@ -60,15 +60,19 @@ end
 % If TransILx is given then we need to solve for the Lane Factors, LaneFact
 if ismember('TransILx', BaseData.Properties.VariableNames)
     % Check if it is not a cell (it is zero, no TransILs)
-    if ~iscell(BaseData.TransILx)
+    if iscell(BaseData.TransILx)
         % LaneFact is 1 with no Transverse influence lines given
-        LaneFact = 1;
+        if BaseData.TransILx{:} == '0'
+            LaneFact = 1;
+        else
+            % Use x and y coordinates to define line, then LaneCen to get LaneFact
+            TransILx = cellfun(@str2num,split(BaseData.TransILx{:},','));
+            TransILy = cellfun(@str2num,split(BaseData.TransILy{:},','));
+            LaneCen = cellfun(@str2num,split(BaseData.LaneCen{:},','));
+            LaneFact = interp1(TransILx,TransILy,LaneCen,'linear','extrap');
+        end
     else
-        % Use x and y coordinates to define line, then LaneCen to get LaneFact
-        TransILx = cellfun(@str2num,split(BaseData.TransILx{:},','));
-        TransILy = cellfun(@str2num,split(BaseData.TransILy{:},','));
-        LaneCen = cellfun(@str2num,split(BaseData.LaneCen{:},','));
-        LaneFact = interp1(TransILx,TransILy,LaneCen,'linear','extrap');
+        LaneFact = 1;
     end
     % We gain info on LaneData.Lane here 1:length(LaneFact)
 else

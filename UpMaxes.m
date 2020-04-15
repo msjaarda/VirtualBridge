@@ -1,7 +1,8 @@
-function [MaxVec,K,MaxDLF,MaxBrStInd,MaxFirstAxInd,MaxFirstAx] = UpMaxes(MaxLE,k,DLF,BrStInd,FirstAxInd,FirstAx)
+function [MaxMaxLE,SMaxMaxLE,K,MaxDLF,MaxBrStInd,MaxFirstAxInd,MaxFirstAx] = UpMaxes(MaxLE,SMaxLE,k,DLF,BrStInd,FirstAxInd,FirstAx)
 %UpdateSimWideMaxes Checks if Max exceeded previous... updates.
 
-MaxVec = MaxLE;
+MaxMaxLE = MaxLE;
+SMaxMaxLE = SMaxLE;
 K = k;
 MaxDLF = DLF;
 MaxBrStInd = BrStInd;

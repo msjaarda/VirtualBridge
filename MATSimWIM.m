@@ -100,8 +100,8 @@ for v = 1:BaseData.MultipleCases
         
         % VWIM Only
         if strcmp(BaseData.Type,'VWIM')
-            [a, b] = max(OutInfo.OverMAXT.MaxLE(OutInfo.OverMAXT.InfCase == InfCase));
-            SimNum = OutInfo.OverMAXT.SimNum(b);
+            [a, b] = max(OutInfo.OverMaxT.MaxLE(OutInfo.OverMaxT.InfCase == InfCase));
+            SimNum = OutInfo.OverMaxT.SimNum(b);
             PDCx = PD(PD.SimNum == SimNum & PD.InfCase == InfCase,:);
 
         elseif strcmp(BaseData.Type,'NWIM')    % WIM Only
@@ -175,7 +175,7 @@ for v = 1:BaseData.MultipleCases
 end
 
 % Convert Results to Table
-OverMAXT = array2table(OverMax,'VariableNames',{'InfCase','Year','MaxLE','MaxDLF','MaxBrStInd','MaxFirstAxInd','MaxFirstAx'});
+OverMaxT = array2table(OverMax,'VariableNames',{'InfCase','Year','MaxLE','MaxDLF','MaxBrStInd','MaxFirstAxInd','MaxFirstAx'});
 
 % Get ESIA
 aQ1 = 0.7; aQ2 = 0.5; aq = 0.5;
@@ -186,7 +186,7 @@ AGBSim = 1.1*9604;
 
 % Simplify results into D
 for i = 1:length(Year)
-    D(:,i) = OverMAXT.MaxLE(OverMAXT.Year == Year(i));
+    D(:,i) = OverMaxT.MaxLE(OverMaxT.Year == Year(i));
 end
 
 % Create plot if multiple years involved
@@ -249,8 +249,8 @@ end
 if strcmp(BaseData.Type,'DWIM')
     
     OutInfo.Name = datestr(now,'mmmdd-yy HHMM'); OutInfo.BaseData = BaseData;
-    OutInfo.ESIM = OverMAXT.MaxLE*1.3;
-    OutInfo.OverMax = OverMax; OutInfo.OverMAXT = OverMAXT;
+    OutInfo.ESIM = OverMaxT.MaxLE*1.3;
+    OutInfo.OverMax = OverMax; OutInfo.OverMaxT = OverMaxT;
     OutInfo.InfNames = Inf.Names;
     OutInfo.LaneData = LaneData;
     

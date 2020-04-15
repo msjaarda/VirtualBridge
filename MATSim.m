@@ -42,7 +42,7 @@ for g = 1:height(BaseData)
         
         % Initialize variables outside of batch simulation loop
         LaneAxLineUp = cell(Num.Lanes,1); LaneVehLineUp = cell(Num.Lanes,1); ApercuMax = [];
-        [MaxVec, Maxk, MaxDLF, MaxBrStInd, MaxFirstAxInd, MaxFirstAx] = deal(zeros(1,Num.InfCases));
+        [MaxMaxLE, SMaxMaxLE, Maxk, MaxDLF, MaxBrStInd, MaxFirstAxInd, MaxFirstAx] = deal(zeros(1,Num.InfCases));
         
         for k = 1:Num.Batches
             
@@ -88,10 +88,10 @@ for g = 1:height(BaseData)
                 [AllTrAx] = GetAllTrAx(AxLineUp,BaseData.ILRes(g),Lane,FixVars);
                 for t = 1:Num.InfCases
                     % Subject Influence Line to Axle Stream, lane specific influence line procedure included in GetMaxLE
-                    [MaxLE,MaxLEStatic,DLF,BrStInd,AxonBr,FirstAxInd,FirstAx] = GetMaxLE(AllTrAx,Inf,BaseData.RunDyn(g),t);
+                    [MaxLE,SMaxLE,DLF,BrStInd,AxonBr,FirstAxInd,FirstAx] = GetMaxLE(AllTrAx,Inf,BaseData.RunDyn(g),t);
                     % Update Maximums if they are exceeded
-                    if MaxLE > MaxVec(t)
-                        [MaxVec(t),Maxk(t),MaxDLF(t),MaxBrStInd(t),MaxFirstAxInd(t),MaxFirstAx(t)] = UpMaxes(MaxLE,k,DLF,BrStInd,FirstAxInd,FirstAx);
+                    if MaxLE > MaxMaxLE(t)
+                        [MaxMaxLE(t),SMaxMaxLE(t),Maxk(t),MaxDLF(t),MaxBrStInd(t),MaxFirstAxInd(t),MaxFirstAx(t)] = UpMaxes(MaxLE,SMaxLE,k,DLF,BrStInd,FirstAxInd,FirstAx);
                         % Save results for Apercu
                         if BaseData.Apercu(g) == 1
                             % Must account for ILRes here... /ILRes
@@ -110,7 +110,7 @@ for g = 1:height(BaseData)
         
         % Log overall maximum cases into OverMax and ApercuOverMax if necessary
         for i = 1:Num.InfCases
-            OverMax = [OverMax; [i, v, MaxVec(i), Maxk(i), MaxDLF(i), MaxBrStInd(i), MaxFirstAxInd(i), MaxFirstAx(i)]];
+            OverMax = [OverMax; [i, v, MaxMaxLE(i), SMaxMaxLE(i), Maxk(i), MaxDLF(i), MaxBrStInd(i), MaxFirstAxInd(i), MaxFirstAx(i)]];
             % Save VWIM to ApercuOverMax, and add column for InfCase
             if BaseData.Apercu(g) == 1
                 ApercuOverMax = [ApercuOverMax; [ApercuMax{i}, repmat(i,size(ApercuMax{i},1),1)]];
@@ -123,10 +123,12 @@ for g = 1:height(BaseData)
     [Time] = GetSimTime();
     
     % In the future could add InfCaseName
-    OverMAXT = array2table(OverMax,'VariableNames',{'InfCase','SimNum','MaxLE','BatchNum','MaxDLF','MaxBrStInd','MaxFirstAxInd','MaxFirstAx'});
+    OverMaxT = array2table(OverMax,'VariableNames',{'InfCase','SimNum','MaxLE','SMaxLE','BatchNum','MaxDLF','MaxBrStInd','MaxFirstAxInd','MaxFirstAx'});
     
     % Reshape OverMax results for output
-    OverMax = sortrows(OverMax); OverMax = OverMax(:,3); OverMax = reshape(OverMax,BaseData.NumSims(g),Num.InfCases);
+    OverMax = sortrows(OverMax); OverMaxS = OverMax(:,4); OverMax = OverMax(:,3); 
+    OverMaxS = reshape(OverMaxS,BaseData.NumSims(g),Num.InfCases);
+    OverMax = reshape(OverMax,BaseData.NumSims(g),Num.InfCases);
     
     % Duplicate if only 1 Sim to avoid statistical errors
     if BaseData.NumSims(g) == 1
@@ -135,6 +137,8 @@ for g = 1:height(BaseData)
     
     % Get ESIM and Ratio
     ESIM = 1.1*prctile(OverMax,99); Ratio = ESIM./ESIA.Total;
+    % Potential issue here as percentiles may not line up. Confusing.
+    ESIMS = 1.1*prctile(OverMaxS,99);
     
     % Print Summary Stats to Command Window
     PrintSummary(BaseData(g,:),BatchSize,PlatPct,TrData,Num,VirtualWIM,Time,Lane.TrDistr)
@@ -163,9 +167,9 @@ for g = 1:height(BaseData)
     
     % Save structure variable with essential simulation information
     OutInfo.Name = TName; OutInfo.BaseData = BaseData(g,:);
-    OutInfo.ESIA = ESIA; OutInfo.ESIM = ESIM;
+    OutInfo.ESIA = ESIA; OutInfo.ESIM = ESIM; OutInfo.ESIMS = ESIMS;
     OutInfo.Mean = mean(OverMax); OutInfo.Std = std(OverMax);
-    OutInfo.OverMax = OverMax; OutInfo.OverMAXT = OverMAXT;
+    OutInfo.OverMax = OverMax; OutInfo.OverMaxT = OverMaxT;
     OutInfo.InfNames = Inf.Names; OutInfo.PlatPct = max(PlatPct);
     OutInfo.LaneData = LaneData;
     
@@ -177,7 +181,7 @@ end
 
 % Run Apercu to see critical case
 if BaseData.Apercu(g) == 1
-    [T, OverMx, AllTrAxx] = GetApercu(PD,OverMAXT,Num.InfCases,Inf,BaseData.RunDyn(g),ESIA.Total,Lane.Dir,BaseData.ILRes(g));
+    [T, OverMx, AllTrAxx] = GetApercu(PD,OverMaxT,Num.InfCases,Inf,BaseData.RunDyn(g),ESIA.Total,Lane.Dir,BaseData.ILRes(g));
 end
 
 
