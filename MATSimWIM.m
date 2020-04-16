@@ -27,11 +27,11 @@ BaseData.NumVeh = 1000000; % use for bi or mo ...
 BaseData.LaneTrDistr = {'50,50'}; % used for split, stand, exfast, exslow 
 BaseData.TrRate = 0; % used to distinguish Det
 
-BaseData.TransILx = {'2,7'};
+BaseData.TransILx = {'2,7'};  % used for reduced, expanded, conc
 BaseData.TransILy = {'0.7,0.3'};
 BaseData.LaneCen = {'1.5,4.5'};
 BaseData.Save = 1;
-BaseData.Folder = '/AGB2002x';
+BaseData.Folder = '/AGB2002A15';
 
 % Non WIM Inputs
 if ~strcmp(BaseData.Type,'NWIM')
@@ -156,9 +156,9 @@ for v = 1:BaseData.MultipleCases
             
             for t = 1:length(InfCase)
                 % Subject Influence Line to Truck Axle Stream
-                [MaxLE,MaxLEStatic,DLF,BrStInd,AxonBr,FirstAxInd,FirstAx] = GetMaxLE(AllTrAx,Inf,BaseData.RunDyn,InfCase(t));
+                [MaxLE,SMaxMaxLE,DLF,BrStInd,AxonBr,FirstAxInd,FirstAx] = GetMaxLE(AllTrAx,Inf,BaseData.RunDyn,InfCase(t));
                 % Record Maximums
-                OverMax = [OverMax; [InfCase(t), Year(i), MaxLE, DLF, BrStInd, FirstAxInd, FirstAx]];
+                OverMax = [OverMax; [InfCase(t), Year(i), MaxLE, SMaxMaxLE, DLF, BrStInd, FirstAxInd, FirstAx]];
             end
             
             if BaseData.NumAnalyses == 1 && length(InfCase) == 1
@@ -175,7 +175,7 @@ for v = 1:BaseData.MultipleCases
 end
 
 % Convert Results to Table
-OverMaxT = array2table(OverMax,'VariableNames',{'InfCase','Year','MaxLE','MaxDLF','MaxBrStInd','MaxFirstAxInd','MaxFirstAx'});
+OverMaxT = array2table(OverMax,'VariableNames',{'InfCase','Year','MaxLE','SMaxLE','MaxDLF','MaxBrStInd','MaxFirstAxInd','MaxFirstAx'});
 
 % Get ESIA
 aQ1 = 0.7; aQ2 = 0.5; aq = 0.5;
@@ -248,7 +248,8 @@ end
 % Optional save of OutInfo (used for deterministic AGB matching)
 if strcmp(BaseData.Type,'DWIM')
     
-    OutInfo.Name = datestr(now,'mmmdd-yy HHMM'); OutInfo.BaseData = BaseData;
+    OutInfo.Name = datestr(now,'mmmdd-yy HHMMSS'); OutInfo.BaseData = BaseData;
+    OutInfo.ESIMS = OverMaxT.MaxLE;
     OutInfo.ESIM = OverMaxT.MaxLE*1.3;
     OutInfo.OverMax = OverMax; OutInfo.OverMaxT = OverMaxT;
     OutInfo.InfNames = Inf.Names;

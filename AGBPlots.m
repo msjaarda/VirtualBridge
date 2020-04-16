@@ -7,11 +7,16 @@ load('AGBResults.mat') % AGB.(Section).(Config).(Dist).(AE)
 
 PlotMAT = true;
 PlotMargins = true;
+AlwaysTME = true;
 % Plot toggles (1 through 5 are Got, Mat, Den, Det, Cen2018)
-MATPlots = [1 2 3];
+% Cen2018 needs updating
+MATPlots = [1 2 3 4 5];
 Acc = [];
 
-Folder_Name = 'AGB2002xx';
+%Fig = 4.3; %4.2 to 4.6 or 'Custom' and fill out the below
+Fig = 4.2:0.1:4.6;
+
+Folder_Name = 'AGB2002A15';
 
 % Ensure file list is succinct
 File_List = dir(['Output/' Folder_Name]); File_List(1:2) = []; i = 1;
@@ -109,19 +114,27 @@ for i = 1:length(OInfo)
             if istable(MAT.(Sectionx).(Configx).(Distx).(AEx))
                 MAT.(Sectionx).(Configx).(Distx).(AEx).(Locx)(Span/10) = OInfo(i).ESIM(k);
                 MAT.(Sectionx).(Configx).(Distx).(AEx).([Locx(1:end-1) 'S'])(Span/10) = OInfo(i).ESIMS(k);
-                MAT.(Sectionx).(Configx).(Distx).(AEx).E(Span/10) = OInfo(i).ESIA.Total(k);
-                MAT.(Sectionx).(Configx).(Distx).(AEx).Eq(Span/10) = OInfo(i).ESIA.Eq(k);
-                MAT.(Sectionx).(Configx).(Distx).(AEx).EQ1(Span/10) = OInfo(i).ESIA.EQ(1,k);
-                MAT.(Sectionx).(Configx).(Distx).(AEx).EQ2(Span/10) = OInfo(i).ESIA.EQ(2,k);
+                % Only if it has it
+                if ~isempty(OInfo(i).ESIA)
+                    
+                    MAT.(Sectionx).(Configx).(Distx).(AEx).E(Span/10) = OInfo(i).ESIA.Total(k);
+                    MAT.(Sectionx).(Configx).(Distx).(AEx).Eq(Span/10) = OInfo(i).ESIA.Eq(k);
+                    MAT.(Sectionx).(Configx).(Distx).(AEx).EQ1(Span/10) = OInfo(i).ESIA.EQ(1,k);
+                    MAT.(Sectionx).(Configx).(Distx).(AEx).EQ2(Span/10) = OInfo(i).ESIA.EQ(2,k);
+                end
             end
         catch
             MAT.(Sectionx).(Configx).(Distx).(AEx) = XT;
             MAT.(Sectionx).(Configx).(Distx).(AEx).(Locx)(Span/10) = OInfo(i).ESIM(k);
             MAT.(Sectionx).(Configx).(Distx).(AEx).([Locx(1:end-1) 'S'])(Span/10) = OInfo(i).ESIMS(k);
-            MAT.(Sectionx).(Configx).(Distx).(AEx).E(Span/10) = OInfo(i).ESIA.Total(k);
-            MAT.(Sectionx).(Configx).(Distx).(AEx).Eq(Span/10) = OInfo(i).ESIA.Eq(k);
-            MAT.(Sectionx).(Configx).(Distx).(AEx).EQ1(Span/10) = OInfo(i).ESIA.EQ(1,k);
-            MAT.(Sectionx).(Configx).(Distx).(AEx).EQ2(Span/10) = OInfo(i).ESIA.EQ(2,k);
+            % Only if it has it
+            if ~isempty(OInfo(i).ESIA)
+                
+                MAT.(Sectionx).(Configx).(Distx).(AEx).E(Span/10) = OInfo(i).ESIA.Total(k);
+                MAT.(Sectionx).(Configx).(Distx).(AEx).Eq(Span/10) = OInfo(i).ESIA.Eq(k);
+                MAT.(Sectionx).(Configx).(Distx).(AEx).EQ1(Span/10) = OInfo(i).ESIA.EQ(1,k);
+                MAT.(Sectionx).(Configx).(Distx).(AEx).EQ2(Span/10) = OInfo(i).ESIA.EQ(2,k);
+            end
         end
         %AExL = AEx;
     end
@@ -129,8 +142,6 @@ for i = 1:length(OInfo)
 end
 
 
-%Fig = 4.2; %4.2 to 4.6 or 'Custom' and fill out the below
-Fig = 4.2:0.1:4.6;
 
 % Custom Input
 
@@ -140,7 +151,7 @@ FName = 'Figure 4.2 Box Girder, Bidirectional';
 % Set Plot Parameters
 Section = 'Box'; % Box, Twin, TwinRed, TwinExp, TwinConc
 Config = 'Bi';   % Bi, Mo
-Dist = 'Split'; % Split, Stand, ExFast, ExSlow
+%Dist = 'Split'; % Split, Stand, ExFast, ExSlow
 
 % Set Action Effects
 AE{1} = 'Mn'; AE{2} = 'Mp'; AE{3} = 'V';
@@ -285,9 +296,14 @@ for i = 1:3 % for each subplot
                 Inds = ~isnan(Yx.(Loc{j})) & X >= Xmin;
             end
             hold on
-            plot(X(Inds),Yx.(Loc{j})(Inds)./Y.E(Inds),'-s','Color','k','MarkerEdgeColor','k','MarkerFaceColor','none','MarkerSize',MSize)
+            if AlwaysTME
+                plot(X(Inds),Yx.(Loc{j})(Inds)./Y.E(Inds),'-s','Color','k','MarkerEdgeColor','k','MarkerFaceColor','none','MarkerSize',MSize)
+            else
+                plot(X(Inds),Yx.(Loc{j})(Inds)./Yx.E(Inds),'-s','Color','k','MarkerEdgeColor','k','MarkerFaceColor','none','MarkerSize',MSize)
+            end
             bp = zeros(1,size(X,1));
             bp(Inds') = [Y.(Loc{j})(Inds)*scale]./[Yx.(Loc{j})(Inds)];
+            % Acc is accuracy of MATSim compared to TM
             Acc = [Acc; bp];
         end
     end
@@ -300,7 +316,12 @@ for i = 1:3 % for each subplot
     end
     Esimmax = max([Y.GD'; Y.MD'; Y.DD'; Y.DetD']);
     Eupdated = 1.5/1.1*(0.7*Y.EQ1 + 0.5*Y.EQ2 + alphasq*Y.Eq);
-    Eupdatedx = 1.5*(0.7*Y.EQ1 + 0.5*Y.EQ2 + alphasq*Y.Eq);
+    % Optional below: Yx or Y
+    if AlwaysTME
+        Eupdatedx = 1.5*(0.7*Y.EQ1 + 0.5*Y.EQ2 + alphasq*Y.Eq);
+    else
+        Eupdatedx = 1.5*(0.7*Yx.EQ1 + 0.5*Yx.EQ2 + alphasq*Yx.Eq);
+    end
     M = Eupdated./Esimmax'-1;
     if PlotMAT
         Esimmaxx = max([Yx.GD'; Yx.MD'; Yx.DD'; Yx.DetD']);
