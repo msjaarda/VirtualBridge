@@ -10,7 +10,7 @@ PlotMargins = true;
 AlwaysTME = true;
 % Plot toggles (1 through 5 are Got, Mat, Den, Det, Cen2018)
 % Cen2018 needs updating
-MATPlots = [1 2 3 4 5];
+MATPlots = [1 2 3 4];
 Acc = [];
 
 %Fig = 4.3; %4.2 to 4.6 or 'Custom' and fill out the below
