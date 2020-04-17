@@ -361,6 +361,8 @@ for i = 1:3 % for each subplot
         
         % Set axis limits
         ylim([0 0.5]); xlim([Xmin 80])
+        xlabel('-2\pi < x < 2\pi') 
+        ylabel('Sine and Cosine Values') 
         title([Title{i} ' Margin'])
         
                
