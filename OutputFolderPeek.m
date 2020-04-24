@@ -4,7 +4,7 @@
 
 clear, clc, close all
 
-Folder_Namex = 'AGB2002A15x';
+Folder_Namex = 'Platooning';
 
 Folder_List = GetFolderList('Output');
 
@@ -41,3 +41,5 @@ for j = 1:length(Folder_List)
     clear SumTab2
     
 end
+
+SumTab.(Folder_Namex)
