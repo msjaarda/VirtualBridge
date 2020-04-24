@@ -31,7 +31,7 @@ if CarWgt == 0
     Flo.Wgt = Flo.Wgt(B);
     if BaseData.RunPlat == 1
         Flo.Plat = Flo.Plat(B);
-        Flo.PSwap = Flo.PSwap(B);
+        Flo.Swap = Flo.Swap(B);
     end
     
     SumDist = cumsum(Flo.Dist);

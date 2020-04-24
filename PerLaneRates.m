@@ -17,7 +17,7 @@ CarCarTransProb = 1-CarTrTransProb;
 
 % If there is only one lane, simple case with all vehicles in one lane
 if Num.Lanes == 1
-    LaneAvgNumVeh = NumVeh;
+    LaneAvgNumVehx = NumVeh;
     
 % If not, we split vehicles accross lanes, solving for the number
 % of cars in each so that all lanes are the same length.
@@ -223,8 +223,8 @@ LaneAvgNumVehx = round(LaneAvgNumVehx');
 
 % Add surplus if we are doing platooning (too difficult to estimate)
 if BaseData.RunPlat == 1
-    Surplus = 1.05; 
-    LaneAvgNumVeh = round(LaneAvgNumVeh*Surplus);
+    Surplus = 1.15; 
+    LaneAvgNumVehx = round(LaneAvgNumVehx*Surplus);
 else
     Surplus = 1;
 end

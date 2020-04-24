@@ -8,7 +8,7 @@
 clear, clc, close all, format long g, rng('shuffle');
 
 % Input File
-InputFile = 'MATSimInputSimple.xlsx';
+InputFile = 'MATSimInputPlatooningBasic.xlsx';
 
 % Read in simulation data
 [BaseData,LaneData,TrData,FolDist] = ReadInputFile(['Input/' InputFile]);
