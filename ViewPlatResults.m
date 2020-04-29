@@ -3,23 +3,25 @@
 
 % Initial commands
 clear, clc, format long g, rng('shuffle');
-close all
+%close all
 
 % Input File or Folder Name
-%Folder_Name = 'PlatStud60m'; 
+Folder_Name = 'PlatStud60m'; 
 Folder_Name = 'PlatStud456045m';
 %Folder_Name = 'PlatStud20m';
-%Folder_Name = 'PlatStud608060m';
+Folder_Name = 'PlatStud608060m';
+%Folder_Name = 'Platoon';
 
 File_List = GetFileList(Folder_Name);
 
 % Read in .mat results variables
 for i = 1:length(File_List)
     load(['Output/' Folder_Name '/' File_List(i).name])
-%     if OutInfo.BaseData.RunPlat == 0
-%         OutInfo.BaseData.PlatSize = 0; OutInfo.BaseData.PlatFolDist = 0;
-%     end
+    if OutInfo.BaseData.RunPlat == 0
+        OutInfo.BaseData.PlatSize = 0; OutInfo.BaseData.PlatFolDist = 0;
+    end
     OInfo(i) = OutInfo;
+    %OInfo.InfNames
 end
 
 % Create easier to manage tables and matrices (rather than structure)
@@ -37,6 +39,38 @@ if length(OutInfo.InfNames) == 1
 else
     BridgeName = Folder_Name(end-2:end);
 end
+
+
+load('PLATResults.mat')
+%PLAT.(Section).(Dist).(Loc).(PlatSize).(PlatRate).(AE).(IVD)(Span/20)
+Section = 'Box'; Dist = 'ExFast'; Loc = 'Ceneri2017';
+%PLAT.(Section).(Dist).(Loc).(PlatSize{k}).(PlatRate{j}).(AE(i)).(IVD{n})(Span/20)  % (PlatSize).(PlatRate).(AE).(IVD)(Span/20)
+
+AE = 'Mn';
+Span = 60;
+
+PlatSize{1} = 'S2'; PlatSize{2} = 'M3'; PlatSize{3} = 'L4';
+%2:4; %S2, M3, L4
+PlatRate{1} = 'L20'; PlatRate{2} = 'H40'; 
+%L20, H40
+IVD{1} = 'SMean'; IVD{2} = 'MSMean'; IVD{3} = 'MLMean'; IVD{4} = 'LMean';
+%2.5:2.5:10;
+
+% AE Influence Line
+
+% PlatRate Platooning Percentage
+for j = 1:2
+    % PlatSize Platoon Size
+    for k = 1:3
+        % IVD Intervehicle Following Distance
+        for n = 1:4
+            R(k,n,j) = PLAT.(Section).(Dist).(Loc).(PlatSize{k}).(PlatRate{j}).(AE).(IVD{n})(Span/20) / PLAT.(Section).(Dist).(Loc).(PlatSize{k}).(PlatRate{j}).(AE).BaseMean(Span/20);
+        end
+    end
+end
+
+
+
 
 % Plot generation - for each influence line action effect
 for i = 1:length(OutInfo.InfNames)
@@ -58,8 +92,10 @@ for i = 1:length(OutInfo.InfNames)
         BDx = BD(PlatPcts == PlatPct,:);
         
         % Get Bunch and Base data (no Platooning anlysis)
+        %if j == 1
         Bunch = mean(Meansx(BDx.RunPlat == 0 & BDx.BunchFactor > 1,:));
         Base = mean(Meansx(BDx.RunPlat == 0 & BDx.BunchFactor == 1,:));
+        %end
         
         % Solve for load effect ratios, and sort Base Data for plots
         BDx.Ratio = Meansx/Bunch; BDx = sortrows(BDx,[5 8 9]);
@@ -74,10 +110,13 @@ for i = 1:length(OutInfo.InfNames)
             hold on
             if j == 1
                 p(num) = plot(BDx.PlatFolDist(BDx.PlatSize == k),BDx.Ratio(BDx.PlatSize == k),'Color',Col{j},'LineStyle',Pat{num});
+                %plot(BDx.PlatFolDist(BDx.PlatSize == k),R(k-1,:,j)','Color','r','LineStyle',Pat{num});
             elseif k == 3
                 p(4) = plot(BDx.PlatFolDist(BDx.PlatSize == k),BDx.Ratio(BDx.PlatSize == k),'Color',Col{j},'LineStyle',Pat{num});
+                %plot(BDx.PlatFolDist(BDx.PlatSize == k),R(k-1,:,j)','Color','r','LineStyle',Pat{num});
             else
                 plot(BDx.PlatFolDist(BDx.PlatSize == k),BDx.Ratio(BDx.PlatSize == k),'Color',Col{j},'LineStyle',Pat{num})
+                %plot(BDx.PlatFolDist(BDx.PlatSize == k),R(k-1,:,j)','Color','r','LineStyle',Pat{num});
             end
             title('Effect of Platooning IVD on Load Effect')
             ylabel('Analysis / Base Analysis')
@@ -95,6 +134,7 @@ for i = 1:length(OutInfo.InfNames)
     text(6.5,1.15,sprintf('Mean of n = 500 maximums'))
     text(6.5,1.13,sprintf('500k vehicles simulated'))
     legend([p(1) p(2) p(3) p(4)],{'2-Tr (20%)','3-Tr (20%)','4-Tr (20%)','40%'},'Location','south','Orientation','horizontal')
+    %legend([p(1) p(2) p(3)],{'2-Tr (20%)','3-Tr (20%)','4-Tr (20%)'},'Location','south','Orientation','horizontal')
     legend('boxoff')
     movegui(gcf,'northwest')
 end
@@ -146,3 +186,8 @@ for i = 1:length(OutInfo.InfNames)
     legend('boxoff')
     movegui(gcf,'north')
 end
+
+
+
+% % Initialize figure
+% figure

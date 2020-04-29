@@ -4,7 +4,7 @@
 
 clear, clc, close all
 
-Folder_Namex = 'Platooning';
+Folder_Namex = 'PlatStud20m';
 
 Folder_List = GetFolderList('Output');
 
