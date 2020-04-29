@@ -1,17 +1,20 @@
-function CreateFolders(Folder_Name)
+function CreateFolders(Folder_Name,BVWIM,BApercu,BSave)
 %xCREATEFOLDER Creates folders in certain spots if there isn't already one
 
 if ~isfolder(['Output' Folder_Name])
-    mkdir(['Output' Folder_Name])
+    if BSave == 1
+        mkdir(['Output' Folder_Name])
+    end
 end
 if ~isfolder(['VirtualWIM' Folder_Name])
-    mkdir(['VirtualWIM' Folder_Name])
+    if BVWIM == 1
+        mkdir(['VirtualWIM' Folder_Name])
+    end
 end
 if ~isfolder(['Apercu' Folder_Name])
-    mkdir(['Apercu' Folder_Name])
-end
-if ~isfolder(['Key Results' Folder_Name])
-    mkdir(['Key Results' Folder_Name])
+    if BApercu == 1
+        mkdir(['Apercu' Folder_Name])
+    end
 end
 
 end

@@ -144,7 +144,7 @@ for g = 1:height(BaseData)
     PrintSummary(BaseData(g,:),BatchSize,PlatPct,TrData,Num,VirtualWIM,Time,Lane.TrDistr)
     
     % Create folders where there are none
-    CreateFolders(BaseData.Folder{g})
+    CreateFolders(BaseData.Folder{g},BaseData.VWIM(g),BaseData.Apercu(g),BaseData.Save(g))
     
     TName = datestr(now,'mmmdd-yy HHMM');
     
