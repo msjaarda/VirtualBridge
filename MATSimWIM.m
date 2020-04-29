@@ -10,38 +10,40 @@ clear, clc, format long g, rng('shuffle'), close all; BaseData = table;
 % Input Information --------------------
 
 % Type
-BaseData.Type = 'DWIM'; % 'NWIM', 'VWIM', 'AWIM', or 'DWIM' 
+BaseData.Type = 'AWIM'; % 'NWIM', 'VWIM', 'AWIM', or 'DWIM' 
                         % Normal, Virtual, Apercu, or Deterministic
                         
 % Necessary Inputs
 % Roadway Info
-BaseData.LaneDir = {'1,1,2,2'};
+BaseData.LaneDir = {'1,1'};
 % Influence Line Info
-BaseData.ILs = {'Mp'};  BaseData.ILRes = 0.1;  InfCase = 1:8;
+BaseData.ILs = {'Mp.Mp60'};  BaseData.ILRes = 0.1;  InfCase = 1;
 % Analysis Info
-BaseData.RunDyn = 0;   BaseData.MultipleCases = 1;
+BaseData.RunDyn = 1;   BaseData.MultipleCases = 1;
 BaseData.TransILx = 0;
 BaseData.TransILy = 0;
 BaseData.LaneCen = 0;
-BaseData.NumVeh = 1000000; % use for bi or mo ...
-BaseData.LaneTrDistr = {'50,50'}; % used for split, stand, exfast, exslow 
-BaseData.TrRate = 0; % used to distinguish Det
+%BaseData.NumVeh = 1000000; % use for bi or mo ...
+%BaseData.LaneTrDistr = {'80,20'}; % used for split, stand, exfast, exslow 
+%BaseData.TrRate = 0; % used to distinguish Det
 
-BaseData.TransILx = {'2,7'};  % used for reduced, expanded, conc
-BaseData.TransILy = {'0.7,0.3'};
-BaseData.LaneCen = {'1.5,4.5'};
-BaseData.Save = 1;
+%BaseData.TransILx = {'0'};  % used for reduced, expanded, conc
+%BaseData.TransILy = {'0'};
+%BaseData.LaneCen = {'0'};
+BaseData.Save = 0;
 BaseData.Folder = '/AGB2002A15';
 
 % Non WIM Inputs
 if ~strcmp(BaseData.Type,'NWIM')
 
-    FName = 'Apercu\AWIM_Mar25-20 1034.mat'; % Options
-    BaseData.LaneDir = {'1,1,2,2'};
-    FName = 'DetAll.mat';
-    BaseData.LaneDir = {'1,2'};
+    FName = 'Apercu\PlatStud60m\AWIM_Jan24-20 1049.mat'; % Options
+    OutputFName = 'Output\PlatStud60m\Jan24-20 1049.mat';
+    %InfCase = 1;
+    %BaseData.LaneDir = {'1,1,2,2'};
+    %FName = 'DetAll.mat';
+    %BaseData.LaneDir = {'1,1'};
     % DWIM: 'Det60t.mat'
-    % AWIM: 'Apercu\PlatStud60m\AWIM_Jan24-20 1049.mat'
+    % AWIM: 'Apercu\AWIM_Mar25-20 1034.mat'
     % VWIM: 'WIM_Jan14 1130.mat'
     
     
@@ -98,11 +100,20 @@ for v = 1:BaseData.MultipleCases
             end
         end
         
-        % VWIM Only
-        if strcmp(BaseData.Type,'VWIM')
-            [a, b] = max(OutInfo.OverMaxT.MaxLE(OutInfo.OverMaxT.InfCase == InfCase));
-            SimNum = OutInfo.OverMaxT.SimNum(b);
-            PDCx = PD(PD.SimNum == SimNum & PD.InfCase == InfCase,:);
+        % VWIM or AWIM Only
+        if strcmp(BaseData.Type,'VWIM') || strcmp(BaseData.Type,'AWIM')
+            
+            load(OutputFName);
+            try
+                [a, b] = max(OutInfo.OverMaxT.MaxLE(OutInfo.OverMaxT.InfCase == InfCase));
+                SimNum = OutInfo.OverMaxT.SimNum(b);
+            catch
+                [a, b] = max(OutInfo.OverMAXT.MaxLE(OutInfo.OverMAXT.InfCase == InfCase));
+                SimNum = OutInfo.OverMAXT.SimNum(b);
+            end
+            
+            PDCx = PD(PD.SimNum == SimNum & PD.InfCase == InfCase,:);         
+            
 
         elseif strcmp(BaseData.Type,'NWIM')    % WIM Only
             % Add row for Class, Daytime, and Daycount
@@ -132,6 +143,7 @@ for v = 1:BaseData.MultipleCases
         else  % AWIM or DWIM Only
             PDCx = PD;
         end
+        
         
         % CUSTOM EDIT for multiple cases
         if v == 2

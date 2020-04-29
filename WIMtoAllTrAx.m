@@ -20,6 +20,10 @@ function [PDCx, AllTrAx, TrLineUp] = WIMtoAllTrAx(PDCx,SpaceSaver,LaneDir,ILRes)
 % Detect type of WIM file
 % Determine if we have Enhanced or VWIM cases
 EnhancedWIM = ismember('HH', PDCx.Properties.VariableNames);
+% Optional conversion from AllAxSpCu to SpCu
+if ismember('AllAxSpCu', PDCx.Properties.VariableNames)
+    PDCx.Properties.VariableNames{'AllAxSpCu'} = 'SpCu';
+end
 % ApercuOverMax counts as VWIM
 VWIM = ismember('SpCu', PDCx.Properties.VariableNames);
 % Regular WIM is when it doesn't have the other two
