@@ -6,11 +6,11 @@ clear, clc, close all
 % INPUT ---------------
 
 PlotMAT = true;
-PlotMargins = true;
+PlotMargins = false;
 AlwaysTME = false;
 % Plot toggles (1 through 5 are Got 03, Mat 03, Den 03, Det, Cen 18)
-MATPlots = [1 2 3 4 5];
-PlotCeneri = true;
+MATPlots = [1];
+PlotCeneri = false;
 
 % Legend labels
 J{1} = 'Got 03';
@@ -56,7 +56,9 @@ MSize = 5; LWid = 1; Xmin = 20;
 % Load AGBMAT Results
 load('AGBResults.mat') % AGB.(Section).(Config).(Dist).(AE)
 % Load AGB Results
-load('AGBMATResults.mat') % AGBMAT.(Sectionx).(Configx).(Distx).(AEx)
+load('AGBMATResultsf50k.mat') % AGBMAT.(Sectionx).(Configx).(Distx).(AEx)
+MAT2 = MAT;
+load('AGBMATResults.mat')
 
 % For each figure
 for k = 1:length(Fig)
@@ -93,6 +95,7 @@ for i = 1:3 % for each subplot
 
     if PlotMAT
         Yx = MAT.(Section{i}).(Config).(Dist{i}).(AE{i});
+        Yx2= MAT2.(Section{i}).(Config).(Dist{i}).(AE{i});
     end
     
     for j = MATPlots % for each traffic case... take away || if no MC
@@ -132,6 +135,7 @@ for i = 1:3 % for each subplot
                 plot(X(Inds),Yx.(Loc{j})(Inds)./Y.E(Inds),'-s','Color','k','MarkerEdgeColor',MEC,'MarkerFaceColor',MFC,'MarkerSize',MSize,'HandleVisibility',HV)
             else
                 plot(X(Inds),Yx.(Loc{j})(Inds)./Yx.E(Inds),'-s','Color','k','MarkerEdgeColor',MEC,'MarkerFaceColor',MFC,'MarkerSize',MSize,'HandleVisibility',HV)
+                plot(X(Inds),Yx2.(Loc{j})(Inds)./Yx.E(Inds),'-s','Color','k','MarkerEdgeColor',MEC,'MarkerFaceColor',MFC,'MarkerSize',MSize,'HandleVisibility',HV)
             end
             %bp = zeros(1,size(X,1));
             %bp(Inds') = [Y.(Loc{j})(Inds)*scale]./[Yx.(Loc{j})(Inds)];
@@ -157,11 +161,11 @@ for i = 1:3 % for each subplot
     M = Eupdated./Esimmax'-1;
     if PlotMAT
         Esimmaxx = max([Yx.GD'; Yx.MD'; Yx.DD'; Yx.DetD']);
-        Esimmaxx2 = max([Yx.GD'; Yx.MD'; Yx.DD'; Yx.DetD'; Yx.CD']);
-        Esimmaxx3 = max([Yx.GD'; Yx.MD'; Yx.DD'; Yx.DetD'; Yx.xTCD']);
+        %Esimmaxx2 = max([Yx.GD'; Yx.MD'; Yx.DD'; Yx.DetD'; Yx.CD']);
+        %Esimmaxx3 = max([Yx.GD'; Yx.MD'; Yx.DD'; Yx.DetD'; Yx.xTCD']);
         Mx = Eupdatedx./Esimmaxx'-1;
-        Mx2 = Eupdatedx./Esimmaxx2'-1;
-        Mx3 = Eupdatedx./Esimmaxx3'-1;
+        %Mx2 = Eupdatedx./Esimmaxx2'-1;
+        %Mx3 = Eupdatedx./Esimmaxx3'-1;
     end
     
     % Set tick details
@@ -234,7 +238,7 @@ for i = 1:3 % for each subplot
             hold on
             Inds = [false true true true true true true true]';
             plot(X(Inds),Mx(Inds),'-s','Color','k','MarkerEdgeColor','k','MarkerFaceColor','none','MarkerSize',MSize) 
-            plot(X(Inds),Mx2(Inds),'-s','Color','k','MarkerEdgeColor','k','MarkerFaceColor','k','MarkerSize',MSize) 
+            %plot(X(Inds),Mx2(Inds),'-s','Color','k','MarkerEdgeColor','k','MarkerFaceColor','k','MarkerSize',MSize) 
             %plot(X(Inds),Mx3(Inds),'-s','Color','k','MarkerEdgeColor','r','MarkerFaceColor','k','MarkerSize',MSize) 
         end
     end
@@ -247,7 +251,7 @@ else
     set(gcf,'Position',[50+175*(k-1) 0+50*(k-1) 900 500])
 end
 
-saveas(gcf,['Key Results/AGBPlots/' FName 'w E MSim & MC.png'])
+%saveas(gcf,['Key Results/AGBPlots/' FName 'w E MSim & MC.png'])
 
 end
 

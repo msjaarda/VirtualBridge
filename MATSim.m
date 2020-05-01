@@ -146,7 +146,7 @@ for g = 1:height(BaseData)
     % Create folders where there are none
     CreateFolders(BaseData.Folder{g},BaseData.VWIM(g),BaseData.Apercu(g),BaseData.Save(g))
     
-    TName = datestr(now,'mmmdd-yy HHMM');
+    TName = datestr(now,'mmmdd-yy HHMMSS');
     
     % Write results to a file (put into function)
     if BaseData.Save(g) == 1

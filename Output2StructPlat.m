@@ -120,12 +120,12 @@ for i = 1:length(OInfo)
             try %PLAT.(Section).(Dist).(Loc).(PlatSize).(PlatRate).(AE).(IVD)(Span/20)
                 if istable(PLAT.(Sectionx).(Distx).(Locx).(PlatSizex).(PlatRatex).(AEx))
                     PLAT.(Sectionx).(Distx).(Locx).(PlatSizex).(PlatRatex).(AEx).(PlatFolDistx)(Span/20) = OInfo(i).Mean(k);
-                    PLAT.(Sectionx).(Distx).(Locx).(PlatSizex).(PlatRatex).(AEx).([PlatFolDistx(1:end-4) 'Max'])(Span/20) = OInfo(i).Mean(k);
+                    PLAT.(Sectionx).(Distx).(Locx).(PlatSizex).(PlatRatex).(AEx).([PlatFolDistx(1:end-4) 'Max'])(Span/20) = OInfo(i).ESIM(k);
                 end
             catch
                 PLAT.(Sectionx).(Distx).(Locx).(PlatSizex).(PlatRatex).(AEx) = XT;
                 PLAT.(Sectionx).(Distx).(Locx).(PlatSizex).(PlatRatex).(AEx).(PlatFolDistx)(Span/20) = OInfo(i).Mean(k);
-                PLAT.(Sectionx).(Distx).(Locx).(PlatSizex).(PlatRatex).(AEx).([PlatFolDistx(1:end-4) 'Max'])(Span/20) = OInfo(i).Mean(k);
+                PLAT.(Sectionx).(Distx).(Locx).(PlatSizex).(PlatRatex).(AEx).([PlatFolDistx(1:end-4) 'Max'])(Span/20) = OInfo(i).ESIM(k);
             end
             PLAT.(Sectionx).(Distx).(Locx).(PlatSizex).(PlatRatex).(AEx).BaseMean(Span/20) = OInfo(BaseFlag).Mean(k);
             PLAT.(Sectionx).(Distx).(Locx).(PlatSizex).(PlatRatex).(AEx).BaseMax(Span/20) = OInfo(BaseFlag).ESIM(k);

@@ -2,7 +2,7 @@
 
 clear, clc
 
-Folder_Name = 'AGB2002';
+Folder_Name = 'AGB2002f50k';
 % Add cols CD and CS for Ceneri... load old mat file
 
 % Ensure file list is succinct
@@ -26,7 +26,7 @@ LocInfo = cell(length(OInfo),1);
 ILsInfo = cell(length(OInfo),1);
 
 % Added after for MC... could remove
-load('AGBMATResultsxx')
+%load('AGBMATResultsxx')
 
 SumTab = struct2table(File_List);
 SumTab(:,2:end) = [];
@@ -53,7 +53,7 @@ for i = 1:length(OInfo)
     end
     
     % Change back to 1000000
-    if OInfo(i).BaseData.NumVeh == 1000000
+    if OInfo(i).BaseData.NumVeh == 25000
         Configx = 'Bi';
     else
         Configx = 'Mo';
