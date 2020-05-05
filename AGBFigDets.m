@@ -78,6 +78,17 @@ elseif Fig == 4.6
     
 end
 
+% Convert to cellular if necessary
+if ~iscell(Section)
+    temp = Section; clear Section; [Section{1:3}] = deal(temp);
+end
+if ~iscell(AE)
+    temp = AE; clear AE; [AE{1:3}] = deal(temp);
+end
+if ~iscell(Dist)
+    temp = Dist; clear Dist; [Dist{1:3}] = deal(temp);
+end
+
 
 end
 
