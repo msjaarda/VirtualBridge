@@ -5,7 +5,8 @@
 % Used with Virtual or Real WIM results
 
 % Initial commands
-clear, clc, format long g, rng('shuffle'), close all; BaseData = table; 
+clear, clc, format long g, rng('shuffle'), close all; BaseData = table;
+addpath('./Misc/Deterministic Vehicles/')
 
 % Input Information --------------------
 
@@ -40,7 +41,7 @@ if ~strcmp(BaseData.Type,'NWIM')
     OutputFName = 'Output\PlatStud60m\Jan24-20 1049.mat';
     %InfCase = 1;
     %BaseData.LaneDir = {'1,1,2,2'};
-    %FName = 'DetAll.mat';
+    FName = 'DetAll.mat';
     %BaseData.LaneDir = {'1,1'};
     % DWIM: 'Det60t.mat'
     % AWIM: 'Apercu\AWIM_Mar25-20 1034.mat'

@@ -3,6 +3,9 @@
 % Initial Commands
 clear, clc, close all
 
+% Load data
+addpath('./Results Variables/')
+
 % INPUT ---------------
 
 PlotMAT = true;

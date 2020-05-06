@@ -40,6 +40,9 @@ Col{3} = [0.27 0.83 0.19]; Col{4} = 0.6*ones(1,3);
 % Set Plot Size Parameters
 MSize = 5; LWid = 1; Xmin = 20;
 
+% Load data
+addpath('./Results Variables/')
+
 % Load AGB Results
 load('AGBResults.mat') % AGB.(Section).(Config).(Dist).(AE)
 GammaS = 1.1;
