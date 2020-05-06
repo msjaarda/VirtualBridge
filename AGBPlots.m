@@ -29,7 +29,7 @@ J{5} = 'MSim'; J{6} = 'Cen 18'; %J{7} = 'Cen 18 10x Traf';
 Acc = [];
 
 %Fig = 4.2; %or 'Custom' and fill out lower down details
-Fig = 4.2%:0.1:4.6;
+Fig = 4.2:0.1:4.6;
 
 % INPUT OVER ----------
 
