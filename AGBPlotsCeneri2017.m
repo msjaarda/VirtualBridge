@@ -12,7 +12,7 @@ PlotMAT = true;
 PlotMargins = false;
 AlwaysTME = false;
 % Plot toggles (1 through 5 are Got 03, Mat 03, Den 03, Det, Cen 18)
-MATPlots = [1 2 3];
+MATPlots = [1];
 PlotCeneri = false;
 
 % Legend labels

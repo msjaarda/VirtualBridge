@@ -3,6 +3,10 @@
 % ------------------------------------------------------------------------
 % Simulate traffic over a bridge to find maximum load effects
 % Used with Simple or Complete MATSimInput spreadsheet
+% Add Fatigue
+% Add Smart Naming (if the run took shorter than a min... add more dec.)
+% Make sure Apercu is smooth and all necessary info is saved
+% MATSimWIM might need more info, say for DWIM to know the IL
 
 % Initializing commands
 clear, clc, close all, format long g, rng('shuffle');
@@ -33,6 +37,7 @@ for g = 1:height(BaseData)
     
     % Initialize empty vars
     [VirtualWIM, OverMax, ApercuOverMax, TableNames] = deal([]);
+    %TableNames = cell(1,BaseData.NumSims(g));
     
     % Initialize parpool if necessary and initialize progress bar
     if BaseData.Parallel(g) > 0, gcp; clc; end, m = StartProgBar(BaseData.NumSims(g), Num.Batches, g, height(BaseData)); tic; st = now;
@@ -67,7 +72,8 @@ for g = 1:height(BaseData)
                     Flo = GetFloDist(FolDist,FixVars,Flo,BaseData.PlatFolDist(g));
                     
                     % 4) Assemble Axle Loads and Axle Spacings vectors - populate Axle Weights (kN) and Inter-Axle Distances (m) within
-                    [Flo, LaneAxLineUp{q}, LaneVehLineUp{q}, TableNames] = GetLaneLineUp(TrTyp,Lane.Dir,q,Flo,FixVars,k,v,BaseData(g,:),TrData);
+                    [Flo, LaneAxLineUp{q}, LaneVehLineUp{q}, TableNamesx] = GetLaneLineUp(TrTyp,Lane.Dir,q,Flo,FixVars,k,v,BaseData(g,:),TrData);
+                    if v == 1 && k == 1 && q == 1, TableNames = [TableNames TableNamesx];  end
                     
                 end
                 

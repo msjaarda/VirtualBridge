@@ -14,9 +14,14 @@ addpath('./Results Variables/')
 MATPlots = [1 2 3 4];
 %PlotCeneri = false;
 
+% Saving
+SaveFig = true;
+SaveFolder = 'PlatoonPlots';
+SaveSuffix = '';
+
 % Legend labels
-J{1} = '2.5 m'; J{2} = '5.0 m';  J{3} = '7.5 m'; 
-J{4} = '10.0 m'; %J{5} = 'MSim'; J{6} = 'Cen 18';
+J{1} = '2.5 m IVD'; J{2} = '5.0 m IVD';  J{3} = '7.5 m IVD'; 
+J{4} = '10 m IVD'; J{5} = 'No Platoons'; %J{6} = 'Cen 18';
 %J{7} = 'Cen 18 10x Traf';
 
 % Initialize vector for calculating accuracy
@@ -64,9 +69,9 @@ Col{3} = [0.2745 0.8314 0.1922]; Col{4} = [0.6 0.6 0.6];
 % Set Plot Size Parameters
 MSize = 5; LWid = 1; Xmin = 20;
 
-for r = 1:2
+for r = 1:2 % 1 is 20%, 2 is 40%
 
-for w = 1:3
+for w = 1:3 % 1 2 3 is 2 3 4 truck platoons
 
 % Assign Figure Name
 FName = sprintf('Figure 1 Box Girder, Unidirectional, %i-Truck Platoons at %i%%',w+1,PlatRateNum(r)*100);
@@ -122,7 +127,11 @@ for i = 1:3 % for each subplot
     Yx = MAT.(Section{i}).(Config).(Dist{i}).(AE{i});
     
     Inds = [2 4 6 8];
-    plot(X(Inds),Yx.(Loc{3})(Inds)./Yx.E(Inds),'-s','Color',[0 0 0],'MarkerEdgeColor','k','MarkerFaceColor',[0 0 0],'MarkerSize',MSize)
+    Base = Yx.('FIFD')(Inds)./Yx.E(Inds);
+    Base2 = Yx.('FIFD')./Yx.E;
+    
+    
+    
 
     %if PlotMAT
         %Yx = PLAT.(Section{i}).(Config).(Dist{i}).(AE{i});
@@ -143,8 +152,8 @@ for i = 1:3 % for each subplot
         hold on
         
         % Get only indices that have results
-        Inds = ~isnan(Y.(IVD{j})) & X >= Xmin;
-        plot(X(Inds),Y.(IVD{j})(Inds)./Y.BaseMax(Inds),'-s','Color',Col{j},'MarkerEdgeColor','none','MarkerFaceColor',Col{j},'MarkerSize',MSize)
+        %Inds = ~isnan(Y.(IVD{j})) & X >= Xmin;
+        plot(X,Base.*(Y.(IVD{j})./Y.BaseMax),'-s','Color',Col{j},'MarkerEdgeColor','none','MarkerFaceColor',Col{j},'MarkerSize',MSize)
 
 %         if PlotMAT
 %             if j == 5
@@ -167,6 +176,8 @@ for i = 1:3 % for each subplot
 %             %Acc = [Acc; bp];
 %         end
     end
+    
+    plot(10:10:80,Base2,'-s','Color',[0.4 0.4 0.4],'MarkerEdgeColor','k','MarkerFaceColor',[0.4 0.4 0.4],'MarkerSize',MSize)
     % Track which of the traffic cases was the highest, for use in
     % Margin Plot
 %     if strcmp(Section{i},'Box')
@@ -192,29 +203,63 @@ for i = 1:3 % for each subplot
 %         %Mx3 = Eupdatedx./Esimmaxx3'-1;
 %     end
     
+
+
+
+%     % Set tick details
+%     ytickformat('%.2f'); yticks(0.9:0.1:1.4); xticks(Xmin:20:80); set(gca,'TickDir','out'); set(gca,'YGrid','on')
+%     
+%     % Axis labels
+%     xlabel('Span (m)')
+%     
+%     % Set title
+%     title(Title{i})
+%     
+%     % Set axis limits
+%     ylim([0.9 1.4]); xlim([Xmin 80])
+% 
+%     % get handle of current, set box property to off and remove background color
+%     a = gca; set(a,'box','off','color','none');
+%     % create new, empty axes with box but without ticks
+%     b = axes('Position',get(a,'Position'),'box','on','xtick',[],'ytick',[]);
+%     % set original axes as active, and link axes in case of zooming
+%     axes(a); %linkaxes([a b]);    
+%     
+%     
+%     if i == 1
+%         %ylabel('E_{SIM}/E_{SIA}')
+%         ylabel('E_{PLATSIM}/E_{BASESIM}')
+%         yh = get(gca,'ylabel'); % handle to the label object
+%         p = get(yh,'position'); % get the current position property
+%         p(1) = 0.9*p(1);          % double the distance,
+%         % negative values put the label below the axis
+%         set(yh,'position',p)   % set the new position
+%     end
+    
+    
+    
+    
+    
     % Set tick details
-    ytickformat('%.2f'); yticks(0.9:0.1:1.4); xticks(Xmin:20:80); set(gca,'TickDir','out'); set(gca,'YGrid','on')
+    ytickformat('%.2f'); yticks(0:0.1:1); xticks(Xmin:10:80); set(gca,'TickDir','out'); set(gca,'YGrid','on')
     
     % Axis labels
     xlabel('Span (m)')
     
     % Set title
     title(Title{i})
-    
-    % Set axis limits
-    ylim([0.9 1.4]); xlim([Xmin 80])
 
     % get handle of current, set box property to off and remove background color
     a = gca; set(a,'box','off','color','none');
     % create new, empty axes with box but without ticks
     b = axes('Position',get(a,'Position'),'box','on','xtick',[],'ytick',[]);
     % set original axes as active, and link axes in case of zooming
-    axes(a); %linkaxes([a b]);    
+    axes(a); linkaxes([a b]);    
     
-    
+    % Set axis limits
+    ylim([0 1]); xlim([Xmin 80])
     if i == 1
-        %ylabel('E_{SIM}/E_{SIA}')
-        ylabel('E_{PLATSIM}/E_{BASESIM}')
+        ylabel('E_{SIM}/E_{SIA}')
         yh = get(gca,'ylabel'); % handle to the label object
         p = get(yh,'position'); % get the current position property
         p(1) = 0.9*p(1);          % double the distance,
@@ -222,11 +267,16 @@ for i = 1:3 % for each subplot
         set(yh,'position',p)   % set the new position
     end
     
+    
+    
+    
+    
+    
 %     if i == 1
 %         if PlotMargins
 %             %legend(J([1 2 3 4 5 6]),'Orientation','horizontal','Position',[0.155677121172981 0.496963062747592 0.701428561380931 0.0242857137322425]);
 %         else
-             legend(J([1 2 3 4]));
+             legend(J([1 2 3 4 5]));
 %         end
 %     end
     
@@ -277,8 +327,9 @@ end
 % else
     set(gcf,'Position',[50+175*(k-1) 0+50*(k-1) 900 500])
 % end
-
-saveas(gcf,['Key Results/PlatoonPlots/' FName '.png'])
+if SaveFig
+    saveas(gcf,['Key Results/' SaveFolder '/' FName SaveSuffix '.png'])
+end
 
 end
 end
