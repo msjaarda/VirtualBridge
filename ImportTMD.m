@@ -27,7 +27,7 @@ ranges = ["D9:K11", "D16:K17", "D22:K23", "D28:K29", "D46:K47"];
 for idx = 1:length(ranges)
     opts.DataRange = ranges(idx);
     % EDIT THIS to the filepath of the Results Viewer (and uncomment)
-    %tb = readtable("Z:\447 - Evaluation ponts existants\Simulation_trafic\Result\WinQSim Results Viewer.xls", opts, "UseExcel", false);
+    tb = readtable("Z:\447 - Evaluation ponts existants\Simulation_trafic\Result\WinQSim Results Viewer.xls", opts, "UseExcel", false);
     TMD = [TMD; tb]; %#ok<AGROW>
 end
 
@@ -51,7 +51,7 @@ ranges = ["D9:K11", "D16:K17", "D22:K23", "D28:K29", "D46:K47"];
 for idx = 1:length(ranges)
     opts.DataRange = ranges(idx);
     % EDIT THIS to the filepath of the Results Viewer (and uncomment)
-    %tb = readtable("Z:\447 - Evaluation ponts existants\Simulation_trafic\Result\WinQSim Results Viewer.xls", opts, "UseExcel", false);
+    tb = readtable("Z:\447 - Evaluation ponts existants\Simulation_trafic\Result\WinQSim Results Viewer.xls", opts, "UseExcel", false);
     TMD = [TMD; tb]; %#ok<AGROW>
 end
 
@@ -70,7 +70,7 @@ ranges = ["D9:K11", "D16:K17", "D22:K23", "D28:K29", "D46:K47"];
 for idx = 1:length(ranges)
     opts.DataRange = ranges(idx);
     % EDIT THIS to the filepath of the Results Viewer (and uncomment)
-    %tb = readtable("Z:\447 - Evaluation ponts existants\Simulation_trafic\Result\WinQSim Results Viewer.xls", opts, "UseExcel", false);
+    tb = readtable("Z:\447 - Evaluation ponts existants\Simulation_trafic\Result\WinQSim Results Viewer.xls", opts, "UseExcel", false);
     TMD = [TMD; tb]; %#ok<AGROW>
 end
 
