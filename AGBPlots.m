@@ -2,7 +2,7 @@
 
 % Initial Commands
 clear, clc, close all
-addpath('./Results Variables/')
+%addpath('./Results Variables/')
 
 % INPUT ---------------
 
