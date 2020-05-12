@@ -179,7 +179,7 @@ else
     end
     
     % Check for other program warnings, initialize empty vars
-    MATSimWarnings(cumsum(TrData.TrDistr.TrDistr), BaseData.BunchFactor, BaseData.RunPlat, TrTrTransProb); 
+    Warnings(cumsum(TrData.TrDistr.TrDistr), BaseData.BunchFactor, BaseData.RunPlat, TrTrTransProb); 
     
 
 %     % Now that we have the TrRates and TransProbs repeat the process! It is iterative...
