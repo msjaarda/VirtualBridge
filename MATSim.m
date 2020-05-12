@@ -1,5 +1,5 @@
 % ------------------------------------------------------------------------
-%                              MATSim2019
+%                              MATSim
 % ------------------------------------------------------------------------
 % Simulate traffic over a bridge to find maximum load effects
 % Used with Simple or Complete MATSimInput spreadsheet

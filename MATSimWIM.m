@@ -1,5 +1,5 @@
 % ------------------------------------------------------------------------
-%                            MATSimWIM2019
+%                            MATSimWIM
 % ------------------------------------------------------------------------
 % Run real traffic over a bridge to find maximum load effects
 % Used with Virtual or Real WIM results

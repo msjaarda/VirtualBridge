@@ -1,5 +1,5 @@
 % ------------------------------------------------------------------------
-%                              MSInputGen
+%                              MATSimInputGen
 % ------------------------------------------------------------------------
 % Summarize traffic characteristics from WIM or VirtualWIM
 %       - Output is a MATSimInput spreadsheet to be used with MATSim
