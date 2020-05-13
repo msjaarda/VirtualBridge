@@ -7,9 +7,9 @@ clear, clc, format long g, rng('shuffle');
 
 % Input File or Folder Name
 Folder_Name = 'PlatStud60m'; 
-Folder_Name = 'PlatStud456045m';
+%Folder_Name = 'PlatStud456045m';
 %Folder_Name = 'PlatStud20m';
-Folder_Name = 'PlatStud608060m';
+%Folder_Name = 'PlatStud608060m';
 %Folder_Name = 'Platoon';
 
 File_List = GetFileList(Folder_Name);

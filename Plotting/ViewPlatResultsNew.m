@@ -3,7 +3,7 @@
 
 % Initial commands
 clear, clc, format long g, rng('shuffle');
-close all
+%close all
 
 % Predefine colors (red and black)
 Col{1} = [0 0 0]; Col{2} = [1 0 0];
