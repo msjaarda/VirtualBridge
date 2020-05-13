@@ -1,5 +1,6 @@
 function [] = LaneDistBr(PDC,TrTyps,TrAxPerGr,Station)
 % This function used in the MATSim input file pipeline
+% Lane Distribution Breakdown (truck axle number in each lane)
 
 
 NumTrTyp = length(TrTyps);

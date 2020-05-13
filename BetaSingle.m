@@ -1,6 +1,8 @@
 clear,clc
 
-load('12TW.mat')
+A = 4;
+B = 3;
+x = betarnd(A,B,1000,1);
 
 bins = 0:0.025:1;
 

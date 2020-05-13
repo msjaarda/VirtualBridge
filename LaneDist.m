@@ -5,7 +5,7 @@ close all
 format long g
 
 %Dates = StartY:EndY;
-Dates = 2011:2018;
+Dates = 2017;
 %Station = {'Ceneri' 'Denges' 'Oberburen'};
 SName = 'Ceneri';
 x = 0;

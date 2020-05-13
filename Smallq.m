@@ -3,14 +3,14 @@ clc
 close all
 format long g
 
-StartY = 2003;
+StartY = 2015;
 EndY = 2018;
-Station = 'Ceneri';
+SName = 'Ceneri';
 x = 0;
 M = [];
 Mx = [];
 
-for i = EndY:-1:StartY
+for i = 2017%EndY:-1:StartY
     
 %     x = x+1;
 %     load(strcat(Station,'_',num2str(i),'.mat'))
@@ -28,17 +28,18 @@ for i = EndY:-1:StartY
     
     
     x = x+1;
-    PD = Classify(Station,num2str(i));
+    load(['PrunedS1 WIM/',SName,'/',SName,'_',num2str(i),'.mat']);
+    PDC = Classify(PD);
     
     
-    J = (PD.GW_TOT/102)./(PD.LENTH/100);
+    J = (PDC.GW_TOT/102)./(PDC.LENTH/100);
     M = [M; mean(J) prctile(J,95) prctile(J,99) prctile(J,99.99)];
     
     
-    Q = PD.W1_2+PD.W2_3+PD.W3_4+PD.W4_5+PD.W5_6+PD.W6_7+PD.W7_8;
+    Q = PDC.W1_2+PDC.W2_3+PDC.W3_4+PDC.W4_5+PDC.W5_6+PDC.W6_7+PDC.W7_8;
     Q = Q + 255;
     
-    Jx = (PD.GW_TOT/102)./(Q/100);
+    Jx = (PDC.GW_TOT/102)./(Q/100);
     Mx = [Mx; mean(Jx) prctile(Jx,95) prctile(Jx,99) prctile(Jx,99.99)];
     
     %PD = PD(PD.ZST == 408,:);

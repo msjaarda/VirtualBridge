@@ -1,8 +1,22 @@
 %   This time for Beta...
 
+% This comes from "Fitting a more complicated distribution: A Mixture of Two
+% Normals" at the following: https://www.mathworks.com/help/stats/examples/fitting-custom-univariate-distributions.html
+
+% Unsuccessfully tried adapting for beta dist.
 clear,clc
 
-load('123TW.mat');
+%load('123TW.mat');
+
+A = 4;
+B = 3;
+xx = betarnd(A,B,1000,1);
+A = 7;
+B = 2;
+yy = betarnd(A,B,1000,1);
+P = 0.1;
+
+x = xx*(1-P)+yy*P;
 
 hist(x,0:0.025:1);
 
