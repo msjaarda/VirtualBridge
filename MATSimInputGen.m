@@ -22,6 +22,7 @@ Year = 2017; SName = 'Ceneri'; Save = 0; PlotFits = 1;
 % ----- ENDIN -----
 
 load(['PrunedS1 WIM/',SName,'/',SName,'_',num2str(Year),'.mat']);
+PD = 1; % REMOVE, just for silly dependancy analysis problem
 Station = unique(PD.ZST);
 
 % Lookup from weeklycount excel file
