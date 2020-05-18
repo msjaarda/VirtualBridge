@@ -3,8 +3,8 @@
 
 clear,clc
 
-FileName = 'Misc/InfLineImport.xlsx';
-LibName = 'FornNS';
+FileName = 'Misc/InfLineImportLuca.xlsx';
+LibName = 'VenogeLuca';
 
 X = readtable(FileName);
 
