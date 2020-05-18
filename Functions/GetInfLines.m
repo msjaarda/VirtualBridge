@@ -46,10 +46,20 @@ for i = 1:NumInfCases
     % Find max Influence line value index, k
     [~, k] = max(Infv(:,Start-StartCol:End-StartCol));
     
+    clear b, clear c
+    
     % Interpolate around influence lines to figure out next biggest max
     for j = 1:End-Start + 1
-        b(j) = interp1(LaneData.x,LaneData{:,Start+j-1},Infx(k(j))+0.6);
-        c(j) = interp1(LaneData.x,LaneData{:,Start+j-1},Infx(k(j))-0.6);
+        % In case we are already at the start or end (can't interpolate
+        % less or more)
+        if k == 1 | k == length(Infv)
+            b(j) = interp1(LaneData.x,LaneData{:,Start+j-1},Infx(k(j)));
+            c(j) = interp1(LaneData.x,LaneData{:,Start+j-1},Infx(k(j)));
+        % Normal procedure
+        else
+            b(j) = interp1(LaneData.x,LaneData{:,Start+j-1},Infx(k(j))+0.6);
+            c(j) = interp1(LaneData.x,LaneData{:,Start+j-1},Infx(k(j))-0.6);
+        end
     end
     
     aprime = max(b,c);
