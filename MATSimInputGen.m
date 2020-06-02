@@ -17,12 +17,12 @@ tic, clear, clc, hold off, close all, format long g, rng('shuffle')
 % ----- INPUT -----
 
 % Year, #, Station Name, string, save and plot toggles
-Year = 2017; SName = 'Ceneri'; Save = 0; PlotFits = 1;
+Year = 2018; SName = 'Gotthard'; Save = 0; PlotFits = 1;
 
 % ----- ENDIN -----
 
 load(['PrunedS1 WIM/',SName,'/',SName,'_',num2str(Year),'.mat']);
-PD = 1; % REMOVE, just for silly dependancy analysis problem
+%PD = 1; % REMOVE, just for silly dependancy analysis problem
 Station = unique(PD.ZST);
 
 % Lookup from weeklycount excel file
@@ -152,4 +152,17 @@ if Save == 1
 end
 
 LaneDistBr(PDC,TrTyps,TrAxPerGr,Station)
+
+% If importing new TrLib to TrLib
+
+load('C:\Users\sjaarda\Desktop\SwissTraffic\Library Variables\TrLib.mat')
+TrLib.([SName,num2str(Year)]).TrDistr = Distr_Excel;
+TrLib.([SName,num2str(Year)]).TrLinFit = LinFit_Excel;
+TrLib.([SName,num2str(Year)]).TrAllo = TrLib.Ceneri2018.TrAllo;
+TrLib.([SName,num2str(Year)]).TrBetAx = BetAx_Excel;
+TrLib.([SName,num2str(Year)]).TrWitAx = TrLib.Ceneri2018.TrWitAx;
+TrLib.([SName,num2str(Year)]).TrDistr.PlatPct = [];
+
+% MANUALLY Save
+
 
