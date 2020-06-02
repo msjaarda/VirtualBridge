@@ -6,14 +6,14 @@ format long g
 
 Year = 2003;
 SName{1} = 'Denges';
-SName{2} = 'Mattstetten';
-SName{3} = 'Gotthard';
+%SName{2} = 'Mattstetten';
+%SName{3} = 'Gotthard';
 x = 0;
-PlotType = 'Weight';   % Options are 'LaneDist' or 'Weight'
+PlotType = 'LaneDist';   % Options are 'LaneDist' or 'Weight'
 
-Num = 3;
+Num = 1;
    
-for i = 1:3
+for i = 1:Num
     
     x = x+1;
     %load(strcat(Station,'_',num2str(i),'.mat'))
@@ -63,7 +63,8 @@ for i = 1:3
         nums{x} = nums{x}/NumTrucks(x);
         Between = mids{x}>10 & mids{x}<50;
 
-        color = ((EndY-i)/(EndY-StartY))*(200/255)*[1, 1, 1];
+        %color = ((EndY-i)/(EndY-StartY))*(200/255)*[1, 1, 1];
+        color = ((Num-i)/(Num))*(200/255)*[1, 1, 1];
         
         j = plot(mids{x}(Between), 100*nums{x}(Between),'Color', color,'LineWidth',1.5);
         ytickformat('percentage')
@@ -74,7 +75,8 @@ for i = 1:3
         PDx = PDx(PDx > 0);
         [nums{x}, mids{x}]  = histcounts(PDx/1000,150,'Normalization','pdf');
         Between = mids{x}>0 & mids{x}<18; 
-        color = ((EndY-i)/(EndY-StartY))*(200/255)*[1, 1, 1];
+        %color = ((EndY-i)/(EndY-StartY))*(200/255)*[1, 1, 1];
+        color = ((Num-i)/(Num))*(200/255)*[1, 1, 1];
         if i == 2018
             color = [0, 1, 0];
         end    
@@ -106,7 +108,7 @@ else
 
 end
 
-x = 1:3;
+%x = 1:3;
 
 legend(SName(x));
 

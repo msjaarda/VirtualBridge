@@ -10,15 +10,16 @@ clear, clc
 % AGB
 %Folder_Name = 'AGB2002f50k';
 % Ceneri2017
-Folder_Name = 'Ceneri2017';
+Folder_Name = 'PlatoonTessin';
 % Platoon
 %Folder_Name = 'Platoon';
 
 % Structure Name
 % AGB and Ceneri2017
-Struct_Name = 'MAT';
+%Struct_Name = 'MAT';
 % Platoon
-%Struct_Name = 'PLAT';
+Struct_Name = 'PLAT';
+RegSpans = false; % Used to tell if the normal sequence of Spans (10-80)
 
 % Number of Vehicles for Bidirectional
 % AGB
@@ -40,7 +41,11 @@ for i = 1:length(File_List)
     end
     % Create matrix of just span lengths
     for k = 1:length(OInfo(i).InfNames)
-        SpanLengths(k) = str2num(OInfo(i).InfNames{k}(end-1:end));
+        if RegSpans
+            SpanLengths(k) = str2num(OInfo(i).InfNames{k}(end-1:end));
+        else % Insert dummy... if we don't have one (change value later)
+            SpanLengths(k) = 0;
+        end
     end
     % Find the number of unique span lengths
     if length(unique(OInfo(i).InfNames)) > ResultsPerRun
@@ -55,9 +60,9 @@ clear OutInfo
 % AGB
 %ColumnNames = {'EQ1','EQ2','Eq','GS','GD','MS','MD','DS','DD','DetS','DetD','E'};
 % Ceneri2017
-ColumnNames = {'EQ1','EQ2','Eq','TWES','TWED','TWOS','TWOD','FIFS','FIFD','E'};
+%ColumnNames = {'EQ1','EQ2','Eq','TWES','TWED','TWOS','TWOD','FIFS','FIFD','E'};
 % Platoon
-%ColumnNames = {'BaseMean','BaseMax','SMean','MSMean','MLMean','LMean','SMax','MSMax','MLMax','LMax'};
+ColumnNames = {'BaseMean','BaseMax','SMean','MSMean','MLMean','LMean','SMax','MSMax','MLMax','LMax'};
 
 % AGB and Ceneri2017
 if ResultsPerRun == 4
@@ -180,18 +185,25 @@ for i = 1:length(OInfo)
         % Get InfName (call it Temp)
         % Needed because there are 2 influence lines for each Twin ESIM
         UniqNames = unique(OInfo(i).InfNames);
-        Temp = OInfo(i).InfNames{k};
-        % Get Span from InfName
-        Span = str2num(Temp(end-1:end));
-        % Get Action Effect from InfName
-        AE = Temp(1:end-2);
+        if RegSpans
+            Temp = UniqNames{k}; %Fixed 26.5.20
+            % Get Span from InfName
+            Span = str2num(Temp(end-1:end));
+            % Get Action Effect from InfName
+            AE = Temp(1:end-2);
+        else
+            Span = 10; %b/c SpanDiv will be 10
+            AE = UniqNames{k};
+        end
         
         % Platoon Specific
         if strcmp(Struct_Name,'PLAT')
             if OInfo(i).BaseData.RunPlat == 1
+                
+                % Try assigning values directly, catch if table is not yet initialized
                 try %PLAT.(Section).(Dist).(Loc).(PlatSize).(PlatRate).(AE).(IVD)(Span/SpanDiv)
                     if istable(PLAT.(Section).(Dist).(Loc).(PlatSize).(PlatRate).(AE))
-                        PLAT.(Section).(Dist).(Loc).(PlatSize).(PlatRate).(AE).(PlatFolDist)(Span/20) = OInfo(i).Mean(k);
+                        PLAT.(Section).(Dist).(Loc).(PlatSize).(PlatRate).(AE).(PlatFolDist)(Span/SpanDiv) = OInfo(i).Mean(k);
                         PLAT.(Section).(Dist).(Loc).(PlatSize).(PlatRate).(AE).([PlatFolDist(1:end-4) 'Max'])(Span/SpanDiv) = OInfo(i).ESIM(k);
                     end
                 catch
@@ -210,7 +222,7 @@ for i = 1:length(OInfo)
                 if istable(MAT.(Section).(Config).(Dist).(AE))
                     MAT.(Section).(Config).(Dist).(AE).(Loc)(Span/SpanDiv) = OInfo(i).ESIM(k);
                     if ~isempty(OInfo(i).ESIMS)
-                        MAT.(Section).(Config).(Dist).(AE).([Loc(1:end-1) 'S'])(Span/10) = OInfo(i).ESIMS(k);
+                        MAT.(Section).(Config).(Dist).(AE).([Loc(1:end-1) 'S'])(Span/SpanDiv) = OInfo(i).ESIMS(k);
                     end
                     % Only if it has it
                     if ~isempty(OInfo(i).ESIA)

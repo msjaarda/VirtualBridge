@@ -1,5 +1,7 @@
 % This script loads a daily .log traffic stream and summarizes behaviour of
-% Car-Truck following interactions
+% Car-Truck following interactions (transition probabilities)
+% as well as following distances
+% Could be added to to test Bailey's curve of speed to following dist
 
 clear
 clc
@@ -172,6 +174,10 @@ histogram(Fol(Fol(:,2)<60 & Fol(:,1) == 1,2),100)
 histogram(Fol(Fol(:,2)<60 & Fol(:,1) == 2,2),100)
 histogram(Fol(Fol(:,2)<60 & Fol(:,1) == 3,2),100)
 histogram(Fol(Fol(:,2)<60 & Fol(:,1) == 4,2),100)
+
+xlabel('Following Distance (m)')
+ylabel('Number of Vehicles')
+title('Following Distances of Vehicles')
 
 
 % Summary
