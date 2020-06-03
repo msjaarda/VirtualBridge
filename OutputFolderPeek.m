@@ -4,7 +4,7 @@
 
 clear, clc, close all
 
-Folder_Namex = 'PlatoonTessin';
+Folder_Namex = 'AGB2018';
 
 Folder_List = GetFolderList('Output');
 

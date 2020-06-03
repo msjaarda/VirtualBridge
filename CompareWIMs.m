@@ -5,7 +5,7 @@ clear, clc, hold off, close all, format long g
 Year = 2003; SName = 'Denges'; 
 % File #2: Year, #, Station Name, string
 %Name = 'WIM_Nov14 1419';
-Year2 = 2017; SName2 = 'Ceneri';
+Year2 = 2018; SName2 = 'Denges';
 
 %load(['VirtualWIM/',Name,'.mat']); PDC2 = Classify(PD);
 load(['PrunedS1 WIM/',SName2,'/',SName2,'_',num2str(Year2),'.mat']); PDC2 = Classify(PD);

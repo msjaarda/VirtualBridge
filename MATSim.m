@@ -12,7 +12,7 @@
 clear, clc, close all, format long g, rng('shuffle');
 
 % Input File
-InputFile = 'MATSimInputLaneDataTessinPlatoon.xlsx';
+InputFile = 'MATSimInputAGBFull.xlsx';
 
 % Read in simulation data
 [BaseData,LaneData,TrData,FolDist] = ReadInputFile(['Input/' InputFile]);

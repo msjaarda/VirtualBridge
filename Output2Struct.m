@@ -10,22 +10,22 @@ clear, clc
 % AGB
 %Folder_Name = 'AGB2002f50k';
 % Ceneri2017
-Folder_Name = 'PlatoonTessin';
+Folder_Name = 'AGB2018';
 % Platoon
 %Folder_Name = 'Platoon';
 
 % Structure Name
 % AGB and Ceneri2017
-%Struct_Name = 'MAT';
+Struct_Name = 'MAT';
 % Platoon
-Struct_Name = 'PLAT';
-RegSpans = false; % Used to tell if the normal sequence of Spans (10-80)
+%Struct_Name = 'PLAT';
+RegSpans = true; % Used to tell if the normal sequence of Spans (10-80)
 
 % Number of Vehicles for Bidirectional
 % AGB
-%BiVehNum = 1000000;
+BiVehNum = 1000000;
 % Ceneri2017 and Platoon
-BiVehNum = 25000;
+%BiVehNum = 25000;
 
 % Ensure file list is succinct
 File_List = GetFileList(Folder_Name);
@@ -58,11 +58,11 @@ clear OutInfo
 
 % Name each column of the final matrix/table in the structure
 % AGB
-%ColumnNames = {'EQ1','EQ2','Eq','GS','GD','MS','MD','DS','DD','DetS','DetD','E'};
+ColumnNames = {'EQ1','EQ2','Eq','GS','GD','MS','MD','DS','DD','DetS','DetD','E'};
 % Ceneri2017
 %ColumnNames = {'EQ1','EQ2','Eq','TWES','TWED','TWOS','TWOD','FIFS','FIFD','E'};
 % Platoon
-ColumnNames = {'BaseMean','BaseMax','SMean','MSMean','MLMean','LMean','SMax','MSMax','MLMax','LMax'};
+%ColumnNames = {'BaseMean','BaseMax','SMean','MSMean','MLMean','LMean','SMax','MSMax','MLMax','LMax'};
 
 % AGB and Ceneri2017
 if ResultsPerRun == 4
@@ -133,13 +133,13 @@ for i = 1:length(OInfo)
         Loc = 'DetD';
     end
     
-    if OInfo(i).BaseData.NumVeh == 20000000
-        Loc = 'TWED';
-    elseif OInfo(i).BaseData.NumVeh == 2000000
-        Loc = 'TWOD';
-    else
-        Loc = 'FIFD';
-    end
+%     if OInfo(i).BaseData.NumVeh == 20000000
+%         Loc = 'TWED';
+%     elseif OInfo(i).BaseData.NumVeh == 2000000
+%         Loc = 'TWOD';
+%     else
+%         Loc = 'FIFD';
+%     end
     
     % Platoon Specific
     %--------------------------------------------------
@@ -184,7 +184,8 @@ for i = 1:length(OInfo)
     for k = 1:length(unique(OInfo(i).InfNames))
         % Get InfName (call it Temp)
         % Needed because there are 2 influence lines for each Twin ESIM
-        UniqNames = unique(OInfo(i).InfNames);
+        UniqNames = unique(OInfo(i).InfNames,'stable'); % Sorts alphabetically!!!BUG added 'stable'
+        
         if RegSpans
             Temp = UniqNames{k}; %Fixed 26.5.20
             % Get Span from InfName
