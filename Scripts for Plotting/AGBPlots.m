@@ -1,4 +1,6 @@
 % Plot AGB Results
+%
+% This needs to be made much clearer. I am attempting to rebuild
 
 % Initial Commands
 clear, clc, close all
