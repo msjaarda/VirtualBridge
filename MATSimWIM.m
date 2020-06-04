@@ -11,14 +11,14 @@ addpath('./Misc/Deterministic Vehicles/')
 % Input Information --------------------
 
 % Type
-BaseData.Type = 'AWIM'; % 'NWIM', 'VWIM', 'AWIM', or 'DWIM' 
+BaseData.Type = 'NWIM'; % 'NWIM', 'VWIM', 'AWIM', or 'DWIM' 
                         % Normal, Virtual, Apercu, or Deterministic
                         
 % Necessary Inputs
 % Roadway Info
 BaseData.LaneDir = {'1,1'};
 % Influence Line Info
-BaseData.ILs = {'Mp.Mp60'};  BaseData.ILRes = 0.1;  InfCase = 1;
+BaseData.ILs = {'Mp.Mp40'};  BaseData.ILRes = 1;  InfCase = 1;
 % Analysis Info
 BaseData.RunDyn = 1;   BaseData.MultipleCases = 1;
 BaseData.TransILx = 0;
@@ -58,10 +58,10 @@ else % WIM Only Inputs
     BaseData.LaneDir = {'1,1'};
     
     % Station Info incl. station name, number, and year
-    Year = 2017;
+    Year = 2011:2018;
     BaseData.SName = 'Denges';
     BaseData.StationNum = 1;
-    BaseData.NumAnalyses = 1;
+    BaseData.NumAnalyses = 10;
     BaseData.Stage2Prune = false;
     BaseData.ClassOnly = false;
     
@@ -89,6 +89,11 @@ OverMax = [];
 for v = 1:BaseData.MultipleCases
 
     for i = 1:length(Year)
+        
+        % Could be a try catch thing. This is for Denges (missing 2010)
+        if Year(i) == 2010
+            continue
+        end
         
         % Load File
         if strcmp(BaseData.Type,'NWIM')
@@ -210,12 +215,12 @@ if length(Year) > 1
     Dx = D(1:BaseData.NumAnalyses,:);
     scatter(YearsforD(:)-0.15,Dx(:),'sk','MarkerFaceColor',0.2*[1 1 1])
     hold on
-    Dx = D(BaseData.NumAnalyses+1:BaseData.NumAnalyses*2,:);
-    scatter(YearsforD(:),Dx(:),'sk','MarkerFaceColor',0.6*[1 1 1])
-    hold on
-    Dx = D(BaseData.NumAnalyses*2+1:BaseData.NumAnalyses*3,:);
-    scatter(YearsforD(:)+0.15,Dx(:),'sk','MarkerFaceColor',1*[1 1 1])
-    hold on
+%     Dx = D(BaseData.NumAnalyses+1:BaseData.NumAnalyses*2,:);
+%     scatter(YearsforD(:),Dx(:),'sk','MarkerFaceColor',0.6*[1 1 1])
+%     hold on
+%     Dx = D(BaseData.NumAnalyses*2+1:BaseData.NumAnalyses*3,:);
+%     scatter(YearsforD(:)+0.15,Dx(:),'sk','MarkerFaceColor',1*[1 1 1])
+%     hold on
     plot(xwidth,[ESIA.Total ESIA.Total],'k')
     text(Year(1),ESIA.Total+ESIA.Total*0.05,sprintf('E_{SIA}'),'FontSize',11,'FontWeight','bold','Color','k')
     hold on
