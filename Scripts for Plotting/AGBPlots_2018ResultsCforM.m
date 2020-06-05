@@ -16,7 +16,7 @@ Plots = [1 3];
 % Use TM's E (slightly different than MATSim E)
 AlwaysTME = false;
 % Saving
-SaveFig = true;
+SaveFig = false;
 SaveFolder = 'AGBPlots';
 SaveSuffix = ' 2003 & 2018 Comp';
 

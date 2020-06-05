@@ -1,6 +1,10 @@
 % Plot AGB Results
 %
-% This needs to be made much clearer. I am attempting to rebuild
+% This needs to be made much clearer. I am attempting to rebuild. We can
+% have 3 optional "layers". The first is colored, just like original AGB.
+% The second is empty black, and the third is filled red w/ black.
+%
+% We should rename results files as well, so that xTC isn't a thing.
 
 % Initial Commands
 clear, clc, close all
@@ -8,10 +12,11 @@ clear, clc, close all
 % INPUT ---------------
 
 % Plot Toggles
-PlotOriginal = true;
+Plot1 = true;
+%Plot1T = [];
+Plot2 = true;
+Plot3 = false;
 PlotMargins = true;
-PlotMAT1 = true;
-PlotMAT2 = false;
 PlotCeneriM = true;
 % Plot Series Toggles (1 through 5 are Got 03, Mat 03, Den 03, Det, Cen 18)
 Plots = [1 2 3 4 5 6];
@@ -106,13 +111,13 @@ for i = 1:3
     end
     
     % Get Y data
-    if PlotOriginal
+    if Plot1
         Y = AGB.(Section{i}).(Config).(Dist{i}).(AE{i});
     end
-    if PlotMAT1
+    if Plot2
         Y1 = MAT.(Section{i}).(Config).(Dist{i}).(AE{i});
     end
-    if PlotMAT2
+    if Plot3
         Y2= MAT2.(Section{i}).(Config).(Dist{i}).(AE{i});
     end
     
@@ -122,7 +127,7 @@ for i = 1:3
         hold on
         
         % Plot AGB Originals (from TM's work)
-        if PlotOriginal
+        if Plot1
             if j < 5 % There are no original AGB Results for j > 5
                 % Get only indices that have results (and above Xmin)
                 Inds = ~isnan(Y.(Loc{j})) & X >= Xmin;
@@ -131,9 +136,9 @@ for i = 1:3
             end
         end
 
-        if PlotMAT1
+        if Plot2
             % Turn on or off legend visibility
-            if j > 4 || [j == 4 && i == 1] || ~PlotOriginal
+            if j > 4 || [j == 4 && i == 1] || ~Plot1
                 HV = 'on';
             else
                 HV = 'off';
@@ -157,16 +162,16 @@ for i = 1:3
             % If using TM's E, divide by Y.E (otherwise use new E)
             if AlwaysTME
                 plot(X(Inds),Y1.(Loc{j})(Inds)./Y.E(Inds),'-s','Color','k','MarkerEdgeColor',MEC,'MarkerFaceColor',MFC,'MarkerSize',MSize,'HandleVisibility',HV)
-                if PlotMAT2
+                if Plot3
                     plot(X(Inds),Y2.(Loc{j})(Inds)./Y.E(Inds),'-s','Color','k','MarkerEdgeColor',MEC,'MarkerFaceColor',MFC,'MarkerSize',MSize,'HandleVisibility','off')
                 end
             else
                 plot(X(Inds),Y1.(Loc{j})(Inds)./Y1.E(Inds),'-s','Color','k','MarkerEdgeColor',MEC,'MarkerFaceColor',MFC,'MarkerSize',MSize,'HandleVisibility',HV)
-                if PlotMAT2
+                if Plot3
                     plot(X(Inds),Y2.(Loc{j})(Inds)./Y1.E(Inds),'-s','Color','k','MarkerEdgeColor',MEC,'MarkerFaceColor',MFC,'MarkerSize',MSize,'HandleVisibility','off')
                 end
             end
-            if j < 5 && PlotOriginal && PlotMAT1
+            if j < 5 && Plot1 && Plot2
                 % Code for accuracy estimation
                 bp = zeros(1,size(X,1));
                 bp(Inds') = [Y.(Loc{j})(Inds)*GammaS]./[Y1.(Loc{j})(Inds)];
@@ -213,7 +218,7 @@ for i = 1:3
     
     if PlotMargins
         
-        if PlotOriginal
+        if Plot1
             % Track which of the traffic cases was the highest, for use in Margin Plot
             ESimmax = max([Y.GD'; Y.MD'; Y.DD'; Y.DetD']);
             % Update E with alphasq
@@ -227,7 +232,7 @@ for i = 1:3
             M = EUpdated./ESimmax'-1;
         end
         
-        if PlotMAT1
+        if Plot2
             % Update E with alphasq (use our E or TM's E) not no gamma 1.1
             if AlwaysTME
                 Eupdated1 = 1.5*(0.7*Y.EQ1 + 0.5*Y.EQ2 + alphasq*Y.Eq);
@@ -275,7 +280,7 @@ for i = 1:3
         
         title([Title{i}])
          
-        if PlotMAT1
+        if Plot2
             hold on
             Inds = [false true true true true true true true]';
             plot(X(Inds),M1(Inds),'-s','Color','k','MarkerEdgeColor','k','MarkerFaceColor','none','MarkerSize',MSize)
