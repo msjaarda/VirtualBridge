@@ -58,7 +58,7 @@ clear OutInfo
 
 % Name each column of the final matrix/table in the structure
 % AGB
-ColumnNames = {'EQ1','EQ2','Eq','GS','GD','MS','MD','DS','DD','DetS','DetD','E'};
+ColumnNames = {'EQ1','EQ2','Eq','GS','GD','CS','CD','DS','DD','E'};
 % Ceneri2017
 %ColumnNames = {'EQ1','EQ2','Eq','TWES','TWED','TWOS','TWOD','FIFS','FIFD','E'};
 % Platoon
@@ -124,7 +124,7 @@ for i = 1:length(OInfo)
     if OInfo(i).BaseData.TrRate == 0.29
         Loc = 'GD';
     elseif OInfo(i).BaseData.TrRate == 0.14
-        Loc = 'MD';
+        Loc = 'CD';
     elseif OInfo(i).BaseData.TrRate == 0.07
         Loc = 'DD';
     elseif OInfo(i).BaseData.TrRate == 0.12 % use CD for Ceneri... change this
