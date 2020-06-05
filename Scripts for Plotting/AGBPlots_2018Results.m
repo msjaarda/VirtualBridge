@@ -47,14 +47,14 @@ addpath('./Results Variables/')
 % Load AGB Results
 load('AGBResults.mat') % AGB.(Section).(Config).(Dist).(AE)
 GammaS = 1;
-AGB = AGBtoMAT(AGB); % If used, change GammaS to 1 (rather than 1.1)
+AGB = AGBtoMAT(AGB,1.1); % If used, change GammaS to 1 (rather than 1.1)
 % Load AGBMAT2 Results
 %load('AGBMAT2018ResultsCforM.mat') % AGBMAT.(Section).(Config).(Dist).(AE)
 %MAT2 = MAT;
 % Load AGBMAT1 Results
 load('AGBMATResults.mat') % AGBMAT.(Section).(Config).(Dist).(AE)
 AGB = MAT;
-load('AGBMAT2018ResultsCforM.mat') 
+load('AGBMAT2018Results.mat') 
 
 % X Data (Y gives in each loop)
 X = 10:10:80; X = X';
