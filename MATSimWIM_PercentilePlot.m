@@ -18,7 +18,7 @@ BaseData.Type = 'NWIM'; % 'NWIM', 'VWIM', 'AWIM', or 'DWIM'
 % Roadway Info
 BaseData.LaneDir = {'1,1'};
 % Influence Line Info
-BaseData.ILs = {'Mp.Mp40'};  BaseData.ILRes = 0.1;  InfCase = 1;
+BaseData.ILs = {'Mp.Mp20'};  BaseData.ILRes = 0.1;  InfCase = 1;
 % Analysis Info
 BaseData.RunDyn = 1;   BaseData.MultipleCases = 3;
 BaseData.TransILx = 0;
@@ -58,10 +58,10 @@ else % WIM Only Inputs
     BaseData.LaneDir = {'1,1'};
     
     % Station Info incl. station name, number, and year
-    Year = 2011:2018;
+    Year = 2018;
     BaseData.SName = 'Ceneri';
     BaseData.StationNum = 1;
-    BaseData.NumAnalyses = 1;
+    BaseData.NumAnalyses = 5;
     BaseData.Stage2Prune = false;
     BaseData.ClassOnly = true;
     
@@ -86,13 +86,26 @@ end
 % Initialize
 OverMax = [];
 
-for v = 1:BaseData.MultipleCases
+for v = 2%1:BaseData.MultipleCases
 
     for i = 1:length(Year)
         
         % Could be a try catch thing. This is for Denges (missing 2010)
-        if Year(i) == 2010
-            continue
+%         if Year(i) == 2010
+%             continue
+%         end
+
+        if v == 1
+            BaseData.SName = 'Ceneri';
+            LaneDir = {'1,1'};
+            
+        elseif v == 2
+            BaseData.SName = 'Denges';
+            LaneDir = {'1,1'};
+            
+        elseif v == 3
+            BaseData.SName = 'Gotthard';
+            BaseData.LaneDir = {'1,2'};
         end
         
         % Load File
@@ -135,7 +148,7 @@ for v = 1:BaseData.MultipleCases
             
             BaseData.ApercuTitle = sprintf('%s %s %i %i',BaseData.Type,BaseData.SName,Stations(BaseData.StationNum),Year(i));
             % Plot Titles
-            BaseData.PlotTitle = sprintf('%s Staion %i Max M+ [Top %i/Year] | 40m Simple Span',BaseData.SName,Stations(BaseData.StationNum),BaseData.NumAnalyses);
+            BaseData.PlotTitle = sprintf('Classified Vehicles Max M+ [Top %i/Year] | 20m Simple Span',BaseData.NumAnalyses);
             
             % Further trimming if necessary
             if BaseData.Stage2Prune
@@ -157,17 +170,21 @@ for v = 1:BaseData.MultipleCases
         
         
         % CUSTOM EDIT for multiple cases
-        if v == 2
-            [Lanes, a, b] = unique(PDCx.FS);
-            if sum(PDCx.FS == Lanes(1)) < sum(PDCx.FS == Lanes(2))
-                SlowLane = Lanes(1);
-            else
-                SlowLane = Lanes(2);
-            end
-            PDCx(PDCx.GW_TOT > 44000 & PDCx.FS == SlowLane,:) = [];
-        elseif v == 3
-            PDCx(PDCx.GW_TOT > 44000,:) = [];
-        end
+%         if v == 2
+%             [Lanes, a, b] = unique(PDCx.FS);
+%             if sum(PDCx.FS == Lanes(1)) < sum(PDCx.FS == Lanes(2))
+%                 SlowLane = Lanes(1);
+%             else
+%                 SlowLane = Lanes(2);
+%             end
+%             PDCx(PDCx.GW_TOT > 44000 & PDCx.FS == SlowLane,:) = [];
+%         elseif v == 3
+%             PDCx(PDCx.GW_TOT > 44000,:) = [];
+%         end
+        
+        % Mod... always case 3 from above
+        PDCx(PDCx.GW_TOT > 44000,:) = [];
+        
               
         % Convert PDC to AllTrAx
         [PDCx, AllTrAx, TrLineUp] = WIMtoAllTrAx(PDCx,round(Inf.x(end)),Lane.Dir,BaseData.ILRes);
@@ -189,9 +206,10 @@ for v = 1:BaseData.MultipleCases
             end
             
             % Delete vehicle entries from TrLineUp for re-analysis
-            TrLineUp(TrLineUp(:,1) > BrStInd & TrLineUp(:,1) < BrStInd + Inf.x(end),:) = [];
+            BrEnInd = BrStInd + Inf.x(length(Inf.v(~isnan(Inf.v))))/BaseData.ILRes;
+            TrLineUp(TrLineUp(:,1) > BrStInd & TrLineUp(:,1) < BrEnInd,:) = [];
             % Set Axles to zero in AllTrAx (can't delete because indices are locations)
-            AllTrAx(BrStInd:BrStInd + Inf.x(end),:) = 0;
+            AllTrAx(BrStInd:BrEnInd,:) = 0;
             
         end
     end
@@ -205,7 +223,14 @@ aQ1 = 0.7; aQ2 = 0.5; aq = 0.5;
 % T69 stands for SIA 269
 ESIA.T69 = 1.5*(ESIA.EQ(1)*aQ1+ESIA.EQ(2)*aQ2+ESIA.Eq*aq);
 % Custom
-AGBSim = 1.1*9604;
+% for 40m
+%AGBSim = 1.1*9604;
+% for 80m
+%AGBSim = 1.1*22533;
+%for 10m
+%AGBSim = 1.1*1433; 
+% for 20 m
+AGBSim = 1.1*3621;   
 
 % Simplify results into D
 for i = 1:length(Year)
@@ -237,13 +262,14 @@ if length(Year) > 1
     hold on
     plot(xwidth,[ESIA.T69 ESIA.T69],'-.k')
     text(Year(1),ESIA.T69+ESIA.Total*0.05,'E_{SIA269}   [\alpha_{Q1} = 0.7, \alpha_{Q2} = 0.5, \alpha_{q} = 0.5]','FontSize',11,'FontWeight','bold','Color','k')
-    ylim([0 ceil(round(ESIA.Total,-3)/10000)*10000])
+    %ylim([0 ceil(round(ESIA.Total,-3)/10000)*10000])
+    ylim([0 5000])
     ytickformat('%g')
     xlim(xwidth)
     xlabel('Year')
     ylabel('Moment (kNm)')
     title(BaseData.PlotTitle)
-    legend('Raw Traffic','Only < 44 tonnes in 2nd Lane','Only < 44 tonnes')
+    legend('Ceneri','Denges','Gotthard')
 end
 
 % Create box plot
