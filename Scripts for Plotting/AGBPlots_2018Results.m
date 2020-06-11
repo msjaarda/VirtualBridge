@@ -16,9 +16,9 @@ Plots = [1 3];
 % Use TM's E (slightly different than MATSim E)
 AlwaysTME = false;
 % Saving
-SaveFig = false;
+SaveFig = true;
 SaveFolder = 'AGBPlots';
-SaveSuffix = ' 2003 & 2018 Comp';
+SaveSuffix = ' 2003 & 2018 Compx';
 
 % Legend labels (Original)
 J{1} = 'Got 03'; J{2} = 'Den 03'; J{3} = '2003 Margin'; J{4} = '2018 Margin';
@@ -304,7 +304,8 @@ end
 
 % Optional save figure
 if SaveFig
-    saveas(gcf,['Key Results/' SaveFolder '/' FName SaveSuffix '.png'])
+    %saveas(gcf,['Key Results/' SaveFolder '/' FName SaveSuffix '.png'])
+    print(gcf, '-dpng', ['Key Results/' SaveFolder '/' FName SaveSuffix '.png'], '-r500')
 end
 
 % Accuracy to Original

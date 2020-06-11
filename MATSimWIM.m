@@ -58,7 +58,7 @@ else % WIM Only Inputs
     BaseData.LaneDir = {'1,1'};
     
     % Station Info incl. station name, number, and year
-    Year = 2011:2018;
+    Year = 2016:2018;
     BaseData.SName = 'Denges';
     BaseData.StationNum = 1;
     BaseData.NumAnalyses = 10;
@@ -91,9 +91,9 @@ for v = 1:BaseData.MultipleCases
     for i = 1:length(Year)
         
         % Could be a try catch thing. This is for Denges (missing 2010)
-        if Year(i) == 2010
-            continue
-        end
+%         if Year(i) == 2010
+%             continue
+%         end
         
         % Load File
         if strcmp(BaseData.Type,'NWIM')
