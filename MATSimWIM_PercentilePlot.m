@@ -90,11 +90,6 @@ for v = 2%1:BaseData.MultipleCases
 
     for i = 1:length(Year)
         
-        % Could be a try catch thing. This is for Denges (missing 2010)
-%         if Year(i) == 2010
-%             continue
-%         end
-
         if v == 1
             BaseData.SName = 'Ceneri';
             LaneDir = {'1,1'};
