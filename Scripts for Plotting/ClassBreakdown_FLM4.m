@@ -8,7 +8,7 @@ format long g
 
 % INPUT -----------
 Year = 2018;
-SName = 'A16';
+SName = 'Gotthard';
 
 % Let the Classify function add the .CLASS column to PD
 load(['PrunedS1 WIM/',SName,'/',SName,'_',num2str(Year),'.mat']);
@@ -64,3 +64,5 @@ title('Class Coverage by Number')
 subplot(1,2,2);
 pie(w, explode, labelsw);
 title('Class Coverage by Weight')
+
+AvgWeightkN = w./x/102;
