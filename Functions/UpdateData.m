@@ -16,21 +16,58 @@ NumLanes = length(Lane.Dir);
 
 % Start with FolDist and TrData, these are quite simple
 
+
+% FolDist is getting a make-over! We can now use qualitative measures:
+% "Jammed" or "Stopped" : 0 kph
+% "At-rest" or "Crawling" : 2 kph
+% "Congest18" : 18 kph
+% "Congested" : 30 kph
+% "Free-flowing" : 1000 veh/hr
+
+% Alternatively, one can simply use a single number representing speed in kph (for
+% 100 and under), OR volume in veh/hr (any value over 100 is assume as volume)
+
 % Update FolDist if necessary
 if ismember('Flow', BaseData.Properties.VariableNames)
-    % Load FlowLib if necessary
-    if ~exist('FlowLib','var')
-        load('FlowLib.mat')
+    % Overwrite
+    FolDist = array2table(zeros(4,4));
+    FolDist.Properties.VariableNames = {'TT', 'TC', 'CT', 'CC'};
+    if iscell(BaseData.Flow)
+        if strcmp(BaseData.Flow{:},'Jammed') || strcmp(BaseData.Flow{:},'Stopped')
+            FolDist.TT = [0.1 15 2.93 10.8]';
+            FolDist.TC = [0.1 15 2.41 9.18]';
+            FolDist.CT = [0.1 15 2.15 10.9]';
+            FolDist.CC = [0.1 15 2.15 15.5]';
+            VehSpd = 0; % kph
+        elseif strcmp(BaseData.Flow{:},'At-rest') || strcmp(BaseData.Flow{:},'Crawling')
+            VehSpd = 2; % kph
+        elseif strcmp(BaseData.Flow{:},'Congest18') % Legacy
+            VehSpd = 18; % kph
+        elseif strcmp(BaseData.Flow{:},'Congested')
+            VehSpd = 30; % kph
+        elseif strcmp(BaseData.Flow{:},'Free-flowing')
+            VehSpd = 1000; % > 100 therefore, veh/hr
+        else
+            fprintf('\nWarning: Not a recognized FolDist input\n\n')
+        end
+    else
+        VehSpd = BaseData.Flow;
     end
-    % Ensure that the chosen flow condition exists in FlowLib
-    if isfield(FlowLib,BaseData.Flow{:})
-        % Overwrite
-        FolDist = FlowLib.(BaseData.Flow{:});
-    end
-else
-    % Print warning if no input
-    if isempty(FolDist)
-        fprintf('\nWarning: No FolDist input\n\n')
+    if VehSpd > 0 && VehSpd < 101
+        FolDist.TT = [VehSpd/15 15+1.1*VehSpd 2.15 9]';
+        FolDist.TC = FolDist.TT;
+        FolDist.CT = FolDist.TT;
+        FolDist.CC = FolDist.TT;
+    elseif VehSpd > 100
+        % Difficult task... what to do with flowing traffic. Has a large
+        % effect inside PerLaneRates AND GetFloDist... we opt to represent
+        % exponential distribution AS beta! See Free-movingFollowing.xlsx
+        beta = VehSpd*0.0126-0.2490; alpha = 1; 
+        mind = 5.5; maxd = 1000; % m
+        FolDist.TT = [mind maxd alpha beta]';
+        FolDist.TC = FolDist.TT;
+        FolDist.CT = FolDist.TT;
+        FolDist.CC = FolDist.TT;
     end
 end
 

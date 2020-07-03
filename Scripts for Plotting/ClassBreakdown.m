@@ -13,7 +13,7 @@ format long g
 
 % INPUT -----------
 Year = 2018;
-SName = 'A16';
+SName = 'Gotthard';
 
 % Let the Classify function add the .CLASS column to PD
 load(['PrunedS1 WIM/',SName,'/',SName,'_',num2str(Year),'.mat']);
