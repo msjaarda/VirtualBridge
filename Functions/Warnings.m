@@ -1,4 +1,4 @@
-function MATSimWarnings(TrDistCu, BunchFactor, RunPlat, TrTrTransProb)
+function Warnings(TrDistCu, BunchFactor, RunPlat, TrTrTransProb)
 %MATSIMWARNINGS Print out warnings for the MATSim Program
 if (0.99999 < TrDistCu(end) && TrDistCu(end) < 1.00001)
 else
