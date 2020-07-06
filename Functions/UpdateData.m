@@ -33,8 +33,8 @@ if ismember('Flow', BaseData.Properties.VariableNames)
     FolDist = array2table(zeros(4,4));
     FolDist.Properties.VariableNames = {'TT', 'TC', 'CT', 'CC'};
     if iscell(BaseData.Flow)
-        try VehSpd = str2num(BaseData.Flow{1});
-        catch
+        VehSpd = str2num(BaseData.Flow{:});
+        if isempty(VehSpd)
         if strcmp(BaseData.Flow{:},'Jammed') || strcmp(BaseData.Flow{:},'Stopped')
             FolDist.TT = [0.1 15 2.93 10.8]';
             FolDist.TC = [0.1 15 2.41 9.18]';
