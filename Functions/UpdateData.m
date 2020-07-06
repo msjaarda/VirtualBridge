@@ -33,6 +33,8 @@ if ismember('Flow', BaseData.Properties.VariableNames)
     FolDist = array2table(zeros(4,4));
     FolDist.Properties.VariableNames = {'TT', 'TC', 'CT', 'CC'};
     if iscell(BaseData.Flow)
+        try VehSpd = str2num(BaseData.Flow{1});
+        catch
         if strcmp(BaseData.Flow{:},'Jammed') || strcmp(BaseData.Flow{:},'Stopped')
             FolDist.TT = [0.1 15 2.93 10.8]';
             FolDist.TC = [0.1 15 2.41 9.18]';
@@ -50,8 +52,7 @@ if ismember('Flow', BaseData.Properties.VariableNames)
         else
             fprintf('\nWarning: Not a recognized FolDist input\n\n')
         end
-    else
-        VehSpd = BaseData.Flow;
+        end
     end
     if VehSpd > 0 && VehSpd < 101
         FolDist.TT = [VehSpd/15 15+1.1*VehSpd 2.15 9]';
@@ -68,6 +69,11 @@ if ismember('Flow', BaseData.Properties.VariableNames)
         FolDist.TC = FolDist.TT;
         FolDist.CT = FolDist.TT;
         FolDist.CC = FolDist.TT;
+    elseif VehSpd == 0
+        FolDist.TT = [0.1 15 2.93 10.8]';
+        FolDist.TC = [0.1 15 2.41 9.18]';
+        FolDist.CT = [0.1 15 2.15 10.9]';
+        FolDist.CC = [0.1 15 2.15 15.5]';
     end
 end
 
