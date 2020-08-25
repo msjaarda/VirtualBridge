@@ -1,6 +1,7 @@
 % Smallq: Finding the percentiles of SIA Code Parameters in real traffic
 %
 % Goal here is to get a sense for Q1 and Q2 as well as q1, and q2
+%
 % We will start with Q1 and Q2, specifically trying to find the %tile of 
 % Q1 (in the code a tandem axle of 300 kN each with 1.2 m spacing), and
 % Q2 (200 kN each with 1.2 m spacing, at the same point in the next lane)
@@ -23,7 +24,7 @@ BaseData.ClassOnly = false;
 
 
 % We really need to do something like in MATSimWIM when we place into axle
-% streams... then we need to analyze the streams side-by-side to see the 
+% streams... then we need to analyze the streams side-by-side to see the relationship between q1 and q2 
 x = 0;
 M = [];
 Mx = [];

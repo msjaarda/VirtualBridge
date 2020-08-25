@@ -6,13 +6,11 @@
 
 % Initial commands
 clear, clc, format long g, rng('shuffle'), close all; BaseData = table;
-addpath('./Misc/Deterministic Vehicles/')
 
 % Input Information --------------------
 
 % Type
-BaseData.Type = 'NWIM'; % 'NWIM', 'VWIM', 'AWIM', or 'DWIM' 
-                        % Normal, Virtual, Apercu, or Deterministic
+BaseData.Type = 'NWIM';
                         
 % Necessary Inputs
 % Roadway Info
@@ -24,48 +22,20 @@ BaseData.RunDyn = 1;   BaseData.MultipleCases = 1;
 BaseData.TransILx = 0;
 BaseData.TransILy = 0;
 BaseData.LaneCen = 0;
-%BaseData.NumVeh = 1000000; % use for bi or mo ...
-%BaseData.LaneTrDistr = {'80,20'}; % used for split, stand, exfast, exslow 
-%BaseData.TrRate = 0; % used to distinguish Det
 
-%BaseData.TransILx = {'0'};  % used for reduced, expanded, conc
-%BaseData.TransILy = {'0'};
-%BaseData.LaneCen = {'0'};
 BaseData.Save = 0;
 BaseData.Folder = '/AGB2002A15';
+    
 
-% Non WIM Inputs
-if ~strcmp(BaseData.Type,'NWIM')
+BaseData.LaneDir = {'1,1'};
 
-    FName = 'Apercu\PlatStud60m\AWIM_Jan24-20 1049.mat'; % Options
-    OutputFName = 'Output\PlatStud60m\Jan24-20 1049.mat';
-    %InfCase = 1;
-    %BaseData.LaneDir = {'1,1,2,2'};
-    FName = 'DetAll.mat';
-    %BaseData.LaneDir = {'1,1'};
-    % DWIM: 'Det60t.mat'
-    % AWIM: 'Apercu\AWIM_Mar25-20 1034.mat'
-    % VWIM: 'WIM_Jan14 1130.mat'
-    
-    
-    
-    Year = 1;
-    BaseData.NumAnalyses = 1;
-    BaseData.ApercuTitle = sprintf('%s',BaseData.Type);
-    
-else % WIM Only Inputs
-    
-    BaseData.LaneDir = {'1,1'};
-    
-    % Station Info incl. station name, number, and year
-    Year = 2016:2018;
-    BaseData.SName = 'Denges';
-    BaseData.StationNum = 1;
-    BaseData.NumAnalyses = 10;
-    BaseData.Stage2Prune = false;
-    BaseData.ClassOnly = false;
-    
-end
+% Station Info incl. station name, number, and year
+Year = 2016:2018;
+BaseData.SName = 'Denges';
+BaseData.StationNum = 1;
+BaseData.NumAnalyses = 10;
+BaseData.Stage2Prune = false;
+BaseData.ClassOnly = false;
 
 % Input Complete   ---------------------
 
@@ -90,67 +60,33 @@ for v = 1:BaseData.MultipleCases
 
     for i = 1:length(Year)
         
-        % Could be a try catch thing. This is for Denges (missing 2010)
-%         if Year(i) == 2010
-%             continue
-%         end
-        
         % Load File
-        if strcmp(BaseData.Type,'NWIM')
-            load(['PrunedS1 WIM/',BaseData.SName,'/',BaseData.SName,'_',num2str(Year(i)),'.mat']);
-        else
-            load(FName)
-            if strcmp(BaseData.Type,'DWIM')
-                PD{PD.GW_TOT == 60000,11:15} = 1.1*PD{PD.GW_TOT == 60000,11:15};
-                PD{PD.GW_TOT == 40000,11:15} = 1.5*PD{PD.GW_TOT == 40000,11:15};
-            end
-        end
-        
-        % VWIM or AWIM Only
-        if strcmp(BaseData.Type,'VWIM') || strcmp(BaseData.Type,'AWIM')
-            
-            load(OutputFName);
-            try
-                [a, b] = max(OutInfo.OverMaxT.MaxLE(OutInfo.OverMaxT.InfCase == InfCase));
-                SimNum = OutInfo.OverMaxT.SimNum(b);
-            catch
-                [a, b] = max(OutInfo.OverMAXT.MaxLE(OutInfo.OverMAXT.InfCase == InfCase));
-                SimNum = OutInfo.OverMAXT.SimNum(b);
-            end
-            
-            PDCx = PD(PD.SimNum == SimNum & PD.InfCase == InfCase,:);         
-            
+        load(['PrunedS1 WIM/',BaseData.SName,'/',BaseData.SName,'_',num2str(Year(i)),'.mat']);
 
-        elseif strcmp(BaseData.Type,'NWIM')    % WIM Only
-            % Add row for Class, Daytime, and Daycount
-            PDC = Classify(PD);
-            PDC = Daytype(PDC,Year(i));
-            clear('PD')
-            
-            % We treat each station separately.. SNum is the input for which
-            Stations = unique(PDC.ZST);
-            Station = Stations(BaseData.StationNum);
-            PDCx = PDC(PDC.ZST == Station,:);
-            clear('PDC')
-            
-            BaseData.ApercuTitle = sprintf('%s %s %i %i',BaseData.Type,BaseData.SName,Stations(BaseData.StationNum),Year(i));
-            % Plot Titles
-            BaseData.PlotTitle = sprintf('%s Staion %i Max M+ [Top %i/Year] | 40m Simple Span',BaseData.SName,Stations(BaseData.StationNum),BaseData.NumAnalyses);
-            
-            % Further trimming if necessary
-            if BaseData.Stage2Prune
-                PDCx = PruneWIM2(PDCx,0);
-            end
-            
-            if BaseData.ClassOnly
-                PDCx(PDCx.CLASS == 0,:) = [];
-            end
-          
-        else  % AWIM or DWIM Only
-            PDCx = PD;
+        % Add row for Class, Daytime, and Daycount
+        PDC = Classify(PD);
+        PDC = Daytype(PDC,Year(i));
+        clear('PD')
+        
+        % We treat each station separately.. SNum is the input for which
+        Stations = unique(PDC.ZST);
+        Station = Stations(BaseData.StationNum);
+        PDCx = PDC(PDC.ZST == Station,:);
+        clear('PDC')
+        
+        BaseData.ApercuTitle = sprintf('%s %s %i %i',BaseData.Type,BaseData.SName,Stations(BaseData.StationNum),Year(i));
+        % Plot Titles
+        BaseData.PlotTitle = sprintf('%s Staion %i Max M+ [Top %i/Year] | 40m Simple Span',BaseData.SName,Stations(BaseData.StationNum),BaseData.NumAnalyses);
+        
+        % Further trimming if necessary
+        if BaseData.Stage2Prune
+            PDCx = PruneWIM2(PDCx,0);
         end
         
-        
+        if BaseData.ClassOnly
+            PDCx(PDCx.CLASS == 0,:) = [];
+        end
+
         % CUSTOM EDIT for multiple cases
         if v == 2
             [Lanes, a, b] = unique(PDCx.FS);
@@ -262,24 +198,6 @@ end
 % xlabel('Year')
 % ylabel('Moment (kNm)')
 % title(sprintf('Ceneri Staion 409 Max M+ [Top %i/Year] | 40m Simple Span',BaseData.NumAnalyses))
-
-% Optional save of OutInfo (used for deterministic AGB matching)
-if strcmp(BaseData.Type,'DWIM')
-    
-    OutInfo.Name = datestr(now,'mmmdd-yy HHMMSS'); OutInfo.BaseData = BaseData;
-    OutInfo.ESIMS = OverMaxT.MaxLE;
-    OutInfo.ESIM = OverMaxT.MaxLE*1.3;
-    OutInfo.OverMax = OverMax; OutInfo.OverMaxT = OverMaxT;
-    OutInfo.InfNames = Inf.Names;
-    OutInfo.LaneData = LaneData;
-    
-    OutInfo.ESIA = []; OutInfo.PlatPct = 0; OutInfo.Mean = []; OutInfo.Std = [];
-    
-    if BaseData.Save == 1
-        save(['Output' BaseData.Folder '/' OutInfo.Name], 'OutInfo')
-    end
-    
-end
 
 
 

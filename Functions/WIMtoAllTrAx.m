@@ -1,6 +1,8 @@
 function [PDCx, AllTrAx, TrLineUp] = WIMtoAllTrAx(PDCx,SpaceSaver,LaneDir,ILRes)
 % WIMTOALLTRAX Translates WIM or VWIM data into AllTrAx and TrLineUp
 % Also returns PDC (in the form of PDCx) with some mods
+% Automatically detects if WIM variable is "Enhanced" ie if it has decimal
+% data, head data, etc.
 
 % This function could use a lot of work
 %   - Organization
@@ -109,8 +111,11 @@ else
     PDCx.Dist = PDCx.DeltaT.*((PDCx.SPEED/100)*0.2777777777778); PDCx.Dist(1) = 1;
     
     % We can do spacesaver here since we treat all at the same time...
+    % Need to be careful here because this is not the space between vehicles...
+    % it is the space different between the start of vehicles! We should
+    % add the max length of a vehicle, which is PruneWIM is 26m
     if SpaceSaver > 0
-        PDCx.Dist(PDCx.Dist > SpaceSaver) = SpaceSaver;
+        PDCx.Dist(PDCx.Dist > SpaceSaver + 26) = SpaceSaver + 26;
     end
     
     % Cummulative distance in axle stream

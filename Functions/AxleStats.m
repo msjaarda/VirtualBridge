@@ -11,7 +11,7 @@ TrTypNumAxPerGr = cell(NumTrTyp,1);
 x = cell(3,1);
 
 % Tonnes to kN Conversion [/100 or /102 (to use g = 9.8)]
-TtkN = 100;
+TtkN = 102;
 % Classified Only (only applies to All Axles - others are class only always)
 ClassOnly = true;
 

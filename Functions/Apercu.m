@@ -1,12 +1,8 @@
 function T = Apercu(PDC,Title,Infx,Infv,BrStInd,TrLineUp,PEsia,DLF,LaneDir,ILRes)
 % Plot A Series of WIM or VWIM Vehicles on a Bridge
 
-
-% Trim ILs
+% Trim ILs to be rid of nan entries
 Infv = Infv(~isnan(Infv)); Infx = Infx(~isnan(Infv));
-
-
-% Not Quite Ready for ILRes ~= 1
 
 figure
 
@@ -14,7 +10,7 @@ figure
 Lanes = unique(PDC.FS); NumLanes = length(Lanes);
 NumLanePlots = length(LaneDir);
 
-% Add speed if it has none (for visual output)
+% Add speed if it has none (for visual output)... make it 0 when there is no data
 if ~ismember('SPEED', PDC.Properties.VariableNames)
     PDC.SPEED = zeros(height(PDC),1);
 end
@@ -59,14 +55,14 @@ if any(strcmp('AllVehPlat',T.Properties.VariableNames))
     end
 end
 
-% 4) what if we are at location 0, and no bar plot goes up
-
 % Gather variables for the plots of each lane
 for i = 1:NumLanes
     % q is a subset of Q, t is a subset of T
     q{i} = Q(Q(:,4) == Lanes(i),:); t{i} = T(T.FS == Lanes(i),:);
     % normalize q values for start of the bridge at zero
-    q{i}(:,1) = round((q{i}(:,1) - BrStInd)*ILRes); q{i}(:,5) = q{i}(:,5) - BrStInd*ILRes;
+    % BARFIX1
+    %q{i}(:,1) = round((q{i}(:,1) - BrStInd)*ILRes); q{i}(:,5) = q{i}(:,5) - BrStInd*ILRes;
+    q{i}(:,1) = round((q{i}(:,1) - BrStInd)); q{i}(:,5) = q{i}(:,5) - BrStInd*ILRes;
     [a, b] = unique(q{i}(:,3));
     % vc stands for vehicle corners, ac for accumulated
     if ~isempty(b)
@@ -91,12 +87,16 @@ for i = 1:NumLanes
             
             if sum(locations) > 0
 %                 if locations(1) == 0
-                    ac{i}(:,j) = accumarray(locations(locations ~= 0),axlevalues(locations ~= 0),[Infx(end) 1]);
+                    % BARFIX2
+                    %ac{i}(:,j) = accumarray(locations(locations ~= 0),axlevalues(locations ~= 0),[Infx(end) 1]);
+                    ac{i}(:,j) = accumarray(locations(locations ~= 0),axlevalues(locations ~= 0),[Infx(end)/ILRes 1]);
 %                 else
 %                     ac{i}(:,j) = accumarray(locations,axlevalues,[Infx(end) 1]);
 %                 end
             else
-                ac{i}(:,j) = zeros([Infx(end) 1]);
+                % BARFIX3
+                %ac{i}(:,j) = zeros([Infx(end) 1]);
+                ac{i}(:,j) = zeros([Infx(end)/ILRes 1]);
             end
             
             Temp = TrLineUp(TrLineUp(:,3) == a(j),5);
@@ -122,18 +122,21 @@ end
 
 % Plot axle loads
 subplot(NumLanePlots+2,1,NumLanePlots+1)
-h = bar(0:Infx(end),barp/9.81,1.2,'grouped','EdgeColor','k');
+% BARFIX4
+%h = bar(0:Infx(end),barp/9.81,1.2,'grouped','EdgeColor','k');
+h = bar(0:ILRes:Infx(end),barp/9.81,1.2,'grouped','EdgeColor','k');
 % fixing the xlim doesn't allow visibility of maximums
 %xlim([0 max(Infx)])
 ylim([0 ceil(max(max(barp/9.81))/5)*5])
 ylabel('Axle Loads (t)')
 
-% Could add total weight on the bridge and DLA
-% SHEAR CALCS ARE WRONG BECAUSE WE DON"T KNOW WHAT IS AT position ZERO FIX!
+% Show text of DLA and Total Weight
 text(1,ceil(max(max(barp/9.81))/5)*5-3,sprintf('Total: %.0f (DLF = %.2f)',sum(sum(barp)),DLF),'FontSize',11,'FontWeight','bold','Color','k')
 
-if ILRes ~= 1 % changed from 0 to 1 on 25/03... hope that hunch was right
-    xtemp = 0:1:Infx(end);
+if ILRes ~= 1
+    % BARFIX5
+    %xtemp = 0:Infx(end);
+    xtemp = 0:ILRes:Infx(end);
     %Infvtemp = interp1(Infx(~isnan(Infv)),Infv(~isnan(Infv)),xtemp);
     Infvtemp = interp1(Infx,Infv,xtemp);
     if size(Infvtemp,1) == 1

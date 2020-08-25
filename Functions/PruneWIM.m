@@ -1,6 +1,6 @@
 function [PD] = PruneWIM(Year,Station,SName,RD,Report,Save)
 %PruneWIM This function takes raw WIM data (RD) from 1 year (that has been
-%assembled using "DailytoYearly.m" and prunes it, giving back processed
+%assembled using "DailytoYearly.m") and prunes it, giving back processed
 %data (PD)
 
 % Year/Station (string OR number), SName (string)
