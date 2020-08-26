@@ -11,7 +11,9 @@ clear, clc, format long g, rng('shuffle'), close all; BaseData = table;
 % Roadway Info
 BaseData.LaneDir = {'1,1'};
 % Influence Line Info
-BaseData.ILs = {'Mp.Mp40'};  BaseData.ILRes = 1;  InfCase = 1;
+BaseData.ILs = {'Mp.Mp40'};  BaseData.ILRes = 1;  
+% InfCase is only for Apercu (no InfCase column in PD for VWIM
+InfCase = 1;
 % Analysis Info
 BaseData.RunDyn = 1;   BaseData.MultipleCases = 1;
 BaseData.TransILx = 0;
@@ -21,8 +23,10 @@ BaseData.LaneCen = 0;
 BaseData.Save = 0;
 BaseData.Folder = '/AGB2002A15';
 
-FName = 'Apercu\PlatStud60m\AWIM_Jan24-20 1049.mat'; % Options
-OutputFName = 'Output\PlatStud60m\Jan24-20 1049.mat';
+FName = 'VirtualWIM\Congest\WIM_May08-20 165449.mat'; % Options
+OutputFName = 'Output\Congest\May08-20 165449.mat';
+% FName = 'Apercu\PlatStud60m\AWIM_Jan24-20 1049.mat'; % Options
+% OutputFName = 'Output\PlatStud60m\Jan24-20 1049.mat';
 %InfCase = 1;
 %BaseData.LaneDir = {'1,1,2,2'};
 %BaseData.LaneDir = {'1,1'};
@@ -66,8 +70,9 @@ for v = 1:BaseData.MultipleCases
         SimNum = OutInfo.OverMAXT.SimNum(b);
     end
     
-    PDCx = PD(PD.SimNum == SimNum & PD.InfCase == InfCase,:);
-    
+    % There is no InfCase with VWIM
+    PDCx = PD(PD.SimNum == SimNum,:);
+    %PDCx = PD(PD.SimNum == SimNum & PD.InfCase == InfCase,:);
        
     % CUSTOM EDIT for multiple cases
     if v == 2
