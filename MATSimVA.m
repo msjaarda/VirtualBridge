@@ -23,7 +23,8 @@ BaseData.LaneCen = 0;
 BaseData.Save = 0;
 BaseData.Folder = '/AGB2002A15';
 
-FName = 'VirtualWIM\Congest\WIM_May08-20 165449.mat'; % Options
+%FName = 'VirtualWIM\Congest\WIM_May08-20 165449.mat'; % Options
+FName = 'Apercu\Congest\AWIM_May08-20 165449.mat'; % Options
 OutputFName = 'Output\Congest\May08-20 165449.mat';
 % FName = 'Apercu\PlatStud60m\AWIM_Jan24-20 1049.mat'; % Options
 % OutputFName = 'Output\PlatStud60m\Jan24-20 1049.mat';
@@ -71,9 +72,13 @@ for v = 1:BaseData.MultipleCases
     end
     
     % There is no InfCase with VWIM
-    PDCx = PD(PD.SimNum == SimNum,:);
-    %PDCx = PD(PD.SimNum == SimNum & PD.InfCase == InfCase,:);
-       
+    %PDCx = PD(PD.SimNum == SimNum,:);
+    try
+        PDCx = PD(PD.SimNum == SimNum & PD.InfCase == InfCase,:);
+    catch
+        PDCx = PD(PD.SimNum == SimNum,:);
+    end
+    
     % CUSTOM EDIT for multiple cases
     if v == 2
         [Lanes, a, b] = unique(PDCx.FS);
