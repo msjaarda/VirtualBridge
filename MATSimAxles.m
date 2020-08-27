@@ -1,7 +1,7 @@
 % ------------------------------------------------------------------------
 %                            MATSimAxles
 % ------------------------------------------------------------------------
-% Run real traffic over a bridge to find maximum load effects
+% Explore questions related to axle weights Q1 and Q2
 
 % Initial commands
 clear, clc, format long g, rng('shuffle'), close all; BaseData = table;
@@ -12,9 +12,9 @@ clear, clc, format long g, rng('shuffle'), close all; BaseData = table;
 BaseData.LaneDir = {'1,1'};
 BaseData.TransILx = 0; BaseData.TransILy = 0; BaseData.LaneCen = 0;
 % Traffic Info
-Year = 2015;
+Year = 2017;
 BaseData.SName = 'Ceneri';
-BaseData.StationNum = 1;
+BaseData.StationNum = 1;    % Eventually add a loop for the other station
 BaseData.Stage2Prune = false;
 BaseData.ClassOnly = true;
 % Influence Line Info
