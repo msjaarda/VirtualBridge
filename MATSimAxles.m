@@ -3,8 +3,8 @@
 % ------------------------------------------------------------------------
 % Explore questions related to axle weights Q1 and Q2
 
-% Initial commands
-clear, clc, format long g, rng('shuffle'), close all; BaseData = table;
+ % Initial commands
+clear, clc, format long g, rng('shuffle'), close all; BaseData = table; YearlyMax = table; q = 1; 
 
 % Input Information --------------------
                       
@@ -12,215 +12,219 @@ clear, clc, format long g, rng('shuffle'), close all; BaseData = table;
 BaseData.LaneDir = {'1,1'};
 BaseData.TransILx = 0; BaseData.TransILy = 0; BaseData.LaneCen = 0;
 % Traffic Info
-Year = 2017;
-BaseData.SName = 'Ceneri';
-BaseData.StationNum = 1;    % Eventually add a loop for the other station
-BaseData.Stage2Prune = false;
-BaseData.ClassOnly = true;
+Year = 2011:2018; % 2010 WIMEnhanced for Ceneri and Oberburen - obtain 2019 from MAF
+%Year = 2012:2014;
+SName = {'Ceneri', 'Denges', 'Gotthard', 'Oberburen'};
+%SName = {'Gotthard'};
+BaseData.StationNum = 1;
+BaseData.Stage2Prune = true;
+BaseData.ClassOnly = false;
 % Influence Line Info
 BaseData.ILs = {'Axle'};  
-BaseData.ILRes = 0.2;
+BaseData.ILRes = 0.2;   % Do not change right now
 % Analysis Info
 BaseData.RunDyn = 0;
 BaseData.MultipleCases = 1;
-BaseData.Save = 0; BaseData.Folder = '/Axles';
+ApercuB = false;
+BaseData.Save = 0; BaseData.Folder = '/AllAxles'; % Also try class only... consider class only with special classes as an extra
+AxleCalcs = false;
+AxleStatsPlot = 0;
 BaseData.NumAnalyses = 1;
+% Length of area looked at
+InfDist = 0.6:0.2:2.6;
+%InfDist = 2.6;
 
 % Input Complete   ---------------------
 
-% Obtain Influence Line Info
-[Num.Lanes,Lane,LaneData,~,~] = UpdateData(BaseData,[],1,1);
-[Inf,Num.InfCases,Inf.x,Inf.v,ESIA] = GetInfLines(LaneData,BaseData,Num.Lanes);
+%         NEW IDEAS: 
+%         - Make plots showing the width taken (0.5-2.4m) and corresponding
+%         load (kN or kN/m) it might show jumps where tandems, tridems fit
+%         - Do this class only and all... 
+%         - Tie the yearly maximums to a return period...
+%         - Revisit Prof. B's memo
+%         - Always remember that we are limited to 25t - larger getts tossed
 
-% Initialize
-OverMax = [];
-
-for v = 1:BaseData.MultipleCases
-
-    for i = 1:length(Year)
-              
-        % Load File
-        load(['PrunedS1 WIM/',BaseData.SName,'/',BaseData.SName,'_',num2str(Year(i)),'.mat']);
-         
-        % Add row for Class, Daytime, and Daycount
-        PDC = Classify(PD);  PDC = Daytype(PDC,Year(i));
-        clear('PD')
+% For each length of area to be analyzed
+for u = 1:length(InfDist)
+    
+    % For each station to be analyzed
+    for r = 1:length(SName)
         
-        % We treat each station separately.. SNum is the input for which
-        Stations = unique(PDC.ZST);
-        Station = Stations(BaseData.StationNum);
-        PDCx = PDC(PDC.ZST == Station,:);
-        clear('PDC')
-        
-        % Apercu Title
-        BaseData.ApercuTitle = sprintf('%s %s %i %i','NWIM',BaseData.SName,Stations(BaseData.StationNum),Year(i));
-        % Plot Title
-        BaseData.PlotTitle = sprintf('%s Staion %i Max M+ [Top %i/Year] | 40m Simple Span',BaseData.SName,Stations(BaseData.StationNum),BaseData.NumAnalyses);
-        
-        % Further trimming if necessary
-        if BaseData.Stage2Prune
-            PDCx = PruneWIM2(PDCx,0);
+        if strcmp(SName{r},'Gotthard')
+            BaseData.LaneDir = {'1,2'};
+        else
+            BaseData.LaneDir = {'1,1'};
         end
-        if BaseData.ClassOnly
-            PDCx(PDCx.CLASS == 0,:) = [];
-        end    
-              
-        % Convert PDC to AllTrAx (edited space between to be 4 m... still
-        % 26 m inside WIMtoAllTrAx to account for Max Length of Veh, must be greater than 0 to actually Spacesave!)
-        [PDCx, AllTrAx, TrLineUp] = WIMtoAllTrAx(PDCx,4,Lane.Dir,BaseData.ILRes);
         
-        % Round TrLineUp first row, move unrounded to fifth row
-        TrLineUp(:,5) = TrLineUp(:,1); TrLineUp(:,1) = round(TrLineUp(:,1)/BaseData.ILRes);
+        % Obtain Influence Line Info
+        [Num.Lanes,Lane,LaneData,~,~] = UpdateData(BaseData,[],1,1);
+        [Inf,Num.InfCases,Inf.x,Inf.v,ESIA] = GetInfLines(LaneData,BaseData,Num.Lanes);
+        % Modify IL according to area to be analyzed
+        Inf.v(:) = 0; Inf.v(94:94+InfDist(u)/0.2-1) = 1;
         
+        % For each year to be analyzed
+        for i = 1:length(Year)
+            
+            % Load File
+            load(['PrunedS1 WIM/',SName{r},'/',SName{r},'_',num2str(Year(i)),'.mat']);
+            
+            % Add row for Class, Daytime, and Daycount
+            PDC = Classify(PD);  PDC = Daytype(PDC,Year(i));
+            clear('PD')
+            
+            % We treat each station separately..
+            Stations = unique(PDC.ZST);
         
-        % Goal here is to get a sense for Q1 and Q2 as well as q1, and q2
-        %
-        % We will start with Q1 and Q2, specifically trying to find the %tile of
-        % Q1 (in the code a tandem axle of 300 kN each with 1.2 m spacing), and
-        % Q2 (200 kN each with 1.2 m spacing, at the same point in the next lane)
-        % and the joint probability between. (Note code has alphaQ = 0.9)
-
-        % Write some code to generate a tandem axle combined weight
-        % histogram for the critical lane, and then move to conditional
-        % probability for the second lane tandems.
+            % For each station
+            for w = 1:length(Stations)
+                
+                Station = Stations(w);
+                
+                PDCx = PDC(PDC.ZST == Station,:);
         
-        % Let's identify TANDEMS in TrLineUp first
-        % First calculate space between axles
-        TrLineUp(:,6) = [10; diff(TrLineUp(:,5))];
-        % Then identify if part of the same vehicle (0s)
-        TrLineUp(:,7) = [0; diff(TrLineUp(:,3))];
-        % Eligible? Spacing must be < 1.2 and same vehicle (0)
-        TrLineUp(:,8) = TrLineUp(:,6) < 2.4 & TrLineUp(:,7) == 0;% & TrLineUp(:,2) > 30;
-        % TANDEM if 0 1 0 pattern
-        TrLineUp(:,9) = [0; diff(TrLineUp(:,8))];
-        TrLineUp(:,10) = [diff(TrLineUp(:,8)); 0]*-1;
-        % TANDEMS in 11
-        TrLineUp(:,11) = TrLineUp(:,8) == 1 & TrLineUp(:,9) == 1 & TrLineUp(:,10) == 1;
-        % AA is first of tandem
-        AA = TrLineUp(:,11) == 1;
-        % AAA is second
-        AAA = [diff(AA); 0];
-        Tandem = TrLineUp(AA == 1,2);
-        Tandem(:,2) = TrLineUp(AAA == 1,2);
-        
-        Tandem(:,3) = Tandem(:,1) + Tandem(:,2);
-        Dist = Tandem(:,1)./Tandem(:,2);
-        %mean(Dist)
-        %mean(Tandem(:,1))
-        %mean(Tandem(:,2))
-        histogram(Tandem(:,3),100,'normalization','pdf')
-        %prctile(Tandem(:,3),99)
-
-        TrTyps = [11; 12; 22; 23; 111; 11117; 1127; 12117; 122; 11127; 1128; 1138; 1238];
-        TrAxPerGr = [11; 12; 22; 23; 111; 1111; 112; 1211; 122; 1112; 112; 113; 123];
-        
-        [STaTr,AllAx] = AxleStats(PDCx,TrAxPerGr,TrTyps,BaseData.SName,Year,1);
-        %prctile(STaTr{2},99.99)
-        
-        hold on
-        subplot(2,2,2)
-        histogram(Tandem(:,3),'BinWidth',2.5,'normalization','pdf')
-        
-        % Search through AllTrAx
-        % If we are using 0.2 m ILRes, add vector in chunks of 12 (2.4 m)
-        for j = 1:12
-            for m = 0:11
-                try
-                    L(:,j,m+1) = AllTrAx(j+m:12:end,3);
-                catch
-                    try
-                        L(:,j,m+1) = [AllTrAx(j+m:12:end,3); 0];
-                    catch
-                        L(:,j,m+1) = [AllTrAx(j+m:12:end,3); 0; 0];
-                    end
+                % Further trimming if necessary
+                if BaseData.Stage2Prune
+                    PDCx = PruneWIM2(PDCx,0);
                 end
-                %T(m+1) = sum(L(:,:,m+1));
-            end
-            T(:,j) = sum(L(:,:,j),2);
-        end   
+                if BaseData.ClassOnly
+                    PDCx(PDCx.CLASS == 0,:) = [];
+                end
+                
+                % Convert PDC to AllTrAx (must be greater than 0 to actually Spacesave! Decide on spacesave... should be < 80 I think)
+                [PDCx, AllTrAx, TrLineUp] = WIMtoAllTrAx(PDCx,4,Lane.Dir,BaseData.ILRes);
+                
+                % Round TrLineUp first row, move unrounded to fifth row
+                TrLineUp(:,5) = TrLineUp(:,1); TrLineUp(:,1) = round(TrLineUp(:,1)/BaseData.ILRes);
+                
+                % Axle calculations are optional
+                if AxleCalcs
 
-        TopM = max(max(T))
+                    % TrLineUp [       1             2         3        4         5       ]
+                    %            AllTrAxIndex    AxleValue   Truck#   LaneID  Station(m)
+                    
+                    % Distance in front
+         
+                    % Treat the lanes separately
+                    Lanes = unique(PDCx.FS);
+                    for p = 1:length(Lanes)
+                        % LaneB is lane boolean
+                        LaneB = TrLineUp(:,4) == Lanes(p);
+                        TrLineUp(LaneB,6) = [10; diff(TrLineUp(LaneB,5))];
+                        % 7th column is Single Axles [ >= 2.4m infront and behind ]
+                        TrLineUp(LaneB,7) = (TrLineUp(LaneB,6) >= 2.4 & circshift(TrLineUp(LaneB,6),-1) >= 2.4) | (circshift(TrLineUp(LaneB,3),1) ~= TrLineUp(LaneB,3) & circshift(TrLineUp(LaneB,6),-1) >= 2.4)...
+                            | (circshift(TrLineUp(LaneB,3),-1) ~= TrLineUp(LaneB,3) & TrLineUp(LaneB,6) >= 2.4);
+                        % 8th column is Tridem Axles
+                        %                       cannot be single            cannot begin before the third axle                       first gap less than 2.4               second gap less than 2.4            third gap larger than 2.4
+                        TrLineUp(LaneB,8) = TrLineUp(LaneB,7) == 0 & circshift(TrLineUp(LaneB,3),2) == TrLineUp(LaneB,3) & circshift(TrLineUp(LaneB,6),-1) < 2.4 & circshift(TrLineUp(LaneB,6),-2) < 2.4 & circshift(TrLineUp(LaneB,6),-3) >= 2.4;
+                    end
         
-        % This value, TopM, represents the most force (kN) found in a given
-        % 2.4 m strip of the vehicle line up.
-        
-        
-        % NEW IDEAS: 
-        % - Apercu the results of TopM (generate BrStInd from AllTrAx index position
-        % - Make the IL 2.4m wide (could have the same result?)
-        % - Make sure this can be done for all years/locations efficiently
-        % - Make plots showing the width taken (0.5-2.4m) and corresponding
-        % load (kN or kN/m) it might show jumps where tandems, tridems fit
-        % - Do this class only and all... 
-        % - Tie the yearly maximums to a return period...
-        % - Revisit Prof. B's memo
-        % - Always remember that we are limited to 25t - larger getts tossed
-        
-        
-        
+                    % Set the 7th column to 3 whenever we have a tridem
+                    TrLineUp(TrLineUp(:,8)==1,7) = 3;
+                    TrLineUp(circshift(TrLineUp(:,8)==1,1),7) = 3;
+                    TrLineUp(circshift(TrLineUp(:,8)==1,2),7) = 3;
+                    
+                    for p = 1:length(Lanes)
+                        % LaneB is lane boolean
+                        LaneB = TrLineUp(:,4) == Lanes(p);
+                        % 9th column is Tandem Axles
+                        %                cannot be single or tridem  neither can the following one                      gap less than 2.4         gap infront larger than 2         second gap larger than 2
+                        TrLineUp(LaneB,9) = TrLineUp(LaneB,7) == 0 & circshift(TrLineUp(LaneB,7),-1) == 0 & circshift(TrLineUp(LaneB,6),-1) < 2.4 & TrLineUp(LaneB,6) >= 2;% & circshift(TrLineUp(LaneB,6),-2) >= 1.2;
+                    end
+                    
+                    % Clean up 3 in a rows
+                    TrLineUp(TrLineUp(:,9) == 1 & circshift(TrLineUp(:,9),-1) == 1 & circshift(TrLineUp(:,9),1) == 1,9) = 0;
+                    
+                    % Set the 7th column to 2 whenever we have a tandem
+                    TrLineUp(TrLineUp(:,9)==1,7) = 2;
+                    TrLineUp(circshift(TrLineUp(:,9)==1,1),7) = 2;
+                   
+                    TrTyps = [11; 12; 22; 23; 111; 11117; 1127; 12117; 122; 11127; 1128; 1138; 1238];
+                    TrAxPerGr = [11; 12; 22; 23; 111; 1111; 112; 1211; 122; 1112; 112; 113; 123];
+                    Vec = [0 1 2 1 0 0 1 1 2 1 1 0 1];
+                    
+                    [STaTr,AllAx] = AxleStats(PDCx,TrAxPerGr,TrTyps,[SName{r} ' ' num2str(Station)],Year(i),AxleStatsPlot);
+                    
+                    clear STA
+                    STA{1} = TrLineUp(TrLineUp(:,7)==1,2);
+                    STA{2} = TrLineUp(TrLineUp(:,9)==1,2) + TrLineUp(circshift(TrLineUp(:,9)==1,1),2);
+                    STA{3} = TrLineUp(TrLineUp(:,8)==1,2) + TrLineUp(circshift(TrLineUp(:,8)==1,1),2) + TrLineUp(circshift(TrLineUp(:,8)==1,2),2);
+                    STA = STA';
+                    
+                    % Checks
+%                     sum(TrLineUp(:,7)==1)/length(STaTr{1});
+%                     (sum(TrLineUp(:,7)==2)./2)/length(STaTr{2});
+%                     (sum(TrLineUp(:,7)==3)./3)/length(STaTr{3});
+%                     sum(TrLineUp(:,7)==2)./2;
+%                     sum(TrLineUp(:,9));
+%                     
+%                     Optional Plots
+%                     hold on
+%                     subplot(2,2,1)
+%                     histogram(STA{1},'BinWidth',2.5,'normalization','pdf','FaceAlpha',0.4)
+%                     subplot(2,2,2)
+%                     histogram(STA{2},'BinWidth',2.5,'normalization','pdf','FaceAlpha',0.4)
+%                     subplot(2,2,3)
+%                     histogram(STA{3},'BinWidth',2.5,'normalization','pdf','FaceAlpha',0.4)
+%                     subplot(2,2,4)
+%                     histogram(TrLineUp(:,2),'BinWidth',1.5,'normalization','pdf','FaceAlpha',0.4)
+%                     
+%                     prctile(STA{1},99.99);
+%                     prctile(STA{2},99.99);
+%                     prctile(STA{3},99.99);
 
-        for k = 1:BaseData.NumAnalyses
-            
-            % Subject Influence Line to Truck Axle Stream
-            [MaxLE,SMaxMaxLE,DLF,BrStInd,AxonBr,FirstAxInd,FirstAx] = GetMaxLE(AllTrAx,Inf,BaseData.RunDyn,1);
-            % Record Maximums
-            OverMax = [OverMax; [1, Year(i), MaxLE, SMaxMaxLE, DLF, BrStInd, FirstAxInd, FirstAx]];
-            
-            if BaseData.NumAnalyses == 1
-                T = Apercu(PDCx,BaseData.ApercuTitle,Inf.x,Inf.v(:,1),BrStInd,TrLineUp,MaxLE/ESIA.Total(1),DLF,Lane.Dir,BaseData.ILRes);
+     
+                end
+                
+                OverMax = [];
+                BaseData.ApercuTitle = [SName(r) ' ' num2str(Station) ' ' num2str(Year(i)) ' Max'];
+                
+                % Atm, just one analysis per year stored in YearlyMax
+                for k = 1:BaseData.NumAnalyses
+                    
+                    % Subject Influence Line to Truck Axle Stream
+                    [MaxLE,SMaxMaxLE,DLF,BrStInd,AxonBr,FirstAxInd,FirstAx] = GetMaxLE(AllTrAx,Inf,BaseData.RunDyn,1);
+                    % Record Maximums
+                    OverMax = [OverMax; [1, Year(i), MaxLE, SMaxMaxLE, DLF, BrStInd, FirstAxInd, FirstAx]];
+                    
+                    if ApercuB
+                        T = Apercu(PDCx,BaseData.ApercuTitle,Inf.x,Inf.v(:,1),BrStInd,TrLineUp,MaxLE/ESIA.Total(1),DLF,Lane.Dir,BaseData.ILRes);
+                    end
+                    
+                    % Delete vehicle entries from TrLineUp for re-analysis
+                    TrLineUp(TrLineUp(:,1) > BrStInd & TrLineUp(:,1) < BrStInd + Inf.x(end),:) = [];
+                    % Set Axles to zero in AllTrAx (can't delete because indices are locations)
+                    AllTrAx(BrStInd:BrStInd + Inf.x(end),:) = 0;
+                    
+                end
+                
+                YearlyMax(q,:) = {Year(i), SName{r}, Station, round(MaxLE,3), InfDist(u)};
+                
+                if AxleCalcs
+                    Axles{q} = STA;
+                end
+                
+                q = q+1;
+                
             end
-            
-            % Delete vehicle entries from TrLineUp for re-analysis
-            TrLineUp(TrLineUp(:,1) > BrStInd & TrLineUp(:,1) < BrStInd + Inf.x(end),:) = [];
-            % Set Axles to zero in AllTrAx (can't delete because indices are locations)
-            AllTrAx(BrStInd:BrStInd + Inf.x(end),:) = 0;
-            
         end
     end
 end
 
-% Convert Results to Table
-OverMaxT = array2table(OverMax,'VariableNames',{'InfCase','Year','MaxLE','SMaxLE','MaxDLF','MaxBrStInd','MaxFirstAxInd','MaxFirstAx'});
-
-% Get ESIA
-aQ1 = 0.7; aQ2 = 0.5; aq = 0.5;
-% T69 stands for SIA 269
-ESIA.T69 = 1.5*(ESIA.EQ(1)*aQ1+ESIA.EQ(2)*aQ2+ESIA.Eq*aq);
-% Custom (input number from AGBS results)
-AGBSim = 1.1*9604;
-
-% Simplify results into D
-for i = 1:length(Year)
-    D(:,i) = OverMaxT.MaxLE(OverMaxT.Year == Year(i));
+YearlyMax.Properties.VariableNames = {'Year', 'SName', 'Station', 'MaxLE', 'Width'};
+% Optional Save - consider adding location folder... create first?
+if BaseData.Save
+    save(['Output' BaseData.Folder '/' 'YearlyMaxQSum'], 'YearlyMax')
 end
 
-% Create plot if multiple years involved
-if length(Year) > 1
-    xwidth = [Year(1)-1 Year(end)+1];
-    figure
-    YearsforD = repmat(Year,BaseData.NumAnalyses,1);
-    Dx = D(1:BaseData.NumAnalyses,:);
-    scatter(YearsforD(:)-0.15,Dx(:),'sk','MarkerFaceColor',0.2*[1 1 1])
-    hold on
-    plot(xwidth,[ESIA.Total ESIA.Total],'k')
-    text(Year(1),ESIA.Total+ESIA.Total*0.05,sprintf('E_{SIA}'),'FontSize',11,'FontWeight','bold','Color','k')
-    hold on
-    plot(xwidth,[AGBSim AGBSim],'r')
-    text(Year(1),AGBSim-ESIA.Total*0.2,'E_{SIM 99%} AGB 2002/005 with \gamma = 1.1','FontSize',11,'FontWeight','bold','Color','r')
-    hold on
-    plot(xwidth,.9*[ESIA.Total ESIA.Total],'-.k')
-    text(Year(1),.9*ESIA.Total-ESIA.Total*0.05,'E_{SIA261}   [\alpha_{Q1/Q2/q} = 0.9]','FontSize',11,'FontWeight','bold','Color','k')
-    hold on
-    plot(xwidth,[ESIA.T69 ESIA.T69],'-.k')
-    text(Year(1),ESIA.T69+ESIA.Total*0.05,'E_{SIA269}   [\alpha_{Q1} = 0.7, \alpha_{Q2} = 0.5, \alpha_{q} = 0.5]','FontSize',11,'FontWeight','bold','Color','k')
-    ylim([0 ceil(round(ESIA.Total,-3)/10000)*10000])
-    ytickformat('%g')
-    xlim(xwidth)
-    xlabel('Year')
-    ylabel('Moment (kNm)')
-    title(BaseData.PlotTitle)
-    legend('Raw Traffic')
-end
+
+
+
+
+
+
+
+
+% LEGACY
 
 % % LEFTOVER FROM SMALLQ
 % 
@@ -340,5 +344,47 @@ end
 % % z = [mean(Lane1) mean(Lane2) mean(Lane3) mean(Lane4)];
 % % 
 % % bar(z)
+
+
+% % 
+% %         Search through AllTrAx... DOESN"T QUITE WORK... MAY AS WELL USE
+% %         MAXLE
+% %         If we are using 0.2 m ILRes, add vector in chunks of 12 (2.4 m)
+% %         for j = 1:12
+% %             for m = 0:11
+% %                 try
+% %                     L(:,j,m+1) = AllTrAx(j+m:12:end,3);
+% %                 catch
+% %                     try
+% %                         L(:,j,m+1) = [AllTrAx(j+m:12:end,3); 0];
+% %                     catch
+% %                         L(:,j,m+1) = [AllTrAx(j+m:12:end,3); 0; 0];
+% %                     end
+% %                 end
+% %             end
+% %             Tx(:,j) = sum(L(:,:,j),2);
+% %         end   
+% %         
+% %         [a, b] = max(Tx);
+% %         [TopM, d] = max(a);
+% %         b(d);
+% %         L(b(d),:,d);
+% %         
+% %         AllTrAx(b(d)*12:b(d)*12+10,:);
+% %         INDs = find(AllTrAx(b(d)*12:b(d)*12+10,3)>0);
+% %  
+% %         TrLineUp(TrLineUp(:,1) == b(d)*12+INDs(1)-1,:);
+% %         INDs2 = find(TrLineUp(:,1) == b(d)*12+INDs(1)-1);
+% %         
+% %         PDCx(TrLineUp(INDs2,3)-1:TrLineUp(INDs2,3)+1,:);
+% %         
+% %         TrLineUp(TrLineUp(:,1) == b(d)*12+INDs(2)-1,:);
+% %         find(TrLineUp(:,1) == b(d)*12+INDs(2)-1);
+% % 
+% %         
+% %         clear L
+% %         clear Tx
+% % %         This value, TopM, represents the most force (kN) found in a given
+% % %         2.4 m strip of the vehicle line up.
 
 

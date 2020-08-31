@@ -72,16 +72,18 @@ for k = 1:3
         set(gca,'yticklabel',[])
         c = ylim;
         % Put statistics onto histogram
-        text(225,c(2)*13/16,sprintf('N'),'FontSize',FontSize,'Color',FontCo)
-        text(225,c(2)*12/16,'\mu','FontSize',FontSize,'Color',FontCo)
-        text(225,c(2)*11/16,'\sigma','FontSize',FontSize,'Color',FontCo)
-        text(225,c(2)*10/16,sprintf('F_{95}'),'FontSize',FontSize,'Color',FontCo)
-        text(225,c(2)*9/16,sprintf('F_{99}'),'FontSize',FontSize,'Color',FontCo)
-        text(250,c(2)*13/16,sprintf('= %i',N(k)),'FontSize',FontSize,'Color',FontCo)
-        text(250,c(2)*12/16,sprintf('= %.1f kN',mean(x{k})),'FontSize',FontSize,'Color',FontCo)
-        text(250,c(2)*11/16,sprintf('= %.1f kN',std(x{k})),'FontSize',FontSize,'Color',FontCo)
-        text(250,c(2)*10/16,sprintf('= %.1f kN',prctile(x{k},95)),'FontSize',FontSize,'Color',FontCo)
-        text(250,c(2)*9/16,sprintf('= %.1f kN',prctile(x{k},99)),'FontSize',FontSize,'Color',FontCo)
+        text(275,c(2)*13/16,sprintf('N'),'FontSize',FontSize,'Color',FontCo)
+        text(275,c(2)*12/16,'\mu','FontSize',FontSize,'Color',FontCo)
+        text(275,c(2)*11/16,'\sigma','FontSize',FontSize,'Color',FontCo)
+        text(275,c(2)*10/16,sprintf('F_{95}'),'FontSize',FontSize,'Color',FontCo)
+        text(275,c(2)*9/16,sprintf('F_{99}'),'FontSize',FontSize,'Color',FontCo)
+        text(275,c(2)*8/16,sprintf('F_{99.99}'),'FontSize',FontSize,'Color',FontCo)
+        text(300,c(2)*13/16,sprintf('= %i',N(k)),'FontSize',FontSize,'Color',FontCo)
+        text(300,c(2)*12/16,sprintf('= %.1f kN',mean(x{k})),'FontSize',FontSize,'Color',FontCo)
+        text(300,c(2)*11/16,sprintf('= %.1f kN',std(x{k})),'FontSize',FontSize,'Color',FontCo)
+        text(300,c(2)*10/16,sprintf('= %.1f kN',prctile(x{k},95)),'FontSize',FontSize,'Color',FontCo)
+        text(300,c(2)*9/16,sprintf('= %.1f kN',prctile(x{k},99)),'FontSize',FontSize,'Color',FontCo)
+        text(300,c(2)*8/16,sprintf('= %.1f kN',prctile(x{k},99.99)),'FontSize',FontSize,'Color',FontCo)
 
     end
 end
@@ -96,7 +98,7 @@ if ClassOnly
 end
 
 for i = shift+1:shift+9
-    y = [y; PDC{PDC{:,i} > 1000,i}/TtkN];
+    y = [y; PDC{PDC{:,i} > 10,i}/TtkN];
 end
 
 N(k+1) = length(y);

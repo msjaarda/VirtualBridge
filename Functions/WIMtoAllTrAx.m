@@ -46,8 +46,11 @@ if EnhancedWIM
     PDCx.HH = str2double(PDCx.HH)/100;
     
     % Changes variables names to be lane specific
-    PDCx.Properties.VariableNames{'HEADx'} = 'LnHead';
-    PDCx.Properties.VariableNames{'GAP'} = 'LnGap';
+    try
+        PDCx.Properties.VariableNames{'HEADx'} = 'LnHead';
+        PDCx.Properties.VariableNames{'GAP'} = 'LnGap';
+    catch
+    end
     
     % Sort by timestamp
     PDCx = sortrows(PDCx,{'JJJJMMTT','HHMMSS','HH'});
@@ -138,9 +141,23 @@ if ~VWIM
         AA = [0; diff(PDCx.CumDist(LaneInds))];
         
         PDCx.LnTrSpacing(LaneInds) = AA;
-        PDCx.LnTrBtw(LaneInds) = AA - PDCx.LENTH(circshift(find(LaneInds == 1),1))/100;
+        % The following only makes sense in direction 1. We don't circshift
+        % for the 2 direction...
+        % Added 1.5 because it was unrealistic at times!
+        if LaneDir(i) == 1
+            PDCx.LnTrBtw(LaneInds) = AA - PDCx.LENTH(circshift(find(LaneInds == 1),1))/100-1.5;
+        else
+            PDCx.LnTrBtw(LaneInds) = AA - PDCx.LENTH(LaneInds)/100-1.5;
+        end
+        
+
         
     end
+    
+    % If LnTrBtw is negative... delete entry! EXPERIMENTAL
+    % COMMENT IF YOU WANT TO INCLUDE POTENTIALLY BAD SCENARIOS WHERE OUR
+    % SPEED ESTIMATE MEANS VEHICLES OVERLAP EACH OTHER
+    PDCx(PDCx.LnTrBtw < 0,:) = [];
 end
 
 % Create wheelbase and axle load vectors
