@@ -38,7 +38,7 @@ count = 1;
 
 % For each length of area to be analyzed
 % Cannot do AxleCalcs with parfor
-for u = 1:length(InfDist)
+parfor u = 1:length(InfDist)
     
     BaseData = table;
     % Roadway Info
