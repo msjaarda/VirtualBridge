@@ -4,7 +4,7 @@
 % Explore questions related to axle weights Q1 and Q2
 
  % Initial commands
-clear, clc, format long g, rng('shuffle'), close all; 
+clear, clc, format long g, rng('shuffle'), close all; tic
 warning('off','MATLAB:mir_warning_maybe_uninitialized_temporary')
 
 % Input Information --------------------
@@ -16,13 +16,13 @@ SName = {'Ceneri', 'Denges', 'Gotthard', 'Oberburen'};
 %SName = {'Denges'};
 
 ApercuB = 0;
-BDSave = 1; 
-BDFolder = '/AllAxles'; % Also try class only... consider class only with special classes as an extra
-AxleCalcs = 0;
+BDSave = 0; 
+BDFolder = '/ClassAxles'; % Also try class only... consider class only with special classes as an extra
+AxleCalcs = 1;
 AxleStatsPlot = 0;
 % Influence Line Info
-InfDist = 0.6:0.2:2.6; % Length of area looked at
-%InfDist = 2.4:0.2:2.6;
+%InfDist = 0.6:0.2:2.6; % Length of area looked at
+InfDist = 2.4;%:0.2:2.6;
 
 %         NEW IDEAS: 
 %         - Make plots showing the width taken (0.5-2.4m) and corresponding
@@ -38,20 +38,19 @@ count = 1;
 
 % For each length of area to be analyzed
 % Cannot do AxleCalcs with parfor
-parfor u = 1:length(InfDist)
+for u = 1:length(InfDist)
     
     BaseData = table;
     % Roadway Info
     BaseData.TransILx = 0; BaseData.TransILy = 0; BaseData.LaneCen = 0;
     BaseData.StationNum = 1;
     BaseData.Stage2Prune = true;
-    BaseData.ClassOnly = false;
+    BaseData.ClassOnly = true;
     BaseData.ILs = {'Axle'};  
     BaseData.ILRes = 0.2;   % Do not change right now
     % Analysis Info
     BaseData.RunDyn = 0;
-    BaseData.MultipleCases = 1;
-    BaseData.NumAnalyses = 1;
+    BaseData.NumAnalyses = 0;
     
     % Input Complete   ---------------------
     
@@ -110,6 +109,15 @@ parfor u = 1:length(InfDist)
                     %            AllTrAxIndex    AxleValue   Truck#   LaneID  Station(m)
                     
                     % Distance in front
+                    
+                    TrTyps = [11; 12; 22; 23; 111; 11117; 1127; 12117; 122; 11127; 1128; 1138; 1238];
+                    TrAxPerGr = [11; 12; 22; 23; 111; 1111; 112; 1211; 122; 1112; 112; 113; 123];
+                    Vec = [0 1 2 1 0 0 1 1 2 1 1 0 1];
+                    
+                    [STaTr,AllAx] = AxleStats(PDCx,TrAxPerGr,TrTyps,[SName{r} ' ' num2str(Station)],Year(i),AxleStatsPlot);
+                    clear STAx
+                    STAx = STaTr';
+                    
          
                     % Treat the lanes separately
                     Lanes = unique(PDCx.FS);
@@ -145,21 +153,17 @@ parfor u = 1:length(InfDist)
                     TrLineUp(TrLineUp(:,9)==1,7) = 2;
                     TrLineUp(circshift(TrLineUp(:,9)==1,1),7) = 2;
                    
-                    TrTyps = [11; 12; 22; 23; 111; 11117; 1127; 12117; 122; 11127; 1128; 1138; 1238];
-                    TrAxPerGr = [11; 12; 22; 23; 111; 1111; 112; 1211; 122; 1112; 112; 113; 123];
-                    Vec = [0 1 2 1 0 0 1 1 2 1 1 0 1];
+
                     
-                    [STaTr,AllAx] = AxleStats(PDCx,TrAxPerGr,TrTyps,[SName{r} ' ' num2str(Station)],Year(i),AxleStatsPlot);
-                    
-                    STA = [];
+                    clear STA;
                     %Single = struct();
-                    STA(1) = cell2struct(TrLineUp(TrLineUp(:,7)==1,2));
+                    STA{1} = TrLineUp(TrLineUp(:,7)==1,2);
                     %Tandem = struct();
-                    STA(2) = TrLineUp(TrLineUp(:,9)==1,2) + TrLineUp(circshift(TrLineUp(:,9)==1,1),2);
+                    STA{2} = TrLineUp(TrLineUp(:,9)==1,2) + TrLineUp(circshift(TrLineUp(:,9)==1,1),2);
                     %Tridem = struct();
-                    STA(3) = TrLineUp(TrLineUp(:,8)==1,2) + TrLineUp(circshift(TrLineUp(:,8)==1,1),2) + TrLineUp(circshift(TrLineUp(:,8)==1,2),2);
+                    STA{3} = TrLineUp(TrLineUp(:,8)==1,2) + TrLineUp(circshift(TrLineUp(:,8)==1,1),2) + TrLineUp(circshift(TrLineUp(:,8)==1,2),2);
                     STA = STA';
-                    
+%                     toc
                     % Checks
 %                     sum(TrLineUp(:,7)==1)/length(STaTr{1});
 %                     (sum(TrLineUp(:,7)==2)./2)/length(STaTr{2});
@@ -207,28 +211,32 @@ parfor u = 1:length(InfDist)
                     
                 end
                 
-                YearlyMax = [YearlyMax; [Year(i), Station, round(MaxLE,3), InfDist(u)]];
+                %YearlyMax = [YearlyMax; [Year(i), Station, round(MaxLE,3), InfDist(u)]];
                 %Loc = [Loc; SName{r}];
                 
                 % Comment if in parfor
-%                 if AxleCalcs && u == 1
-%                      Axles{count} = STA;
-%                      count = count+1;
-%                 end   
+                if AxleCalcs && u == 1
+                     Axles{count} = STA;
+                     % Compare Axlesx to previous
+                     Axlesx{count} = STAx;
+                     count = count+1;
+                end   
             end
         end
     end
 end
 
-YearlyMax = array2table(YearlyMax,'VariableNames',{'Year', 'Station', 'MaxLE', 'Width'});
+% Should we do axles from all locations?! no reason not to add all, as far
+% as I can tell
+
+%YearlyMax = array2table(YearlyMax,'VariableNames',{'Year', 'Station', 'MaxLE', 'Width'});
+
 %YearlyMax.SName = Loc;
 %YearlyMax.Properties.VariableNames = {'SName', 'Year', 'Station', 'MaxLE', 'Width'};
 % Optional Save - consider adding location folder... create first?
 if BDSave
     save(['Output' BDFolder '/' 'YearlyMaxQSum'], 'YearlyMax')
 end
-
-
 
 
 
