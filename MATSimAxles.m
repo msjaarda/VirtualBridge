@@ -15,7 +15,7 @@ Year = 2011:2018; % 2010 WIMEnhanced for Ceneri and Oberburen - obtain 2019 from
 SName = {'Ceneri', 'Denges', 'Gotthard', 'Oberburen'};
 %SName = {'Denges'};
 
-ApercuB = 1;
+ApercuB = 0;
 BDSave = 1; 
 BDFolder = '/AllAxles'; % Also try class only... consider class only with special classes as an extra
 AxleCalcs = 0;
@@ -33,12 +33,12 @@ InfDist = 0.6:0.2:2.6; % Length of area looked at
 %         - Always remember that we are limited to 25t - larger getts tossed
 
 YearlyMax = [];
-Loc = [];
+%Loc = [];
 count = 1;
 
 % For each length of area to be analyzed
 % Cannot do AxleCalcs with parfor
-parfor u = 1:length(InfDist)
+for u = 1:length(InfDist)
     
     BaseData = table;
     % Roadway Info
@@ -77,17 +77,17 @@ parfor u = 1:length(InfDist)
             PD = load(['PrunedS1 WIM/',SName{r},'/',SName{r},'_',num2str(Year(i)),'.mat']);
             
             % Add row for Class, Daytime, and Daycount
-            PDC = Classify(PD.PD);  PDC = Daytype(PDC,Year(i));
+            PD = Classify(PD.PD);  PD = Daytype(PD,Year(i));
             
             % We treat each station separately..
-            Stations = unique(PDC.ZST);
+            Stations = unique(PD.ZST);
         
             % For each station
             for w = 1:length(Stations)
                 
                 Station = Stations(w);
                 
-                PDCx = PDC(PDC.ZST == Station,:);
+                PDCx = PD(PD.ZST == Station,:);
         
                 % Further trimming if necessary
                 if BaseData.Stage2Prune
@@ -185,8 +185,8 @@ parfor u = 1:length(InfDist)
      
                 end
                 
-                OverMax = [];
-                BaseData.ApercuTitle = [SName{r} ' ' num2str(Station) ' ' num2str(Year(i)) ' Max'];
+%                 OverMax = [];
+%                 BaseData.ApercuTitle = [SName{r} ' ' num2str(Station) ' ' num2str(Year(i)) ' Max'];
                 
                 % Atm, just one analysis per year stored in YearlyMax
                 for k = 1:BaseData.NumAnalyses
@@ -194,21 +194,21 @@ parfor u = 1:length(InfDist)
                     % Subject Influence Line to Truck Axle Stream
                     [MaxLE,SMaxMaxLE,DLF,BrStInd,AxonBr,FirstAxInd,FirstAx] = GetMaxLE(AllTrAx,Inf,BaseData.RunDyn,1);
                     % Record Maximums
-                    OverMax = [OverMax; [1, Year(i), MaxLE, SMaxMaxLE, DLF, BrStInd, FirstAxInd, FirstAx]];
+%                     OverMax = [OverMax; [1, Year(i), MaxLE, SMaxMaxLE, DLF, BrStInd, FirstAxInd, FirstAx]];
                     
                     if ApercuB
                         T = Apercu(PDCx,BaseData.ApercuTitle,Inf.x,Inf.v(:,1),BrStInd,TrLineUp,MaxLE/ESIA.Total(1),DLF,Lane.Dir,BaseData.ILRes);
                     end
                     
-                    % Delete vehicle entries from TrLineUp for re-analysis
-                    TrLineUp(TrLineUp(:,1) > BrStInd & TrLineUp(:,1) < BrStInd + Inf.x(end),:) = [];
-                    % Set Axles to zero in AllTrAx (can't delete because indices are locations)
-                    AllTrAx(BrStInd:BrStInd + Inf.x(end),:) = 0;
+%                     % Delete vehicle entries from TrLineUp for re-analysis
+%                     TrLineUp(TrLineUp(:,1) > BrStInd & TrLineUp(:,1) < BrStInd + Inf.x(end),:) = [];
+%                     % Set Axles to zero in AllTrAx (can't delete because indices are locations)
+%                     AllTrAx(BrStInd:BrStInd + Inf.x(end),:) = 0;
                     
                 end
                 
                 YearlyMax = [YearlyMax; [Year(i), Station, round(MaxLE,3), InfDist(u)]];
-                Loc = [Loc; SName{r}];
+                %Loc = [Loc; SName{r}];
                 
                 % Comment if in parfor
 %                 if AxleCalcs && u == 1
@@ -221,7 +221,7 @@ parfor u = 1:length(InfDist)
 end
 
 YearlyMax = array2table(YearlyMax,'VariableNames',{'Year', 'Station', 'MaxLE', 'Width'});
-YearlyMax.SName = Loc;
+%YearlyMax.SName = Loc;
 %YearlyMax.Properties.VariableNames = {'SName', 'Year', 'Station', 'MaxLE', 'Width'};
 % Optional Save - consider adding location folder... create first?
 if BDSave
