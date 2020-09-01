@@ -4,37 +4,25 @@
 % Explore questions related to axle weights Q1 and Q2
 
  % Initial commands
-clear, clc, format long g, rng('shuffle'), close all; BaseData = table; YearlyMax = table; q = 1; 
+clear, clc, format long g, rng('shuffle'), close all; 
+warning('off','MATLAB:mir_warning_maybe_uninitialized_temporary')
 
 % Input Information --------------------
                       
-% Roadway Info
-BaseData.LaneDir = {'1,1'};
-BaseData.TransILx = 0; BaseData.TransILy = 0; BaseData.LaneCen = 0;
 % Traffic Info
 Year = 2011:2018; % 2010 WIMEnhanced for Ceneri and Oberburen - obtain 2019 from MAF
-%Year = 2012:2014;
+%Year = 2018;
 SName = {'Ceneri', 'Denges', 'Gotthard', 'Oberburen'};
-%SName = {'Gotthard'};
-BaseData.StationNum = 1;
-BaseData.Stage2Prune = true;
-BaseData.ClassOnly = false;
-% Influence Line Info
-BaseData.ILs = {'Axle'};  
-BaseData.ILRes = 0.2;   % Do not change right now
-% Analysis Info
-BaseData.RunDyn = 0;
-BaseData.MultipleCases = 1;
-ApercuB = false;
-BaseData.Save = 0; BaseData.Folder = '/AllAxles'; % Also try class only... consider class only with special classes as an extra
-AxleCalcs = false;
-AxleStatsPlot = 0;
-BaseData.NumAnalyses = 1;
-% Length of area looked at
-InfDist = 0.6:0.2:2.6;
-%InfDist = 2.6;
+%SName = {'Denges'};
 
-% Input Complete   ---------------------
+ApercuB = 1;
+BDSave = 1; 
+BDFolder = '/AllAxles'; % Also try class only... consider class only with special classes as an extra
+AxleCalcs = 0;
+AxleStatsPlot = 0;
+% Influence Line Info
+InfDist = 0.6:0.2:2.6; % Length of area looked at
+%InfDist = 2.4:0.2:2.6;
 
 %         NEW IDEAS: 
 %         - Make plots showing the width taken (0.5-2.4m) and corresponding
@@ -44,8 +32,28 @@ InfDist = 0.6:0.2:2.6;
 %         - Revisit Prof. B's memo
 %         - Always remember that we are limited to 25t - larger getts tossed
 
+YearlyMax = [];
+Loc = [];
+count = 1;
+
 % For each length of area to be analyzed
-for u = 1:length(InfDist)
+% Cannot do AxleCalcs with parfor
+parfor u = 1:length(InfDist)
+    
+    BaseData = table;
+    % Roadway Info
+    BaseData.TransILx = 0; BaseData.TransILy = 0; BaseData.LaneCen = 0;
+    BaseData.StationNum = 1;
+    BaseData.Stage2Prune = true;
+    BaseData.ClassOnly = false;
+    BaseData.ILs = {'Axle'};  
+    BaseData.ILRes = 0.2;   % Do not change right now
+    % Analysis Info
+    BaseData.RunDyn = 0;
+    BaseData.MultipleCases = 1;
+    BaseData.NumAnalyses = 1;
+    
+    % Input Complete   ---------------------
     
     % For each station to be analyzed
     for r = 1:length(SName)
@@ -57,8 +65,8 @@ for u = 1:length(InfDist)
         end
         
         % Obtain Influence Line Info
-        [Num.Lanes,Lane,LaneData,~,~] = UpdateData(BaseData,[],1,1);
-        [Inf,Num.InfCases,Inf.x,Inf.v,ESIA] = GetInfLines(LaneData,BaseData,Num.Lanes);
+        [NLanes,Lane,LaneData,~,~] = UpdateData(BaseData,[],1,1);
+        [Inf,NInfCases,Inf.x,Inf.v,ESIA] = GetInfLines(LaneData,BaseData,NLanes);
         % Modify IL according to area to be analyzed
         Inf.v(:) = 0; Inf.v(94:94+InfDist(u)/0.2-1) = 1;
         
@@ -66,11 +74,10 @@ for u = 1:length(InfDist)
         for i = 1:length(Year)
             
             % Load File
-            load(['PrunedS1 WIM/',SName{r},'/',SName{r},'_',num2str(Year(i)),'.mat']);
+            PD = load(['PrunedS1 WIM/',SName{r},'/',SName{r},'_',num2str(Year(i)),'.mat']);
             
             % Add row for Class, Daytime, and Daycount
-            PDC = Classify(PD);  PDC = Daytype(PDC,Year(i));
-            clear('PD')
+            PDC = Classify(PD.PD);  PDC = Daytype(PDC,Year(i));
             
             % We treat each station separately..
             Stations = unique(PDC.ZST);
@@ -144,10 +151,13 @@ for u = 1:length(InfDist)
                     
                     [STaTr,AllAx] = AxleStats(PDCx,TrAxPerGr,TrTyps,[SName{r} ' ' num2str(Station)],Year(i),AxleStatsPlot);
                     
-                    clear STA
-                    STA{1} = TrLineUp(TrLineUp(:,7)==1,2);
-                    STA{2} = TrLineUp(TrLineUp(:,9)==1,2) + TrLineUp(circshift(TrLineUp(:,9)==1,1),2);
-                    STA{3} = TrLineUp(TrLineUp(:,8)==1,2) + TrLineUp(circshift(TrLineUp(:,8)==1,1),2) + TrLineUp(circshift(TrLineUp(:,8)==1,2),2);
+                    STA = [];
+                    %Single = struct();
+                    STA(1) = cell2struct(TrLineUp(TrLineUp(:,7)==1,2));
+                    %Tandem = struct();
+                    STA(2) = TrLineUp(TrLineUp(:,9)==1,2) + TrLineUp(circshift(TrLineUp(:,9)==1,1),2);
+                    %Tridem = struct();
+                    STA(3) = TrLineUp(TrLineUp(:,8)==1,2) + TrLineUp(circshift(TrLineUp(:,8)==1,1),2) + TrLineUp(circshift(TrLineUp(:,8)==1,2),2);
                     STA = STA';
                     
                     % Checks
@@ -176,7 +186,7 @@ for u = 1:length(InfDist)
                 end
                 
                 OverMax = [];
-                BaseData.ApercuTitle = [SName(r) ' ' num2str(Station) ' ' num2str(Year(i)) ' Max'];
+                BaseData.ApercuTitle = [SName{r} ' ' num2str(Station) ' ' num2str(Year(i)) ' Max'];
                 
                 % Atm, just one analysis per year stored in YearlyMax
                 for k = 1:BaseData.NumAnalyses
@@ -197,23 +207,25 @@ for u = 1:length(InfDist)
                     
                 end
                 
-                YearlyMax(q,:) = {Year(i), SName{r}, Station, round(MaxLE,3), InfDist(u)};
+                YearlyMax = [YearlyMax; [Year(i), Station, round(MaxLE,3), InfDist(u)]];
+                Loc = [Loc; SName{r}];
                 
-                if AxleCalcs
-                    Axles{q} = STA;
-                end
-                
-                q = q+1;
-                
+                % Comment if in parfor
+%                 if AxleCalcs && u == 1
+%                      Axles{count} = STA;
+%                      count = count+1;
+%                 end   
             end
         end
     end
 end
 
-YearlyMax.Properties.VariableNames = {'Year', 'SName', 'Station', 'MaxLE', 'Width'};
+YearlyMax = array2table(YearlyMax,'VariableNames',{'Year', 'Station', 'MaxLE', 'Width'});
+YearlyMax.SName = Loc;
+%YearlyMax.Properties.VariableNames = {'SName', 'Year', 'Station', 'MaxLE', 'Width'};
 % Optional Save - consider adding location folder... create first?
-if BaseData.Save
-    save(['Output' BaseData.Folder '/' 'YearlyMaxQSum'], 'YearlyMax')
+if BDSave
+    save(['Output' BDFolder '/' 'YearlyMaxQSum'], 'YearlyMax')
 end
 
 
