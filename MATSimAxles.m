@@ -16,13 +16,13 @@ SName = {'Ceneri', 'Denges', 'Gotthard', 'Oberburen'};
 %SName = {'Denges'};
 
 ApercuB = 0;
-BDSave = 0; 
-BDFolder = '/ClassAxles'; % Also try class only... consider class only with special classes as an extra
-AxleCalcs = 1;
+BDSave = 1; 
+BDFolder = '/ClassOWAxles'; % Also try class only... consider class only with special classes as an extra
+AxleCalcs = 0;
 AxleStatsPlot = 0;
 % Influence Line Info
-%InfDist = 0.6:0.2:2.6; % Length of area looked at
-InfDist = 2.4;%:0.2:2.6;
+InfDist = 0.6:0.2:2.6; % Length of area looked at
+%InfDist = 2.4;%:0.2:2.6;
 
 %         NEW IDEAS: 
 %         - Make plots showing the width taken (0.5-2.4m) and corresponding
@@ -34,11 +34,11 @@ InfDist = 2.4;%:0.2:2.6;
 
 YearlyMax = [];
 %Loc = [];
-count = 1;
+%count = 1;
 
 % For each length of area to be analyzed
 % Cannot do AxleCalcs with parfor
-for u = 1:length(InfDist)
+parfor u = 1:length(InfDist)
     
     BaseData = table;
     % Roadway Info
@@ -114,9 +114,9 @@ for u = 1:length(InfDist)
                     TrAxPerGr = [11; 12; 22; 23; 111; 1111; 112; 1211; 122; 1112; 112; 113; 123];
                     Vec = [0 1 2 1 0 0 1 1 2 1 1 0 1];
                     
-                    [STaTr,AllAx] = AxleStats(PDCx,TrAxPerGr,TrTyps,[SName{r} ' ' num2str(Station)],Year(i),AxleStatsPlot);
-                    clear STAx
-                    STAx = STaTr';
+                    %[STaTr,AllAx] = AxleStats(PDCx,TrAxPerGr,TrTyps,[SName{r} ' ' num2str(Station)],Year(i),AxleStatsPlot);
+                    %clear STAx
+                    %STAx = STaTr';
                     
          
                     % Treat the lanes separately
@@ -155,14 +155,14 @@ for u = 1:length(InfDist)
                    
 
                     
-                    clear STA;
+                    %clear STA;
                     %Single = struct();
-                    STA{1} = TrLineUp(TrLineUp(:,7)==1,2);
+                    %STA{1} = TrLineUp(TrLineUp(:,7)==1,2);
                     %Tandem = struct();
-                    STA{2} = TrLineUp(TrLineUp(:,9)==1,2) + TrLineUp(circshift(TrLineUp(:,9)==1,1),2);
+                    %STA{2} = TrLineUp(TrLineUp(:,9)==1,2) + TrLineUp(circshift(TrLineUp(:,9)==1,1),2);
                     %Tridem = struct();
-                    STA{3} = TrLineUp(TrLineUp(:,8)==1,2) + TrLineUp(circshift(TrLineUp(:,8)==1,1),2) + TrLineUp(circshift(TrLineUp(:,8)==1,2),2);
-                    STA = STA';
+                    %STA{3} = TrLineUp(TrLineUp(:,8)==1,2) + TrLineUp(circshift(TrLineUp(:,8)==1,1),2) + TrLineUp(circshift(TrLineUp(:,8)==1,2),2);
+                    %STA = STA';
 %                     toc
                     % Checks
 %                     sum(TrLineUp(:,7)==1)/length(STaTr{1});
@@ -201,7 +201,7 @@ for u = 1:length(InfDist)
 %                     OverMax = [OverMax; [1, Year(i), MaxLE, SMaxMaxLE, DLF, BrStInd, FirstAxInd, FirstAx]];
                     
                     if ApercuB
-                        T = Apercu(PDCx,BaseData.ApercuTitle,Inf.x,Inf.v(:,1),BrStInd,TrLineUp,MaxLE/ESIA.Total(1),DLF,Lane.Dir,BaseData.ILRes);
+                        %T = Apercu(PDCx,BaseData.ApercuTitle,Inf.x,Inf.v(:,1),BrStInd,TrLineUp,MaxLE/ESIA.Total(1),DLF,Lane.Dir,BaseData.ILRes);
                     end
                     
 %                     % Delete vehicle entries from TrLineUp for re-analysis
@@ -211,15 +211,15 @@ for u = 1:length(InfDist)
                     
                 end
                 
-                %YearlyMax = [YearlyMax; [Year(i), Station, round(MaxLE,3), InfDist(u)]];
+                YearlyMax = [YearlyMax; [Year(i), Station, round(MaxLE,3), InfDist(u)]];
                 %Loc = [Loc; SName{r}];
                 
                 % Comment if in parfor
                 if AxleCalcs && u == 1
-                     Axles{count} = STA;
+                     %Axles{count} = STA;
                      % Compare Axlesx to previous
-                     Axlesx{count} = STAx;
-                     count = count+1;
+                     %Axlesx{count} = STAx;
+                     %count = count+1;
                 end   
             end
         end
@@ -229,7 +229,7 @@ end
 % Should we do axles from all locations?! no reason not to add all, as far
 % as I can tell
 
-%YearlyMax = array2table(YearlyMax,'VariableNames',{'Year', 'Station', 'MaxLE', 'Width'});
+YearlyMax = array2table(YearlyMax,'VariableNames',{'Year', 'Station', 'MaxLE', 'Width'});
 
 %YearlyMax.SName = Loc;
 %YearlyMax.Properties.VariableNames = {'SName', 'Year', 'Station', 'MaxLE', 'Width'};
