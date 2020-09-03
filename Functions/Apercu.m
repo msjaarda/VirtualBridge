@@ -2,7 +2,10 @@ function T = Apercu(PDC,Title,Infx,Infv,BrStInd,TrLineUp,PEsia,DLF,LaneDir,ILRes
 % Plot A Series of WIM or VWIM Vehicles on a Bridge
 
 % Trim ILs to be rid of nan entries
-Infv = Infv(~isnan(Infv)); Infx = Infx(~isnan(Infv));
+% Only works for non-twin
+if size(Infv,2) == 1
+    Infv = Infv(~isnan(Infv)); Infx = Infx(~isnan(Infv));
+end
 
 figure
 
@@ -210,10 +213,10 @@ for j = 1:NumLanePlots
         scatter(q{j}(:,5),7*ones(size(q{j},1),1),'filled','s','MarkerFaceColor','k')
         hold on
         scatter(q{j}(:,5),3*ones(size(q{j},1),1),'filled','s','MarkerFaceColor','k')
-        xlim([0 max(Infx)]); ylim([0 10])
+        xlim([-0.5 max(Infx)+0.5]); ylim([0 10])
         ylabel(['Lane ' num2str(Lanes(j))]); set(gca,'ytick',[]); set(gca,'yticklabel',[])
     else
-        xlim([0 max(Infx)]); ylim([0 10])
+        xlim([-0.5 max(Infx)+0.5]); ylim([0 10])
         ylabel(['Lane ' num2str(Lanes(j-1)+1)]); set(gca,'ytick',[]); set(gca,'yticklabel',[])
     end
     

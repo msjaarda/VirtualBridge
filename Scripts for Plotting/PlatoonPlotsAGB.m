@@ -16,7 +16,7 @@ MATPlots = [1 2 3 4];
 
 % Saving
 SaveFig = true;
-SaveFolder = 'PlatoonPlots';
+SaveFolder = 'PlatoonPlotswTwin';
 SaveSuffix = '';
 
 % Legend labels
@@ -35,7 +35,7 @@ J{4} = '10 m IVD'; J{5} = 'No Platoons'; %J{6} = 'Cen 18';
 % Custom Input
 
 % Set Plot Parameters
-Section = 'Box'; % Box, Twin, TwinRed, TwinExp, TwinConc
+Section = 'Twin'; % Box, Twin, TwinRed, TwinExp, TwinConc
 Config = 'Mo';   % Bi, Mo
 Dist = 'ExFast'; % Split, Stand, ExFast, ExSlow
 
@@ -74,7 +74,11 @@ for r = 1:2 % 1 is 20%, 2 is 40%
 for w = 1:3 % 1 2 3 is 2 3 4 truck platoons
 
 % Assign Figure Name
-FName = sprintf('Figure 1 Box Girder, Unidirectional, %i-Truck Platoons at %i%%',w+1,PlatRateNum(r)*100);
+try
+    FName = sprintf('Figure 1 %s Girder, Unidirectional, %i-Truck Platoons at %i%%',Section,w+1,PlatRateNum(r)*100);
+catch
+    FName = sprintf('Figure 1 %s Girder, Unidirectional, %i-Truck Platoons at %i%%',Section{1},w+1,PlatRateNum(r)*100);
+end
 
 % Load AGBMAT Results
 %load('AGBResults.mat') % AGB.(Section).(Config).(Dist).(AE)
@@ -83,9 +87,9 @@ FName = sprintf('Figure 1 Box Girder, Unidirectional, %i-Truck Platoons at %i%%'
 %MAT2 = MAT;
 %load('AGBMATResults.mat')
 
-load('PLATResults.mat')  
+load('PLATResultswTwin.mat')  
 %PLAT.(Section).(Dist).(Loc).(PlatSize).(PlatRate).(AE).(IVD)(Span/20)
-load('Ceneri2017Results.mat')
+load('Ceneri2017ResultswTwin.mat')
 
 
 % For each figure

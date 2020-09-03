@@ -10,22 +10,25 @@ clear, clc
 % AGB
 %Folder_Name = 'AGB2002f50k';
 % Ceneri2017
-Folder_Name = 'AGB2018';
+%Folder_Name = 'AGB2018';
 % Platoon
-%Folder_Name = 'Platoon';
+Folder_Name = 'PlatoonTwinBase';
 
 % Structure Name
 % AGB and Ceneri2017
 Struct_Name = 'MAT';
 % Platoon
 %Struct_Name = 'PLAT';
+% Add to existing Structure (PLATResults)
+%load('Results Variables\PLATResults.mat')
+load('Results Variables\Ceneri2017Results.mat')
 RegSpans = true; % Used to tell if the normal sequence of Spans (10-80)
 
 % Number of Vehicles for Bidirectional
 % AGB
-BiVehNum = 1000000;
+%BiVehNum = 1000000;
 % Ceneri2017 and Platoon
-%BiVehNum = 25000;
+BiVehNum = 25000;
 
 % Ensure file list is succinct
 File_List = GetFileList(Folder_Name);
@@ -58,9 +61,9 @@ clear OutInfo
 
 % Name each column of the final matrix/table in the structure
 % AGB
-ColumnNames = {'EQ1','EQ2','Eq','GS','GD','CS','CD','DS','DD','E'};
+%ColumnNames = {'EQ1','EQ2','Eq','GS','GD','CS','CD','DS','DD','E'};
 % Ceneri2017
-%ColumnNames = {'EQ1','EQ2','Eq','TWES','TWED','TWOS','TWOD','FIFS','FIFD','E'};
+ColumnNames = {'EQ1','EQ2','Eq','TWES','TWED','TWOS','TWOD','FIFS','FIFD','E'};
 % Platoon
 %ColumnNames = {'BaseMean','BaseMax','SMean','MSMean','MLMean','LMean','SMax','MSMax','MLMax','LMax'};
 
@@ -133,13 +136,13 @@ for i = 1:length(OInfo)
         Loc = 'DetD';
     end
     
-%     if OInfo(i).BaseData.NumVeh == 20000000
-%         Loc = 'TWED';
-%     elseif OInfo(i).BaseData.NumVeh == 2000000
-%         Loc = 'TWOD';
-%     else
-%         Loc = 'FIFD';
-%     end
+    if OInfo(i).BaseData.NumVeh == 20000000
+        Loc = 'TWED';
+    elseif OInfo(i).BaseData.NumVeh == 2000000
+        Loc = 'TWOD';
+    else
+        Loc = 'FIFD';
+    end
     
     % Platoon Specific
     %--------------------------------------------------

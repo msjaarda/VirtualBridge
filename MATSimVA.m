@@ -8,24 +8,28 @@ clear, clc, format long g, rng('shuffle'), close all; BaseData = table;
 
 % Input Information --------------------
 
-% Roadway Info
-BaseData.LaneDir = {'1,1'};
-% Influence Line Info
-BaseData.ILs = {'Mp.Mp40'};  BaseData.ILRes = 1;  
-% InfCase is only for Apercu (no InfCase column in PD for VWIM
-InfCase = 1;
-% Analysis Info
-BaseData.RunDyn = 1;   BaseData.MultipleCases = 1;
-BaseData.TransILx = 0;
-BaseData.TransILy = 0;
-BaseData.LaneCen = 0;
+% % Roadway Info
+% BaseData.LaneDir = {'1,1'};
+% % Influence Line Info
+% BaseData.ILs = {'Mp.Mp40'};  BaseData.ILRes = 1;  
+% % InfCase is only for Apercu (no InfCase column in PD for VWIM)
+% 
+% % Analysis Info
+% BaseData.RunDyn = 1;   
 
-BaseData.Save = 0;
-BaseData.Folder = '/AGB2002A15';
+InfCase = 6;
+MultipleCases = 1;
+
+% BaseData.TransILx = {'2,7'};
+% BaseData.TransILy = {'0.9,0.1'};
+% BaseData.LaneCen = {'1.5,4.5'};
+
+% BaseData.Save = 0;
+% BaseData.Folder = '/AGB2002A15';
 
 %FName = 'VirtualWIM\Congest\WIM_May08-20 165449.mat'; % Options
-FName = 'Apercu\Congest\AWIM_May08-20 165449.mat'; % Options
-OutputFName = 'Output\Congest\May08-20 165449.mat';
+FName = 'Apercu\PlatoonTwinApercu\AWIM_Sep03-20 113250.mat'; % Options
+OutputFName = 'Output\PlatoonTwinApercu\Sep03-20 113250.mat';
 % FName = 'Apercu\PlatStud60m\AWIM_Jan24-20 1049.mat'; % Options
 % OutputFName = 'Output\PlatStud60m\Jan24-20 1049.mat';
 %InfCase = 1;
@@ -34,8 +38,7 @@ OutputFName = 'Output\Congest\May08-20 165449.mat';
 % AWIM: 'Apercu\AWIM_Mar25-20 1034.mat'
 % VWIM: 'WIM_Jan14 1130.mat'
 
-BaseData.NumAnalyses = 1;
-BaseData.ApercuTitle = sprintf('%s','VAWIM');
+
     
 
 % Input Complete   ---------------------
@@ -51,18 +54,29 @@ BaseData.ApercuTitle = sprintf('%s','VAWIM');
 % % BaseData will be overwrote
 
 % Obtain Influence Line Info
-[Num.Lanes,Lane,LaneData,~,~] = UpdateData(BaseData,[],1,1);
-[Inf,Num.InfCases,Inf.x,Inf.v,ESIA] = GetInfLines(LaneData,BaseData,Num.Lanes);
+% [Num.Lanes,Lane,LaneData,~,~] = UpdateData(BaseData,[],1,1);
+% [Inf,Num.InfCases,Inf.x,Inf.v,ESIA] = GetInfLines(LaneData,BaseData,Num.Lanes);
+
+
 
 % Initialize
 OverMax = [];
 
-for v = 1:BaseData.MultipleCases
+for v = 1:MultipleCases
         
     % Load File
     load(FName)
     % Load Output File
     load(OutputFName);
+    
+    % If not already defined, we need to define things in terms of OutInfo
+    BaseData = OutInfo.BaseData;
+    BaseData.Save = 0;
+    BaseData.NumAnalyses = 1;
+    BaseData.ApercuTitle = sprintf('%s','VAWIM');
+    [Num.Lanes,Lane,LaneData,~,~] = UpdateData(BaseData,[],1,1);
+    [Inf,Num.InfCases,Inf.x,Inf.v,ESIA] = GetInfLines(OutInfo.LaneData,BaseData,Num.Lanes);
+
     try
         [a, b] = max(OutInfo.OverMaxT.MaxLE(OutInfo.OverMaxT.InfCase == InfCase));
         SimNum = OutInfo.OverMaxT.SimNum(b);
@@ -103,18 +117,41 @@ for v = 1:BaseData.MultipleCases
         for t = 1:length(InfCase)
             % Subject Influence Line to Truck Axle Stream
             [MaxLE,SMaxMaxLE,DLF,BrStInd,AxonBr,FirstAxInd,FirstAx] = GetMaxLE(AllTrAx,Inf,BaseData.RunDyn,InfCase(t));
+            %[MaxLE,SMaxMaxLE,DLF,BrStInd,AxonBr,FirstAxInd,FirstAx] = GetMaxLE(AllTrAx,Inf,BaseData.RunDyn,1);
             % Record Maximums
             OverMax = [OverMax; [InfCase(t), 1, MaxLE, SMaxMaxLE, DLF, BrStInd, FirstAxInd, FirstAx]];
         end
         
-        if BaseData.NumAnalyses == 1 && length(InfCase) == 1
-            T = Apercu(PDCx,BaseData.ApercuTitle,Inf.x,Inf.v(:,t),BrStInd,TrLineUp,MaxLE/ESIA.Total(t),DLF,Lane.Dir,BaseData.ILRes);
+        % If the influence line applies to all lanes, take simple AllTrAx (end col)
+        if Inf.Lanes(Inf.UniqStartInds(InfCase)) == 0
+            %TrAx = AllTrAx(:,end);           Try using direct... save time
+            %InfLanes = 1;
+            InfLanes = size(AllTrAx,2);
+            % If not, take lane specific AllTrAx (all but end)
+        else
+            %TrAx = AllTrAx(:,1:end-1);     Try using direct... save time
+            InfLanes = Inf.Lanes(Inf.UniqInds == InfCase);
         end
         
-        % Delete vehicle entries from TrLineUp for re-analysis
-        TrLineUp(TrLineUp(:,1) > BrStInd & TrLineUp(:,1) < BrStInd + Inf.x(end),:) = [];
-        % Set Axles to zero in AllTrAx (can't delete because indices are locations)
-        AllTrAx(BrStInd:BrStInd + Inf.x(end),:) = 0;
+        % Take only the influence lines that apply to the current InfCase
+        Infv = Inf.v(:,Inf.UniqInds == InfCase);
+        % Remove nans (added experimentally 12/02/2020.. fixed 05/03)
+        FirstNan = find(isnan(Infv));
+        if ~isempty(FirstNan)
+            Infv = Infv(1:FirstNan-1,:);
+            Infx = Inf.x(1:FirstNan-1,:);
+        end
+        
+        if BaseData.NumAnalyses == 1 && length(InfCase) == 1
+            %T = Apercu(PDCx,BaseData.ApercuTitle,Inf.x,Inf.v(:,InfCase(t)),BrStInd,TrLineUp,MaxLE/ESIA.Total(t),DLF,Lane.Dir,BaseData.ILRes);
+            T = Apercu(PDCx,BaseData.ApercuTitle,Infx,Infv,BrStInd,TrLineUp,MaxLE/ESIA.Total(InfCase(t)),DLF,Lane.Dir,BaseData.ILRes);
+            %T = Apercu(PDCx,BaseData.ApercuTitle,Inf.x,Inf.v(:,1),BrStInd,TrLineUp,MaxLE/ESIA.Total(t),DLF,Lane.Dir,BaseData.ILRes);
+        end
+        
+%         % Delete vehicle entries from TrLineUp for re-analysis
+%         TrLineUp(TrLineUp(:,1) > BrStInd & TrLineUp(:,1) < BrStInd + Inf.x(end),:) = [];
+%         % Set Axles to zero in AllTrAx (can't delete because indices are locations)
+%         AllTrAx(BrStInd:BrStInd + Inf.x(end),:) = 0;
         
     end
 end
