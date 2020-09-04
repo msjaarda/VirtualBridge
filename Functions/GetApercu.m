@@ -29,8 +29,20 @@ for t = 1:NumInfCases
     % Record Maximums
     OverMax = [OverMax; [t, Year, MaxLEx, DLFx, BrStIndx, FirstAxIndx, FirstAxx, MaxSimNum]];
     
-    T = Apercu(PDC,'Trial',Inf.x,Inf.v(:,Inf.UniqInds == t),BrStIndx,TrLineUp,MaxLEx/ESIA(t),DLFx,LaneDir,ILRes);
-
+    % Take only the influence lines that apply to the current InfCase
+    Infv = Inf.v(:,Inf.UniqInds == t);
+    % Remove nans (added experimentally 12/02/2020.. fixed 05/03)
+    FirstNan = find(isnan(Infv));
+    if ~isempty(FirstNan)
+        Infv = Infv(1:FirstNan-1,:);
+        Infx = Inf.x(1:FirstNan-1,:);
+    end
+    
+    T = Apercu(PDC,'Trial',Infx,Infv,BrStIndx,TrLineUp,MaxLEx/ESIA(t),DLFx,LaneDir,ILRes);
+    %T = Apercu(PDC,'Trial',Infx,Infv(:,Inf.UniqInds == t),BrStIndx,TrLineUp,MaxLEx/ESIA(t),DLFx,LaneDir,ILRes);
+    
+    %T = Apercu(PDCx,BaseData.ApercuTitle,Infx,Infv,BrStInd,TrLineUp,MaxLE/ESIA.Total(InfCase(t)),DLF,Lane.Dir,BaseData.ILRes);
+            
 end
 
 % [Delete vehicles involved in maximum case, and re-analyze]
