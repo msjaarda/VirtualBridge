@@ -78,11 +78,13 @@ for v = 1:MultipleCases
     [Inf,Num.InfCases,Inf.x,Inf.v,ESIA] = GetInfLines(OutInfo.LaneData,BaseData,Num.Lanes);
 
     try
-        [a, b] = max(OutInfo.OverMaxT.MaxLE(OutInfo.OverMaxT.InfCase == InfCase));
-        SimNum = OutInfo.OverMaxT.SimNum(b);
+        [a, SimNum] = max(OutInfo.OverMaxT.MaxLE(OutInfo.OverMaxT.InfCase == InfCase));
+        %Temp = OutInfo.OverMaxT(OutInfo.OverMaxT.InfCase == InfCase,:);
+        % Not there yet! Something is wrong with b (SimNum is wrong)
+        %SimNum = Temp.SimNum(b);
     catch % Cover the case of MAXT (old school) rather than MaxT
-        [a, b] = max(OutInfo.OverMAXT.MaxLE(OutInfo.OverMAXT.InfCase == InfCase));
-        SimNum = OutInfo.OverMAXT.SimNum(b);
+        [a, SimNum] = max(OutInfo.OverMAXT.MaxLE(OutInfo.OverMAXT.InfCase == InfCase));
+        %SimNum = OutInfo.OverMAXT.SimNum(b);
     end
     
     % There is no InfCase with VWIM
@@ -122,16 +124,18 @@ for v = 1:MultipleCases
             OverMax = [OverMax; [InfCase(t), 1, MaxLE, SMaxMaxLE, DLF, BrStInd, FirstAxInd, FirstAx]];
         end
         
-        % If the influence line applies to all lanes, take simple AllTrAx (end col)
-        if Inf.Lanes(Inf.UniqStartInds(InfCase)) == 0
-            %TrAx = AllTrAx(:,end);           Try using direct... save time
-            %InfLanes = 1;
-            InfLanes = size(AllTrAx,2);
-            % If not, take lane specific AllTrAx (all but end)
-        else
-            %TrAx = AllTrAx(:,1:end-1);     Try using direct... save time
-            InfLanes = Inf.Lanes(Inf.UniqInds == InfCase);
-        end
+        % I think this part is unnecessary?
+        
+%         % If the influence line applies to all lanes, take simple AllTrAx (end col)
+%         if Inf.Lanes(Inf.UniqStartInds(InfCase)) == 0
+%             %TrAx = AllTrAx(:,end);           Try using direct... save time
+%             %InfLanes = 1;
+%             InfLanes = size(AllTrAx,2);
+%             % If not, take lane specific AllTrAx (all but end)
+%         else
+%             %TrAx = AllTrAx(:,1:end-1);     Try using direct... save time
+%             InfLanes = Inf.Lanes(Inf.UniqInds == InfCase);
+%         end
         
         % Take only the influence lines that apply to the current InfCase
         Infv = Inf.v(:,Inf.UniqInds == InfCase);
