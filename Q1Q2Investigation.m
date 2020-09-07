@@ -2,6 +2,9 @@
 
 clear, clc, close all
 
+% Now we must write this memo... question is, why is ClassOW < Class?!
+% Look into this...
+
 % Folder Name
 FName{1} = '/AllAxles';
 FName{2} = '/ClassAxles';

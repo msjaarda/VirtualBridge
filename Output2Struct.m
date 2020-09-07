@@ -4,6 +4,9 @@
 % plotting them. You can optionally probe folder to see contents using
 % "OutputFolderPeek.m"
 
+% May run into an issue in the future as simple notation Mn now has 
+% mroe than just 10-80m spans, it also has 90 and 100m spans Mn90 Mn100
+
 clear, clc
 
 % Folder name where results are. Results should be "similar" files
@@ -13,6 +16,9 @@ clear, clc
 %Folder_Name = 'AGB2018';
 % Platoon
 Folder_Name = 'PlatoonTwinBase';
+
+% We can delete certain results variables if we want (PlatoonwTwin should replace Platoon)
+% Ceneri2017Results and Ceneri2017Resultsw/Twin
 
 % Structure Name
 % AGB and Ceneri2017
