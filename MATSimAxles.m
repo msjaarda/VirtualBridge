@@ -10,19 +10,19 @@ warning('off','MATLAB:mir_warning_maybe_uninitialized_temporary')
 % Input Information --------------------
                       
 % Traffic Info
-Year = 2011:2018; % 2010 WIMEnhanced for Ceneri and Oberburen - obtain 2019 from MAF
-%Year = 2018;
-SName = {'Ceneri', 'Denges', 'Gotthard', 'Oberburen'};
-%SName = {'Denges'};
+%Year = 2011:2018; % 2010 WIMEnhanced for Ceneri and Oberburen - obtain 2019 from MAF
+Year = 2013;
+%SName = {'Ceneri', 'Denges', 'Gotthard', 'Oberburen'};
+SName = {'Denges'};
 
-ApercuB = 0;
-BDSave = 1; 
+ApercuB = 1;
+BDSave = 0; 
 BDFolder = '/ClassOWAxles'; % Also try class only... consider class only with special classes as an extra
 AxleCalcs = 0;
 AxleStatsPlot = 0;
 % Influence Line Info
-InfDist = 0.6:0.2:2.6; % Length of area looked at
-%InfDist = 2.4:0.2:2.6;
+%InfDist = 0.6:0.2:2.6; % Length of area looked at
+InfDist = 1.2;%:0.2:2.6;
 
 %         NEW IDEAS: 
 %         - Make plots showing the width taken (0.5-2.4m) and corresponding
@@ -38,7 +38,7 @@ count = 1;
 
 % For each length of area to be analyzed
 % Cannot do AxleCalcs with parfor
-parfor u = 1:length(InfDist)
+for u = 1:length(InfDist)
     
     BaseData = table;
     % Roadway Info
@@ -54,6 +54,15 @@ parfor u = 1:length(InfDist)
     BaseData.NumAnalyses = 1;
     
     % Input Complete   ---------------------
+    
+    % We can observe a phenomenon where including the ClassOW can sometimes
+    % decrease the results. This is because of rounding. It increases more
+    % than it decreases... a mean of 0.9 % overall. 
+    
+    % One ideal is to run both Class and ClassOW, and detect if an OW
+    % vehicle is involved in the maximum or not. If it is not, the higher
+    % from Class and ClassOW should be taken as both Class and ClassOW. If it is, ClassOW
+    % will be the higher one, and Class will remain lower.
     
     % For each station to be analyzed
     for r = 1:length(SName)
@@ -185,8 +194,8 @@ parfor u = 1:length(InfDist)
      
                 end
                 
-%                 OverMax = [];
-%                 BaseData.ApercuTitle = [SName{r} ' ' num2str(Station) ' ' num2str(Year(i)) ' Max'];
+                OverMax = [];
+                BaseData.ApercuTitle = [SName{r} ' ' num2str(Station) ' ' num2str(Year(i)) ' Max'];
                 
                 % Atm, just one analysis per year stored in YearlyMax
                 for k = 1:BaseData.NumAnalyses

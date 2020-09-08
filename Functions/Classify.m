@@ -10,6 +10,8 @@ function [PDC] = Classify(PD)
 % Classificaiton according to AGB 2002/005 with the addition of Class 23
 % and 11bis.
 
+ClassOW = true;
+
 % SName (string), Year (string OR number)
 
 % This classification scheme uses numbers, not strings. Keep in mind:
@@ -223,6 +225,8 @@ Weight = PDC.GW_TOT >= 10000 & PDC.GW_TOT < 90000;
 Type = logical(Axles.*Dist12.*Dist23.*Dist34.*Dist45.*Dist56.*Weight);
 PDC.CLASS(Type,:) = 1238; 
 
+if ClassOW
+
 % Type 41) 60 tonne crane truck from F2.17 of AGB 2002/005
 % This could have overlap with Type 23, so don't expect too many
 % Unclassified
@@ -320,6 +324,8 @@ if ismember('W6_7', PDC.Properties.VariableNames)
             PDC.CLASS(Type,:) = 45;
         end
     end
+
+end
 
 end
 
