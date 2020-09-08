@@ -16,7 +16,7 @@ format long g
 
 % ----- INPUT -----
 
-Year = {'2011' '2012' '2013' '2014' '2015' '2016' '2017'};
+Year = {'2019'};
 Station = {'402'};
 SName = 'Gotthard';
 
@@ -28,7 +28,8 @@ for w = 1:length(Station)
 
 TFileName1 = strcat(SName,Station{w},'_',Year{q});
 TFileName = strcat(SName,'_',Year{q});
-Loc = strcat('C:\Users\sjaarda\Desktop\WIMDaily\',SName,'\',Station{w},'\',Year{q});
+Loc = strcat('C:\Users\sjaarda\Desktop\WIMDaily\',SName,'\',Station{w});
+%Loc = strcat('C:\Users\sjaarda\Desktop\WIMDaily\',SName,'\',Station{w},'\',Year{q});
 
 % Create a structure will all filesnames in order to step through and
 % process these individual daily files (import, edit, and add to 'RD',
@@ -150,7 +151,8 @@ PD = PruneWIM((Year{q}),Station{w},SName,RD,1,0);
 [TotDaysOpen, y] = size(unique(PD.JJJJMMTT));
 
 % writetable(PD,strcat(TFileName,'_Filtered'))
-save(strcat(TFileName,'_Filtered'),'PD')
+%save(strcat(TFileName,'_Filtered'),'PD')
+save(TFileName,'PD')
 
 end
 
