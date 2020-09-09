@@ -22,14 +22,14 @@ warning('off','MATLAB:mir_warning_maybe_uninitialized_temporary')
 % Input Information --------------------
                       
 % Traffic Info
-%Year = 2011:2019; % Also have 2010 WIMEnhanced for Ceneri and Oberburen
-Year = 2015;
-%SName = {'Ceneri', 'Denges', 'Gotthard', 'Oberburen'};
-SName = {'Denges'};
-%InfDist = 0.6:0.2:2.6; % Strip width
-InfDist = 1.2;%:0.2:2.6;
+Year = 2011:2019; % Also have 2010 WIMEnhanced for Ceneri and Oberburen
+%Year = 2015:2016;
+SName = {'Ceneri', 'Denges', 'Gotthard', 'Oberburen'};
+%SName = {'Denges'};
+InfDist = 0.6:0.2:2.6; % Strip width
+%InfDist = 1.2;%:0.2:2.6;
 
-ApercuT = 1;
+ApercuT = 0;
 SaveT = 0; 
 
 % All
@@ -40,7 +40,7 @@ SaveT = 0;
 YearlyMax = [];
 
 % For each length of area to be analyzed, optional parfor
-for u = 1:length(InfDist)
+parfor u = 1:length(InfDist)
     
     % Initialize BaseData (keep inside parfor)
     BaseData = table;
@@ -115,15 +115,16 @@ for u = 1:length(InfDist)
                     PDCy = PruneWIM2(PDCy,0);
                 end
                 
-                for m = 1:3;
+                for m = 1:3
                     
                     PDCx = PDCy;
                         
                     if ClassOnly(m) == 1
-                        PDCx(PDCx.CLASS == 0,:) = [];
                         PDCx.CLASS(PDCx.CLASS == 119) = 0;
+                        PDCx(PDCx.CLASS == 0,:) = [];
                         if ClassOW(m) == 1
                             PDCx.CLASS(PDCx.CLASS > 39 & PDCx.CLASS < 50) = 0;
+                            PDCx(PDCx.CLASS == 0,:) = [];
                         end
                     end
                     
