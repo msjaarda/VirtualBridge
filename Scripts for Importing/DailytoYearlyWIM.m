@@ -17,8 +17,8 @@ format long g
 % ----- INPUT -----
 
 Year = {'2019'};
-Station = {'402'};
-SName = 'Gotthard';
+Station = {'415' '416'};
+SName = 'Oberburen';
 
 % -----------------
 
@@ -53,6 +53,10 @@ for i = 1:NumFiles
     
     % Delete last row (always meaningless after the import)
     [RDisize, RDirows]= size(RDi);
+    if RDisize == 0
+        continue
+    else
+        
     RDi(RDisize,:) = [];
     RDi.ZST = str2num(Station{w})*ones(size(RDi,1),1);
     
@@ -73,6 +77,7 @@ for i = 1:NumFiles
         % update wait bar
         waitbar((i)/NumFiles,f,['Processed ',num2str(i),' of ',num2str(NumFiles),' Files for ',SName,' ',Station{w}]);
         StartRow = EndRow + 1;
+    end
     end
        
 end
@@ -151,7 +156,7 @@ PD = PruneWIM((Year{q}),Station{w},SName,RD,1,0);
 [TotDaysOpen, y] = size(unique(PD.JJJJMMTT));
 
 % writetable(PD,strcat(TFileName,'_Filtered'))
-%save(strcat(TFileName,'_Filtered'),'PD')
+save(strcat(TFileName,'_Filtered'),'PD')
 save(TFileName,'PD')
 
 end
