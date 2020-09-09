@@ -14,30 +14,34 @@ clear, clc, format long g, rng('shuffle'), close all;
 % - Fix Q1Q2Investigation to include final recommendation (notes r there)
 % - Always remember that we are limited to 25t - larger getts tossed
 % - Create a structure variable with data from each location (All, Class, ClassOW)
+% - Add columns for Class and Year
+% - Make a different variable that simply stores the maximum yearly values
+% Axles.Denges
 
 % Input Information --------------------
                       
 % Traffic Info
+% Find a way to systematically cover each folder and variable in PrunedS1 WIM
 %Year = 2011:2019;
-Year = 2013;
+Year = 2013:2014;
 %SName = {'Ceneri', 'Denges', 'Gotthard', 'Oberburen'};
 SName = {'Denges'};
 
 BDSave = 0; 
-BDFolder = '/ClassOWAxles'; % Also try class only... consider class only w/ special classes as an extra
 AxleStatsPlot = 0;
 
 %Loc = [];
-count = 1;
+
+%count = 1;
 
 BaseData = table;
 % Roadway Info
 BaseData.TransILx = 0; BaseData.TransILy = 0; BaseData.LaneCen = 0;
-BaseData.StationNum = 1;
+% BaseData.StationNum = 1;
 BaseData.Stage2Prune = true;
-BaseData.ClassOnly = true;
-BaseData.ClassOW = true;
-BaseData.ILs = {'Axle'};
+% BaseData.ClassOnly = true;
+% BaseData.ClassOW = true;
+% BaseData.ILs = {'Axle'};
 BaseData.ILRes = 0.2;   % Do not change right now
 % Analysis Info
 BaseData.RunDyn = 0;
@@ -50,16 +54,10 @@ BaseData.NumAnalyses = 1;
 for r = 1:length(SName)
         
     if strcmp(SName{r},'Gotthard')
-        BaseData.LaneDir = {'1,2'};
+        LaneDir = [1 2];
     else
-        BaseData.LaneDir = {'1,1'};
+        LaneDir = [1 1];
     end
-    
-    % Obtain Influence Line Info
-    [NLanes,Lane,LaneData,~,~] = UpdateData(BaseData,[],1,1);
-    [Inf,NInfCases,Inf.x,Inf.v,ESIA] = GetInfLines(LaneData,BaseData,NLanes);
-    % Modify IL according to area to be analyzed
-    Inf.v(:) = 0; Inf.v(94:94+InfDist(u)/0.2-1) = 1;
     
     % For each year to be analyzed
     for i = 1:length(Year)
@@ -84,22 +82,29 @@ for r = 1:length(SName)
             if BaseData.Stage2Prune
                 PDCx = PruneWIM2(PDCx,0);
             end
-            if BaseData.ClassOnly
-                PDCx(PDCx.CLASS == 0,:) = [];
-                if ~BaseData.ClassOW
-                    PDC.CLASS(PDC.CLASS > 39 & PDC.CLASS < 50) = 0; 
-                    PDC.CLASS(PDC.CLASS == 119) = 0;
-                end
-            end
+%             if BaseData.ClassOnly
+%                 PDCx(PDCx.CLASS == 0,:) = [];
+%                 if ~BaseData.ClassOW
+%                     PDC.CLASS(PDC.CLASS > 39 & PDC.CLASS < 50) = 0; 
+%                     PDC.CLASS(PDC.CLASS == 119) = 0;
+%                 end
+%             end
             
             % Convert PDC to AllTrAx (must be greater than 0 to actually Spacesave! Decide on spacesave... should be < 80 I think)
-            [PDCx, AllTrAx, TrLineUp] = WIMtoAllTrAx(PDCx,4,Lane.Dir,BaseData.ILRes);
+            [PDCx, AllTrAx, TrLineUp] = WIMtoAllTrAx(PDCx,4,LaneDir,BaseData.ILRes);
+            
+            % PDCx Index is found in TrLineUp(:,3)
+            % Get Class from PDCx
+            %TrLUClass = PDCx.CLASS(TrLineUp(:,3));
+            %TrLUTime = PDCx.JJJJMMTT(TrLineUp(:,3));
             
             % Round TrLineUp first row, move unrounded to fifth row
             TrLineUp(:,5) = TrLineUp(:,1); TrLineUp(:,1) = round(TrLineUp(:,1)/BaseData.ILRes);
             
             % TrLineUp [       1             2         3        4         5       ]
             %            AllTrAxIndex    AxleValue   Truck#   LaneID  Station(m)
+            
+            % Add Truck Class to TrLineUp? That way it is easy to filter later
             
             % Distance in front
             
@@ -137,20 +142,26 @@ for r = 1:length(SName)
             TrLineUp(TrLineUp(:,9)==1,7) = 2;
             TrLineUp(circshift(TrLineUp(:,9)==1,1),7) = 2;
             
+            % Optional: Verify with AxleStats
+            if AxleStatsPlot
             TrTyps = [11; 12; 22; 23; 111; 11117; 1127; 12117; 122; 11127; 1128; 1138; 1238];
             TrAxPerGr = [11; 12; 22; 23; 111; 1111; 112; 1211; 122; 1112; 112; 113; 123];
             Vec = [0 1 2 1 0 0 1 1 2 1 1 0 1];
             
             [STaTr,AllAx] = AxleStats(PDCx,TrAxPerGr,TrTyps,[SName{r} ' ' num2str(Station)],Year(i),AxleStatsPlot);
+            end
             
-            STA = [];
+            %STA = [];
             %Single = struct();
-            STA(1) = cell2struct(TrLineUp(TrLineUp(:,7)==1,2));
+            %STA(1) = cell2struct(TrLineUp(TrLineUp(:,7)==1,2));
             %Tandem = struct();
-            STA(2) = TrLineUp(TrLineUp(:,9)==1,2) + TrLineUp(circshift(TrLineUp(:,9)==1,1),2);
+            %STA(2) = TrLineUp(TrLineUp(:,9)==1,2) + TrLineUp(circshift(TrLineUp(:,9)==1,1),2);
             %Tridem = struct();
-            STA(3) = TrLineUp(TrLineUp(:,8)==1,2) + TrLineUp(circshift(TrLineUp(:,8)==1,1),2) + TrLineUp(circshift(TrLineUp(:,8)==1,2),2);
-            STA = STA';
+            %STA(3) = TrLineUp(TrLineUp(:,8)==1,2) + TrLineUp(circshift(TrLineUp(:,8)==1,1),2) + TrLineUp(circshift(TrLineUp(:,8)==1,2),2);
+            %All is simply every TrLineUp Entry
+            % How can we best store this info? Alain wanted the ratios as well...
+            
+            %STA = STA';
                 
             % Checks
             %                     sum(TrLineUp(:,7)==1)/length(STaTr{1});
@@ -174,12 +185,18 @@ for r = 1:length(SName)
             %                     prctile(STA{2},99.99);
             %                     prctile(STA{3},99.99);
            
-            Axles{count} = STA;
-            count = count+1;
+            %Axles{count} = STA;
+            %count = count+1;
+            
+            Axles.([SName{r} num2str(Station)])(Year(i)-2000).All = [TrLineUp(:,2) PDCx.CLASS(TrLineUp(:,3))];
+            Axles.([SName{r} num2str(Station)])(Year(i)-2000).Single = [TrLineUp(TrLineUp(:,7)==1,2) PDCx.CLASS(TrLineUp(TrLineUp(:,7)==1,3))];
+            Axles.([SName{r} num2str(Station)])(Year(i)-2000).Tandem = [(TrLineUp(TrLineUp(:,9)==1,2) + TrLineUp(circshift(TrLineUp(:,9)==1,1),2)) TrLineUp(TrLineUp(:,9)==1,2) TrLineUp(circshift(TrLineUp(:,9)==1,1),2) PDCx.CLASS(TrLineUp(TrLineUp(:,9)==1,3))]; 
+            Axles.([SName{r} num2str(Station)])(Year(i)-2000).Tridem = [(TrLineUp(TrLineUp(:,8)==1,2) + TrLineUp(circshift(TrLineUp(:,8)==1,1),2) + TrLineUp(circshift(TrLineUp(:,8)==1,2),2))  TrLineUp(TrLineUp(:,8)==1,2)  TrLineUp(circshift(TrLineUp(:,8)==1,1),2)  TrLineUp(circshift(TrLineUp(:,8)==1,2),2) PDCx.CLASS(TrLineUp(TrLineUp(:,8)==1,3))]; 
+            
         end
     end
 end
 
 if BDSave
-    save(['Output' BDFolder '/' 'YearlyMaxQSum'], 'YearlyMax')
+    save('AxleGroupWeights', 'Axles')
 end

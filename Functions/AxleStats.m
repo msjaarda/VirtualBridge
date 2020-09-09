@@ -13,7 +13,7 @@ x = cell(3,1);
 % Tonnes to kN Conversion [/100 or /102 (to use g = 9.8)]
 TtkN = 102;
 % Classified Only (only applies to All Axles - others are class only always)
-ClassOnly = true;
+ClassOnly = false;
 
 if width(PDC) > 35
     if sum(strcmp('Head',PDC.Properties.VariableNames)) > 0
