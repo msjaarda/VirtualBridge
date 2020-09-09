@@ -9,15 +9,16 @@
  % Initial commands
 clear, clc, format long g, rng('shuffle'), close all;
 
-% Tasks
+% Notes
 % - Create AxleCalcs from all possible axles of all possible years/stations
 % - Fix Q1Q2Investigation to include final recommendation (notes r there)
 % - Always remember that we are limited to 25t - larger getts tossed
+% - Create a structure variable with data from each location (All, Class, ClassOW)
 
 % Input Information --------------------
                       
 % Traffic Info
-%Year = 2011:2018;
+%Year = 2011:2019;
 Year = 2013;
 %SName = {'Ceneri', 'Denges', 'Gotthard', 'Oberburen'};
 SName = {'Denges'};
