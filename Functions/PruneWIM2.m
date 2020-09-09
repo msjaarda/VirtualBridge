@@ -20,8 +20,7 @@ end
 
 % Get rid of overweight classes and class 11bis right now
 %PDC.CLASS(PDC.CLASS > 39 & PDC.CLASS < 50) = 0; 
-
-PDC.CLASS(PDC.CLASS == 119) = 0;
+%PDC.CLASS(PDC.CLASS == 119) = 0;
 
 if Report == 1
     fprintf('\nTotal Before Pruning Stage 2: %i\n\n',OriginalL)
