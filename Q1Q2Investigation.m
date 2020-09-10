@@ -5,6 +5,16 @@ clear, clc, close all
 % Now we must write this memo... question is, why is ClassOW < Class?!
 % Look into this...
 
+% Refigure now that we have new variables with new formats.
+% Remember to get the ratio of axles between each other like Alain
+% suggested
+% For Axles, add maximum per year detection
+
+% Consideration of both model factor and DLA...
+% Should we add a model factor on MaxLE?
+
+% - Fix Q1Q2Investigation to include final recommendation (notes r there)
+
 % Folder Name
 FName{1} = '/AllAxles';
 FName{2} = '/ClassAxles';
@@ -125,7 +135,7 @@ end
 Num = 184.8*(1.+0.7*4.7*0.0782);
 NumC = 300*1.5;
 Rati = 232.3/450;
-DLAr = 0.9*1/1.4;
+DLAr = 0.9*1/1.4; % Should actually be 1.8 and not 1.4
 
 % Which YearlyMax are we using? AllAx? ClassAx?
 PCT = prctile(YearlyMax.MaxLE(YearlyMax.Width == 1.6),95);

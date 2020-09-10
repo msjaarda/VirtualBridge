@@ -9,6 +9,10 @@ end
 
 figure
 
+% Just for displaying class, see Classify
+TrTyps = [0; 11; 119; 12; 22; 23; 111; 11117; 1127; 12117; 122; 11127; 1128; 1138; 1238; 41; 42; 43; 44; 45; 46];
+TrNames = ["NC" "11" "11bis" "12" "22" "23" "111" "1111r" "112r" "1211r" "122" "11112r" "112a" "113a" "123a" "5ax 60t" "6ax 60t" "7ax 72t" "8ax 84t" "9ax 96t" "8ax 96t"];
+
 % Get number and name of lanes
 Lanes = unique(PDC.FS); NumLanes = length(Lanes);
 NumLanePlots = length(LaneDir);
@@ -206,6 +210,9 @@ for j = 1:NumLanePlots
             end
             if (vc{j}(i,1)+vc{j}(i,2))/2 > max(Infx)/15 && (vc{j}(i,1)+vc{j}(i,2))/2 < max(Infx)-max(Infx)/15
                 text((vc{j}(i,1)+vc{j}(i,2))/2,9,sprintf('%.0f kph',t{j}.SPEED(i)/100),'FontSize',11,'FontWeight','bold','HorizontalAlignment','center','Color','k')
+            end
+            if (vc{j}(i,1)+vc{j}(i,2))/2 > max(Infx)/15 && (vc{j}(i,1)+vc{j}(i,2))/2 < max(Infx)-max(Infx)/15
+                text((vc{j}(i,1)+vc{j}(i,2))/2,1.25,sprintf('CLASS %s',TrNames(TrTyps == t{j}.CLASS(i))),'FontSize',9,'FontWeight','bold','HorizontalAlignment','center','Color',[0.5 0.5 0.5])
             end
         end
         % Add wheel locations (column 5 has actual wheel locations, column 1 would be approximate)
