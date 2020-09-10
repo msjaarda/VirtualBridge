@@ -22,14 +22,14 @@ warning('off','MATLAB:mir_warning_maybe_uninitialized_temporary')
 % Input Information --------------------
                       
 % Traffic Info
-Year = 2011:2019; % Also have 2010 WIMEnhanced for Ceneri and Oberburen
-%Year = 2015:2016;
-SName = {'Ceneri', 'Denges', 'Gotthard', 'Oberburen'};
-%SName = {'Denges'};
-InfDist = 0.6:0.2:2.6; % Strip width
-%InfDist = 1.2;%:0.2:2.6;
+%Year = 2011:2019; % Also have 2010 WIMEnhanced for Ceneri and Oberburen
+Year = 2015;
+%SName = {'Ceneri', 'Denges', 'Gotthard', 'Oberburen'};
+SName = {'Oberburen'};
+%InfDist = 0.6:0.2:2.6; % Strip width
+InfDist = 2.6;%:0.2:2.6;
 
-ApercuT = 0;
+ApercuT = 1;
 SaveT = 0; 
 
 % All
@@ -40,7 +40,7 @@ SaveT = 0;
 YearlyMax = [];
 
 % For each length of area to be analyzed, optional parfor
-parfor u = 1:length(InfDist)
+for u = 1:length(InfDist)
     
     % Initialize BaseData (keep inside parfor)
     BaseData = table;
@@ -64,16 +64,13 @@ parfor u = 1:length(InfDist)
     % Input Complete   ---------------------
     
     % We can observe a phenomenon where including the ClassOW can sometimes
-    % decrease the results. This is because of rounding. It increases more
-    % than it decreases... a mean of 0.9 % overall. 
+    % decrease the results. This is because of rounding.
     
     % One ideal is to run both Class and ClassOW, and detect if an OW
     % vehicle is involved in the maximum or not. If it is not, the higher
     % from Class and ClassOW should be taken as both Class and ClassOW. If it is, ClassOW
-    % will be the higher one, and Class will remain lower.
-    
-    % Tried to solve this by using ILRes = 0.1... check that it worked then
-    % delete these comments (above)
+    % will be the higher one, and Class will remain lower. See 2nd to last
+    % note, and code to solve for which vehicles were involved.
     
     % For each station to be analyzed
     for r = 1:length(SName)
@@ -145,6 +142,23 @@ parfor u = 1:length(InfDist)
                         % % Record Maximums
                         %OverMax = [OverMax; [1, Year(i), MaxLE, SMaxMaxLE, DLF, BrStInd, FirstAxInd, FirstAx]];
                         
+                        % See second to last note for an explanation of the
+                        % below... it tried to flag cases where ClassOW has
+                        % a maximum that actually includes OW vehicles.
+                        % Code not ready to run.
+%                         S = TrLineUp(find(TrLineUp(:,1)>min(BrStInd+find(Inf.v>0)) & TrLineUp(:,1)<max(BrStInd+find(Inf.v>0))),:);
+%                         
+%                         AO = PDCr.CLASS(unique(S(:,3)));
+%                         
+%                         if m == 2
+%                             if isempty(find(AO > 39 & AO < 50))
+%                                 TG = 0;
+%                                 MaxLEr = MaxLE;
+%                             else
+%                                 TG = 1
+%                             end
+%                         end
+
                         if ApercuT
                             T = Apercu(PDCr,BaseData.ApercuTitle,Inf.x,Inf.v(:,1),BrStInd,TrLineUp,MaxLE/ESIA.Total(1),DLF,Lane.Dir,BaseData.ILRes);
                         end
@@ -169,10 +183,24 @@ end
 YearlyMax = array2table(YearlyMax,'VariableNames',{'Year', 'Station', 'MaxLE', 'Width'});
 YearlyMax.ClassT = repmat(["All"; "ClassOW"; "Class"],height(YearlyMax)/3,1);
 
+% Make sure All is always equal or greater than the other 2
+% This is to account for rounding errors
+Q = [YearlyMax.MaxLE(YearlyMax.ClassT == "All"),YearlyMax.MaxLE(YearlyMax.ClassT == "ClassOW"),YearlyMax.MaxLE(YearlyMax.ClassT == "Class")];
+T = max(Q');
+T = T';
+YearlyMax.MaxLE(YearlyMax.ClassT == "All") = T;
+Q = [YearlyMax.MaxLE(YearlyMax.ClassT == "ClassOW"),YearlyMax.MaxLE(YearlyMax.ClassT == "Class")];
+T = max(Q');
+T = T';
+YearlyMax.MaxLE(YearlyMax.ClassT == "ClassOW") = T;
+
+% The above solves some issues, but it is still possible that ClassOW is
+% falsely larger than Class. IndicesRerun are the cases to investigate if
+% it is desired.
+IndicesRerun = find(YearlyMax.MaxLE(YearlyMax.ClassT == "ClassOW")./YearlyMax.MaxLE(YearlyMax.ClassT == "Class") > 1)*3;
+
 % Optional Save
 if SaveT
-    save('YearlyMaxQSum','YearlyMax');
+    save('WIMYearlyMaxQSum','YearlyMax');
 end
-
-% Run Separately... then combine into one
 
