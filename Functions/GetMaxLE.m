@@ -80,6 +80,7 @@ if RunDyn == 1
 end
 
 % Find MaxLE and location, StLoc
+% This R is what we use for fatigue! Represents the stress History
 [MaxLE, StLoc] = max(R);
 
 % Compute Location Info

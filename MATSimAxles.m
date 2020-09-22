@@ -1,23 +1,18 @@
 % ------------------------------------------------------------------------
 %                            MATSimAxles
 % ------------------------------------------------------------------------
-% Explore questions related to axle weights Q1 and Q2
+% Generate WIMYearlyMaxQSum - a summary of maximum effects on a strip width
 
  % Initial commands
 clear, clc, format long g, rng('shuffle'), close all; 
 warning('off','MATLAB:mir_warning_maybe_uninitialized_temporary')
 
 % NOTES
-% - Allow for parfor if possible (for AxleCalcs) only for one InfDist value
-% - Create AxleCalcs from all possible axles of all possible years/stations
-% - Fix Classification issue (Class OW >= Class, no rounding effects)
-% - Fix Q1Q2Investigation to include final recommendation (notes r there)
-% - Gather some Aprcu's for the memo
-% - Polish memo (French), and add new results
-% - Check in on Colin (see Google drive folder and Alain email)
-% - Set meetings with EB, RH, and DP
-% - Read and incorporate more of EB's memo into mine
-% - Always remember that we are limited to 25t - larger getts tossed
+% - Always remember that we are limited to 25t - larger getts tossed by P1
+
+% We can observe a phenomenon where including the ClassOW can sometimes
+% decrease the results. This is because of rounding. See 2nd to last
+% note, and code to solve for which vehicles were involved.
 
 % Input Information --------------------
                       
@@ -62,16 +57,7 @@ for u = 1:length(InfDist)
    
     
     % Input Complete   ---------------------
-    
-    % We can observe a phenomenon where including the ClassOW can sometimes
-    % decrease the results. This is because of rounding.
-    
-    % One ideal is to run both Class and ClassOW, and detect if an OW
-    % vehicle is involved in the maximum or not. If it is not, the higher
-    % from Class and ClassOW should be taken as both Class and ClassOW. If it is, ClassOW
-    % will be the higher one, and Class will remain lower. See 2nd to last
-    % note, and code to solve for which vehicles were involved.
-    
+        
     % For each station to be analyzed
     for r = 1:length(SName)
         

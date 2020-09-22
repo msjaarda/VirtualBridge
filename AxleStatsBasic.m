@@ -5,6 +5,7 @@
 % information on Q1 and maximum axle loads
 % Differs from function AxleStats because it finds axle groups in
 % non-classified vehicles. Optional variable save at end (large var)
+% Generate WIMAxles, a massive variable with all the axle info
 
  % Initial commands
 clear, clc, format long g, rng('shuffle'), close all;
@@ -15,16 +16,20 @@ clear, clc, format long g, rng('shuffle'), close all;
 % - Make sure ClassOW is set to true inside Classify.m
 
 % Input Information --------------------
+
+% Optional loading of existing var to add to
+load('WIMAxles')
                       
 % Traffic Info
 Year = 2003:2019;
-%Year = 2013;
-SName = {'Ceneri', 'Denges', 'Gotthard', 'Oberburen'};
-%SName = {'Oberburen'};
+%Year = 2018;
+%SName = {'Ceneri', 'Denges', 'Gotthard', 'Oberburen'};
+%SName = {'StMaurice', 'Schafisheim', 'Plazzas', 'A16'};
+SName = {'Gotthard'};
 
 % Toggles
 AxleStatsT = 0;
-AxleStatsPlot = 0;
+AxleStatsPlot = 1;
 
 Stage2Prune = true;
 ILRes = 0.2;   % Needed for WIMtoAllTrAx
@@ -33,7 +38,7 @@ ILRes = 0.2;   % Needed for WIMtoAllTrAx
     
 % For each station to be analyzed
 for r = 1:length(SName)
-        
+     
     if strcmp(SName{r},'Gotthard')
         LaneDir = [1 2];
     else
@@ -43,14 +48,17 @@ for r = 1:length(SName)
     % For each year to be analyzed
     for i = 1:length(Year)
         
-        % Denges 2010 Missing
-        if strcmp(SName{r},'Denges') && Year(i) == 2010
+        clc
+        % To track progress
+        fprintf('\nLocation: %s\n    Year: %i\n\n',SName{r},Year(i))
+              
+        % Load File (% skip if file doesn't exist)
+        try
+            PD = load(['PrunedS1 WIM/',SName{r},'/',SName{r},'_',num2str(Year(i)),'.mat']);
+        catch
             continue
-        else
+        end
         
-        % Load File
-        PD = load(['PrunedS1 WIM/',SName{r},'/',SName{r},'_',num2str(Year(i)),'.mat']);
-                
         % Add row for Class, Daytime, and Daycount
         PD = Classify(PD.PD);  PD = Daytype(PD,Year(i));
         
@@ -59,6 +67,15 @@ for r = 1:length(SName)
             PD.ZST(PD.FS < 3) = 415;
             PD.ZST(PD.ZST == 410) = 416;
         end
+        if strcmp(SName{r},'Trubbach') && Year(i) < 2006
+            PD.ZST(PD.FS < 3) = 417;
+            PD.ZST(PD.ZST == 407) = 418;
+        end
+        if strcmp(SName{r},'Mattstetten') && Year(i) < 2006
+            PD.ZST(PD.FS < 3) = 413;
+            PD.ZST(PD.ZST == 407) = 414;
+        end
+        
         
         % We treat each station separately
         Stations = unique(PD.ZST);
@@ -86,19 +103,43 @@ for r = 1:length(SName)
             %            AllTrAxIndex    AxleValue   Truck#   LaneID  Station(m)
                         
             % Distances refer to distance in front
-            
-            % Treat the lanes separately
+                        
+            % Treat the lanes separately & incorporate direction
             Lanes = unique(PDCx.FS);
             for p = 1:length(Lanes)
+                
                 % LaneB is lane boolean
                 LaneB = TrLineUp(:,4) == Lanes(p);
-                TrLineUp(LaneB,6) = [10; diff(TrLineUp(LaneB,5))];
-                % 7th column is Single Axles [ >= 2.4m infront and behind ]
-                TrLineUp(LaneB,7) = (TrLineUp(LaneB,6) >= 2.4 & circshift(TrLineUp(LaneB,6),-1) >= 2.4) | (circshift(TrLineUp(LaneB,3),1) ~= TrLineUp(LaneB,3) & circshift(TrLineUp(LaneB,6),-1) >= 2.4)...
-                    | (circshift(TrLineUp(LaneB,3),-1) ~= TrLineUp(LaneB,3) & TrLineUp(LaneB,6) >= 2.4);
-                % 8th column is Tridem Axles
-                %                       cannot be single            cannot begin before the third axle                       first gap less than 2.4               second gap less than 2.4            third gap larger than 2.4
-                TrLineUp(LaneB,8) = TrLineUp(LaneB,7) == 0 & circshift(TrLineUp(LaneB,3),2) == TrLineUp(LaneB,3) & circshift(TrLineUp(LaneB,6),-1) < 2.4 & circshift(TrLineUp(LaneB,6),-2) < 2.4 & circshift(TrLineUp(LaneB,6),-3) >= 2.4;
+                
+                if LaneDir(p) == 1
+                    
+                    TrLineUp(LaneB,6) = [10; diff(TrLineUp(LaneB,5))];
+                    % 7th column is Single Axles [ >= 2.4m infront and behind ]
+                    % Or if the row above is a diff veh and the row below is >= 2.4m, or if the row below is a diff veh and row above is > 2.4m
+                    TrLineUp(LaneB,7) = (TrLineUp(LaneB,6) >= 2.4 & circshift(TrLineUp(LaneB,6),-1) >= 2.4) | (circshift(TrLineUp(LaneB,3),1) ~= TrLineUp(LaneB,3) & circshift(TrLineUp(LaneB,6),-1) >= 2.4)...
+                        | (circshift(TrLineUp(LaneB,3),-1) ~= TrLineUp(LaneB,3) & TrLineUp(LaneB,6) >= 2.4);
+                    % 8th column is Tridem Axles
+                    %                       cannot be single            cannot begin before the third axle                       first gap less than 2.4               second gap less than 2.4            third gap larger than 2.4
+                    TrLineUp(LaneB,8) = TrLineUp(LaneB,7) == 0 & circshift(TrLineUp(LaneB,3),2) == TrLineUp(LaneB,3) & circshift(TrLineUp(LaneB,6),-1) < 2.4 & circshift(TrLineUp(LaneB,6),-2) < 2.4 & circshift(TrLineUp(LaneB,6),-3) >= 2.4;
+                    
+                else
+                    
+                    % Fix order before performing diff
+                    TrLineUpx = TrLineUp(LaneB,:);
+                    [TrLineUpxy, b] = sortrows(TrLineUpx,1);
+                    TrLineUpxy(:,6) = [diff(TrLineUpxy(:,5)); 10];
+                    
+                    TrLineUp(LaneB,:) = TrLineUpxy(b,:);
+
+                    % 7th column is Single Axles [ >= 2.4m infront and behind ]
+                    % Or if the row above is a diff veh and the row below is >= 2.4m, or if the row below is a diff veh and row above is > 2.4m
+                    TrLineUp(LaneB,7) = (TrLineUp(LaneB,6) >= 2.4 & circshift(TrLineUp(LaneB,6),-1) >= 2.4) | (circshift(TrLineUp(LaneB,3),1) ~= TrLineUp(LaneB,3) & circshift(TrLineUp(LaneB,6),-1) >= 2.4)...
+                        | (circshift(TrLineUp(LaneB,3),-1) ~= TrLineUp(LaneB,3) & TrLineUp(LaneB,6) >= 2.4);
+                    % 8th column is Tridem Axles
+                    %                       cannot be single            cannot begin before the third axle                       first gap less than 2.4               second gap less than 2.4            third gap larger than 2.4
+                    TrLineUp(LaneB,8) = TrLineUp(LaneB,7) == 0 & circshift(TrLineUp(LaneB,3),2) == TrLineUp(LaneB,3) & circshift(TrLineUp(LaneB,6),-1) < 2.4 & circshift(TrLineUp(LaneB,6),-2) < 2.4 & circshift(TrLineUp(LaneB,6),-3) >= 2.4;
+
+                end
             end
                 
             % Set the 7th column to 3 whenever we have a tridem
@@ -121,6 +162,20 @@ for r = 1:length(SName)
             TrLineUp(TrLineUp(:,9)==1,7) = 2;
             TrLineUp(circshift(TrLineUp(:,9)==1,1),7) = 2;
             
+            % Make unidentified axles (till now) singles
+            %TrLineUp(TrLineUp(:,7)==0,7) = 1;
+            
+            % TrLineUp [       1             2         3        4         5            6            7           8         9       ]
+            %            AllTrAxIndex    AxleValue   Truck#   LaneID  Station(m) StationDiff(m) SingleFlag TridemFlag TandemFlag 
+                        
+            % Distances refer to distance in front
+            
+            % Why is the 7th column sometimes 0??
+            % Escapes single/tandem/tridem altogether...
+            % It is a flag to notice when Gotthard problem is fixed
+            % FIXED
+            %sum(TrLineUp(:,7)==0)
+            
             % Optional: Verify with AxleStats
             if AxleStatsT
                 TrTyps = [11; 12; 22; 23; 111; 11117; 1127; 12117; 122; 11127; 1128; 1138; 1238];
@@ -137,14 +192,15 @@ for r = 1:length(SName)
             Axles.([SName{r} num2str(Station)])(Year(i)-2000).All = [TrLineUp(:,2) PDCx.CLASS(TrLineUp(:,3))];
             % Single [Q Class]
             Axles.([SName{r} num2str(Station)])(Year(i)-2000).Single = [TrLineUp(TrLineUp(:,7)==1,2) PDCx.CLASS(TrLineUp(TrLineUp(:,7)==1,3))];
-            % Tandem [Total Q1 Q2 Class]
-            Axles.([SName{r} num2str(Station)])(Year(i)-2000).Tandem = [(TrLineUp(TrLineUp(:,9)==1,2) + TrLineUp(circshift(TrLineUp(:,9)==1,1),2)) TrLineUp(TrLineUp(:,9)==1,2) TrLineUp(circshift(TrLineUp(:,9)==1,1),2) PDCx.CLASS(TrLineUp(TrLineUp(:,9)==1,3))]; 
+            % Tandem [Total Q1 Q2 Class]                                                            Total                                                       Axle 1                          Axle 2                                                          Space btwn                                             Class
+            Axles.([SName{r} num2str(Station)])(Year(i)-2000).Tandem = [(TrLineUp(TrLineUp(:,9)==1,2) + TrLineUp(circshift(TrLineUp(:,9)==1,1),2)) TrLineUp(TrLineUp(:,9)==1,2) TrLineUp(circshift(TrLineUp(:,9)==1,1),2) abs(TrLineUp(circshift(TrLineUp(:,9)==1,1),5)-TrLineUp(TrLineUp(:,9)==1,5)) PDCx.CLASS(TrLineUp(TrLineUp(:,9)==1,3))]; 
             % Tridem [Total Q1 Q2 Q3 Class]
-            Axles.([SName{r} num2str(Station)])(Year(i)-2000).Tridem = [(TrLineUp(TrLineUp(:,8)==1,2) + TrLineUp(circshift(TrLineUp(:,8)==1,1),2) + TrLineUp(circshift(TrLineUp(:,8)==1,2),2))  TrLineUp(TrLineUp(:,8)==1,2)  TrLineUp(circshift(TrLineUp(:,8)==1,1),2)  TrLineUp(circshift(TrLineUp(:,8)==1,2),2) PDCx.CLASS(TrLineUp(TrLineUp(:,8)==1,3))]; 
-        end    
+            Axles.([SName{r} num2str(Station)])(Year(i)-2000).Tridem = [(TrLineUp(TrLineUp(:,8)==1,2) + TrLineUp(circshift(TrLineUp(:,8)==1,1),2) + TrLineUp(circshift(TrLineUp(:,8)==1,2),2))  TrLineUp(TrLineUp(:,8)==1,2)  TrLineUp(circshift(TrLineUp(:,8)==1,1),2)  TrLineUp(circshift(TrLineUp(:,8)==1,2),2) abs(TrLineUp(circshift(TrLineUp(:,8)==1,1),5)-TrLineUp(TrLineUp(:,8)==1,5)) abs(TrLineUp(circshift(TrLineUp(:,8)==1,2),5)-TrLineUp(circshift(TrLineUp(:,8)==1,1),5)) PDCx.CLASS(TrLineUp(TrLineUp(:,8)==1,3))];
         end
     end
 end
+
+%histogram(Axles.Ceneri408(3).Tandem(:,4),100,'normalization','pdf')
 
 % Saving is manual
 %save('WIMAxles', 'Axles')
