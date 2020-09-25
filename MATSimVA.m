@@ -2,7 +2,7 @@
 %                            MATSimVA
 % ------------------------------------------------------------------------
 % Run virtual WIM or apercu traffic over a bridge to find maximum load effects
-% This program should only be used with the both Output and Apercu/Virtual files
+% This program should only be used with both the Output and Apercu/Virtual files
 % Even though it can work for VirtualWIM, Apercu is probably the main use
 
 % Initial commands

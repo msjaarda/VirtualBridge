@@ -4,7 +4,7 @@
 % Simulate traffic over a bridge to find maximum load effects
 % Used with Simple or Complete MATSimInput spreadsheet
 % Add Fatigue
-% Add Smart Naming (if the run took shorter than a min... add more dec.)
+% Add Smart Naming
 % Make sure Apercu is smooth and all necessary info is saved
 % MATSimWIM might need more info, say for DWIM to know the IL
 
@@ -12,7 +12,7 @@
 clear, clc, close all, format long g, rng('shuffle');
 
 % Input File
-InputFile = 'MATSimInputPlatooningTwinApercu.xlsx';
+InputFile = 'MATSimInputPlatoonFatigue.xlsx';
 
 % Read in simulation data
 [BaseData,LaneData,TrData,FolDist] = ReadInputFile(['Input/' InputFile]);
@@ -42,12 +42,12 @@ for g = 1:height(BaseData)
     % Initialize parpool if necessary and initialize progress bar
     if BaseData.Parallel(g) > 0, gcp; clc; end, m = StartProgBar(BaseData.NumSims(g), Num.Batches, g, height(BaseData)); tic; st = now;
     
-    parfor (v = 1:BaseData.NumSims(g), BaseData.Parallel(g)*100)
-    %for v = 1:BaseData.NumSims(g)
+    %parfor (v = 1:BaseData.NumSims(g), BaseData.Parallel(g)*100)
+    for v = 1:BaseData.NumSims(g)
         
         % Initialize variables outside of batch simulation loop
         LaneAxLineUp = cell(Num.Lanes,1); LaneVehLineUp = cell(Num.Lanes,1); ApercuMax = [];
-        [MaxMaxLE, SMaxMaxLE, Maxk, MaxDLF, MaxBrStInd, MaxFirstAxInd, MaxFirstAx] = deal(zeros(1,Num.InfCases));
+        [MaxMaxLE, SMaxMaxLE, Maxk, MaxDLF, MaxBrStInd, MaxFirstAxInd, MaxFirstAx, MaxDamage] = deal(zeros(1,Num.InfCases));
         
         for k = 1:Num.Batches
             
@@ -94,7 +94,13 @@ for g = 1:height(BaseData)
                 [AllTrAx] = GetAllTrAx(AxLineUp,BaseData.ILRes(g),Lane,FixVars);
                 for t = 1:Num.InfCases
                     % Subject Influence Line to Axle Stream, lane specific influence line procedure included in GetMaxLE
-                    [MaxLE,SMaxLE,DLF,BrStInd,AxonBr,FirstAxInd,FirstAx] = GetMaxLE(AllTrAx,Inf,BaseData.RunDyn(g),t);
+                    [MaxLE,SMaxLE,DLF,BrStInd,AxonBr,FirstAxInd,FirstAx,R] = GetMaxLE(AllTrAx,Inf,BaseData.RunDyn(g),t);
+                    if BaseData.RunFat(g) == 1 % Check if we need == 1
+                        Damage = GetFatigueDamage(R,BaseData.FatScale(g),BaseData.FatCat(g));
+                        if Damage > MaxDamage(t)
+                            MaxDamage(t) = Damage;
+                        end
+                    end
                     % Update Maximums if they are exceeded
                     if MaxLE > MaxMaxLE(t)
                         [MaxMaxLE(t),SMaxMaxLE(t),Maxk(t),MaxDLF(t),MaxBrStInd(t),MaxFirstAxInd(t),MaxFirstAx(t)] = UpMaxes(MaxLE,SMaxLE,k,DLF,BrStInd,FirstAxInd,FirstAx);
@@ -116,7 +122,7 @@ for g = 1:height(BaseData)
         
         % Log overall maximum cases into OverMax and ApercuOverMax if necessary
         for i = 1:Num.InfCases
-            OverMax = [OverMax; [i, v, MaxMaxLE(i), SMaxMaxLE(i), Maxk(i), MaxDLF(i), MaxBrStInd(i), MaxFirstAxInd(i), MaxFirstAx(i)]];
+            OverMax = [OverMax; [i, v, MaxMaxLE(i), SMaxMaxLE(i), Maxk(i), MaxDLF(i), MaxBrStInd(i), MaxFirstAxInd(i), MaxFirstAx(i), MaxDamage(t)]];
             % Save VWIM to ApercuOverMax, and add column for InfCase
             if BaseData.Apercu(g) == 1
                 ApercuOverMax = [ApercuOverMax; [ApercuMax{i}, repmat(i,size(ApercuMax{i},1),1)]];
@@ -129,7 +135,7 @@ for g = 1:height(BaseData)
     [Time] = GetSimTime();
     
     % In the future could add InfCaseName
-    OverMaxT = array2table(OverMax,'VariableNames',{'InfCase','SimNum','MaxLE','SMaxLE','BatchNum','MaxDLF','MaxBrStInd','MaxFirstAxInd','MaxFirstAx'});
+    OverMaxT = array2table(OverMax,'VariableNames',{'InfCase','SimNum','MaxLE','SMaxLE','BatchNum','MaxDLF','MaxBrStInd','MaxFirstAxInd','MaxFirstAx','MaxDamage'});
     
     % Reshape OverMax results for output
     OverMax = sortrows(OverMax); OverMaxS = OverMax(:,4); OverMax = OverMax(:,3); 

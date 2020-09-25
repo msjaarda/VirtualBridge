@@ -1,4 +1,4 @@
-function [MaxLE,MaxLEStatic,DLF,BrStInd,AxonBr,FirstAxInd,FirstAx] = GetMaxLE(AllTrAx,Inf,RunDyn,InfCase)
+function [MaxLE,MaxLEStatic,DLF,BrStInd,AxonBr,FirstAxInd,FirstAx,R] = GetMaxLE(AllTrAx,Inf,RunDyn,InfCase)
 %GETMAXLE This function computes the maximum load effect on the bridge
 % It does this through convolution of the load, v, and influence, u
 % v must be constructed from AllTrAx, depending on InfCase
@@ -56,7 +56,7 @@ else
 end
 
 % If we want, we can include the static and dynamic results separately...
-% This would add a comparison to AGB 2005
+% This would add a comparison to AGB 2005 (we do this now actually)
 
 % Find MaxLE and location, StLoc
 [MaxLEStatic, ~] = max(R);

@@ -1,4 +1,4 @@
-% Fatigue Spitballin'
+% Fatigue
 % use https://www.mathworks.com/help/signal/ref/rainflow.html
 % Script loads a variable, R, which is from GetMaxLE of MATSim
 % Should figure out a way to optionally save R when Fatigue Analysis is
