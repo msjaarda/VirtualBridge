@@ -47,7 +47,7 @@ for g = 1:height(BaseData)
         
         % Initialize variables outside of batch simulation loop
         LaneAxLineUp = cell(Num.Lanes,1); LaneVehLineUp = cell(Num.Lanes,1); ApercuMax = [];
-        [MaxMaxLE, SMaxMaxLE, Maxk, MaxDLF, MaxBrStInd, MaxFirstAxInd, MaxFirstAx, MaxDamage] = deal(zeros(1,Num.InfCases));
+        [MaxMaxLE, SMaxMaxLE, Maxk, MaxBrStInd, MaxDamage] = deal(zeros(1,Num.InfCases));
         
         for k = 1:Num.Batches
             
@@ -94,16 +94,21 @@ for g = 1:height(BaseData)
                 [AllTrAx] = GetAllTrAx(AxLineUp,BaseData.ILRes(g),Lane,FixVars);
                 for t = 1:Num.InfCases
                     % Subject Influence Line to Axle Stream, lane specific influence line procedure included in GetMaxLE
-                    [MaxLE,SMaxLE,DLF,BrStInd,AxonBr,FirstAxInd,FirstAx,R] = GetMaxLE(AllTrAx,Inf,BaseData.RunDyn(g),t);
+                    [MaxLE,SMaxLE,BrStInd,AxonBr,R] = GetMaxLE(AllTrAx,Inf,BaseData.RunDyn(g),t);
+                    % What is BaseData.RunFat doesn't exisit? Insert try catch
+                    try
                     if BaseData.RunFat(g) == 1 % Check if we need == 1
                         Damage = GetFatigueDamage(R,BaseData.FatScale(g),BaseData.FatCat(g));
                         if Damage > MaxDamage(t)
                             MaxDamage(t) = Damage;
                         end
                     end
+                    catch
+                        MaxDamage(t) = 0;
+                    end
                     % Update Maximums if they are exceeded
                     if MaxLE > MaxMaxLE(t)
-                        [MaxMaxLE(t),SMaxMaxLE(t),Maxk(t),MaxDLF(t),MaxBrStInd(t),MaxFirstAxInd(t),MaxFirstAx(t)] = UpMaxes(MaxLE,SMaxLE,k,DLF,BrStInd,FirstAxInd,FirstAx);
+                        [MaxMaxLE(t),SMaxMaxLE(t),Maxk(t),MaxBrStInd(t)] = UpMaxes(MaxLE,SMaxLE,k,BrStInd);
                         % Save results for Apercu
                         if BaseData.Apercu(g) == 1
                             % Must account for ILRes here... /ILRes
@@ -122,7 +127,7 @@ for g = 1:height(BaseData)
         
         % Log overall maximum cases into OverMax and ApercuOverMax if necessary
         for i = 1:Num.InfCases
-            OverMax = [OverMax; [i, v, MaxMaxLE(i), SMaxMaxLE(i), Maxk(i), MaxDLF(i), MaxBrStInd(i), MaxFirstAxInd(i), MaxFirstAx(i), MaxDamage(t)]];
+            OverMax = [OverMax; [i, v, Maxk(i), MaxMaxLE(i), SMaxMaxLE(i), MaxBrStInd(i), MaxDamage(t)]];
             % Save VWIM to ApercuOverMax, and add column for InfCase
             if BaseData.Apercu(g) == 1
                 ApercuOverMax = [ApercuOverMax; [ApercuMax{i}, repmat(i,size(ApercuMax{i},1),1)]];
@@ -135,10 +140,10 @@ for g = 1:height(BaseData)
     [Time] = GetSimTime();
     
     % In the future could add InfCaseName
-    OverMaxT = array2table(OverMax,'VariableNames',{'InfCase','SimNum','MaxLE','SMaxLE','BatchNum','MaxDLF','MaxBrStInd','MaxFirstAxInd','MaxFirstAx','MaxDamage'});
+    OverMaxT = array2table(OverMax,'VariableNames',{'InfCase','SimNum','BatchNum','MaxLE','SMaxLE','MaxBrStInd','MaxDamage'});
     
     % Reshape OverMax results for output
-    OverMax = sortrows(OverMax); OverMaxS = OverMax(:,4); OverMax = OverMax(:,3); 
+    OverMax = sortrows(OverMax); OverMaxS = OverMax(:,5); OverMax = OverMax(:,4); 
     OverMaxS = reshape(OverMaxS,BaseData.NumSims(g),Num.InfCases);
     OverMax = reshape(OverMax,BaseData.NumSims(g),Num.InfCases);
     

@@ -65,15 +65,15 @@ TrLineUp(:,5) = TrLineUp(:,1); TrLineUp(:,1) = round(TrLineUp(:,1)/BaseData.ILRe
 
 
 % Subject Influence Line to Truck Axle Stream
-[MaxLE,SMaxMaxLE,DLF,BrStInd,AxonBr,FirstAxInd,FirstAx] = GetMaxLE(AllTrAx,Inf,BaseData.RunDyn,1);
+[MaxLE,SMaxLE,BrStInd,AxonBr] = GetMaxLE(AllTrAx,Inf,BaseData.RunDyn,1);
 % Record Maximums
-OverMax = [OverMax; [1, 1, MaxLE, SMaxMaxLE, DLF, BrStInd, FirstAxInd, FirstAx]];
+OverMax = [OverMax; [1, 1, MaxLE, SMaxLE, BrStInd]];
 
 % Display Apercu
-T = Apercu(PDCx,BaseData.ApercuTitle,Inf.x,Inf.v(:,1),BrStInd,TrLineUp,MaxLE/ESIA.Total(1),DLF,Lane.Dir,BaseData.ILRes);
+T = Apercu(PDCx,BaseData.ApercuTitle,Inf.x,Inf.v(:,1),BrStInd,TrLineUp,MaxLE/ESIA.Total(1),MaxLE/SMaxLE,Lane.Dir,BaseData.ILRes);
 
 % Convert Results to Table
-OverMaxT = array2table(OverMax,'VariableNames',{'InfCase','Year','MaxLE','SMaxLE','MaxDLF','MaxBrStInd','MaxFirstAxInd','MaxFirstAx'});
+OverMaxT = array2table(OverMax,'VariableNames',{'InfCase','Year','MaxLE','SMaxLE','MaxBrStInd'});
 
 % Get ESIA
 aQ1 = 0.7; aQ2 = 0.5; aq = 0.5;

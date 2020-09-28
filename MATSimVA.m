@@ -67,10 +67,10 @@ end
 TrLineUp(:,5) = TrLineUp(:,1); TrLineUp(:,1) = round(TrLineUp(:,1)/BaseData.ILRes);
           
 % Subject Influence Line to Truck Axle Stream
-[MaxLE,SMaxMaxLE,DLF,BrStInd,AxonBr,FirstAxInd,FirstAx] = GetMaxLE(AllTrAx,Inf,BaseData.RunDyn,InfCase(i));
-%[MaxLE,SMaxMaxLE,DLF,BrStInd,AxonBr,FirstAxInd,FirstAx] = GetMaxLE(AllTrAx,Inf,BaseData.RunDyn,1);
+[MaxLE,SMaxLE,BrStInd,AxonBr] = GetMaxLE(AllTrAx,Inf,BaseData.RunDyn,InfCase(i));
+%[MaxLE,SMaxMaxLE,BrStInd,AxonBr] = GetMaxLE(AllTrAx,Inf,BaseData.RunDyn,1);
 % Record Maximums
-OverMax = [OverMax; [InfCase(i), 1, MaxLE, SMaxMaxLE, DLF, BrStInd, FirstAxInd, FirstAx]];
+OverMax = [OverMax; [InfCase(i), 1, MaxLE, SMaxLE, BrStInd]];
 
 % Take only the influence lines that apply to the current InfCase
 Infv = Inf.v(:,Inf.UniqInds == InfCase(i));
@@ -81,9 +81,9 @@ if ~isempty(FirstNan)
     Infx = Inf.x(1:FirstNan-1,:);
 end
 
-T = Apercu(PDCx,BaseData.ApercuTitle,Infx,Infv,BrStInd,TrLineUp,MaxLE/ESIA.Total(InfCase(i)),DLF,Lane.Dir,BaseData.ILRes);
+T = Apercu(PDCx,BaseData.ApercuTitle,Infx,Infv,BrStInd,TrLineUp,MaxLE/ESIA.Total(InfCase(i)),MaxLE/SMaxLE,Lane.Dir,BaseData.ILRes);
 
 end
                
 % Convert Results to Table
-OverMaxT = array2table(OverMax,'VariableNames',{'InfCase','Year','MaxLE','SMaxLE','MaxDLF','MaxBrStInd','MaxFirstAxInd','MaxFirstAx'});
+OverMaxT = array2table(OverMax,'VariableNames',{'InfCase','Year','MaxLE','SMaxLE','MaxBrStInd'});

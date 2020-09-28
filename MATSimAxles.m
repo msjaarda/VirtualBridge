@@ -124,9 +124,9 @@ for u = 1:length(InfDist)
                     for k = 1:BaseData.NumAnalyses
                         
                         % Subject Influence Line to Truck Axle Stream
-                        [MaxLE,SMaxMaxLE,DLF,BrStInd,AxonBr,FirstAxInd,FirstAx] = GetMaxLE(AllTrAx,Inf,BaseData.RunDyn,1);
+                        [MaxLE,SMaxLE,BrStInd,AxonBr] = GetMaxLE(AllTrAx,Inf,BaseData.RunDyn,1);
                         % % Record Maximums
-                        %OverMax = [OverMax; [1, Year(i), MaxLE, SMaxMaxLE, DLF, BrStInd, FirstAxInd, FirstAx]];
+                        %OverMax = [OverMax; [1, Year(i), MaxLE, SMaxLE, BrStInd]];
                         
                         % See second to last note for an explanation of the
                         % below... it tried to flag cases where ClassOW has
@@ -146,7 +146,7 @@ for u = 1:length(InfDist)
 %                         end
 
                         if ApercuT
-                            T = Apercu(PDCr,BaseData.ApercuTitle,Inf.x,Inf.v(:,1),BrStInd,TrLineUp,MaxLE/ESIA.Total(1),DLF,Lane.Dir,BaseData.ILRes);
+                            T = Apercu(PDCr,BaseData.ApercuTitle,Inf.x,Inf.v(:,1),BrStInd,TrLineUp,MaxLE/ESIA.Total(1),MaxLE/SMaxLE,Lane.Dir,BaseData.ILRes);
                         end
                         
                         % % Delete vehicle entries from TrLineUp for re-analysis

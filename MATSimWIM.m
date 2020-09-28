@@ -110,13 +110,13 @@ for v = 1:BaseData.MultipleCases
             
             for t = 1:length(InfCase)
                 % Subject Influence Line to Truck Axle Stream
-                [MaxLE,SMaxMaxLE,DLF,BrStInd,AxonBr,FirstAxInd,FirstAx] = GetMaxLE(AllTrAx,Inf,BaseData.RunDyn,InfCase(t));
+                [MaxLE,SMaxLE,BrStInd,AxonBr,~] = GetMaxLE(AllTrAx,Inf,BaseData.RunDyn,InfCase(t));
                 % Record Maximums
-                OverMax = [OverMax; [InfCase(t), Year(i), MaxLE, SMaxMaxLE, DLF, BrStInd, FirstAxInd, FirstAx]];
+                OverMax = [OverMax; [InfCase(t), Year(i), MaxLE, SMaxLE, BrStInd]];
             end
             
             if BaseData.NumAnalyses == 1 && length(InfCase) == 1
-                T = Apercu(PDCx,BaseData.ApercuTitle,Inf.x,Inf.v(:,t),BrStInd,TrLineUp,MaxLE/ESIA.Total(t),DLF,Lane.Dir,BaseData.ILRes);
+                T = Apercu(PDCx,BaseData.ApercuTitle,Inf.x,Inf.v(:,t),BrStInd,TrLineUp,MaxLE/ESIA.Total(t),MaxLE/SMaxLE,Lane.Dir,BaseData.ILRes);
             end
             
             % Delete vehicle entries from TrLineUp for re-analysis
@@ -129,7 +129,7 @@ for v = 1:BaseData.MultipleCases
 end
 
 % Convert Results to Table
-OverMaxT = array2table(OverMax,'VariableNames',{'InfCase','Year','MaxLE','SMaxLE','MaxDLF','MaxBrStInd','MaxFirstAxInd','MaxFirstAx'});
+OverMaxT = array2table(OverMax,'VariableNames',{'InfCase','Year','MaxLE','SMaxLE','MaxBrStInd'});
 
 % Get ESIA
 aQ1 = 0.7; aQ2 = 0.5; aq = 0.5;

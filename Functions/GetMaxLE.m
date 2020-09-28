@@ -1,4 +1,4 @@
-function [MaxLE,MaxLEStatic,DLF,BrStInd,AxonBr,FirstAxInd,FirstAx,R] = GetMaxLE(AllTrAx,Inf,RunDyn,InfCase)
+function [MaxLE,StaticMaxLE,BrStInd,AxonBr,R] = GetMaxLE(AllTrAx,Inf,RunDyn,InfCase)
 %GETMAXLE This function computes the maximum load effect on the bridge
 % It does this through convolution of the load, v, and influence, u
 % v must be constructed from AllTrAx, depending on InfCase
@@ -59,7 +59,7 @@ end
 % This would add a comparison to AGB 2005 (we do this now actually)
 
 % Find MaxLE and location, StLoc
-[MaxLEStatic, ~] = max(R);
+[StaticMaxLE, ~] = max(R);
 
 % Could add other stuff here from below, if we want static location info
 
@@ -88,7 +88,8 @@ end
 % Get Bridge Start Index
 BrStInd = StLoc-length(Infv)+1;
 
-% Get Axles on Bridge... a little tricky because of indexing
+% Get Axles on Bridge... a little tricky because of indexing...
+% We gather this information mostly for troubleshooting. No longer passed on through function as of Sept 28/2020
 if BrStInd-1+length(Infv) > length(AllTrAx) && BrStInd > 0
     AxonBr = zeros(length(Infv),1);
     AxonBr(1:length(AllTrAx((BrStInd):end,end))) = AllTrAx((BrStInd):end,end);
@@ -101,6 +102,7 @@ end
 
 % Find indexes for AxonBr
 AxonBrInds = find(AxonBr);
+% Find (but not reported)
 FirstAxInd = BrStInd+AxonBrInds(1)-1;
 FirstAx = AxonBr(AxonBrInds(1));
 
@@ -113,6 +115,8 @@ if RunDyn == 1
 else
     DLF = 1;   
 end
+
+% DLF No longer reported (Sept 28, 2020) since we report StaticMaxLE
 
 % NB: In fact... this whole MaxLE thing doesn't care about direction at all
 % Axles are just single points, at single locations, with no directions

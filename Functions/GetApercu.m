@@ -1,4 +1,4 @@
-function [T, OverMx, AllTrAx] = GetApercu(PD,OverMAXT,NumInfCases,Inf,RunDyn,ESIA,LaneDir,ILRes)
+function [T, OverMx, AllTrAx] = GetApercu(PD,OverMaxT,NumInfCases,Inf,RunDyn,ESIA,LaneDir,ILRes)
 %GETAPERCU Prepares results to be handed to WIMtoAllTrAx, then into Apercu
 
 % Dummy year
@@ -9,7 +9,7 @@ OverMax = [];
 
 % Create Apercu for each InfCase
 for t = 1:NumInfCases
-    OverM = OverMAXT(OverMAXT.InfCase == t,:);
+    OverM = OverMaxT(OverMaxT.InfCase == t,:);
     [MaxLE, MaxSimNum] = max(OverM.MaxLE);
     % Take only vehicles involved in governing simulation, from current InfCase
     PDx = PD(PD.SimNum == MaxSimNum & PD.InfCase == t,:);
@@ -25,9 +25,9 @@ for t = 1:NumInfCases
     TrLineUp(:,5) = TrLineUp(:,1); TrLineUp(:,1) = round(TrLineUp(:,1)/ILRes);
     
     % Subject Influence Line to Truck Axle Stream
-    [MaxLEx,MaxLEStaticx,DLFx,BrStIndx,AxonBrx,FirstAxIndx,FirstAxx] = GetMaxLE(AllTrAx,Inf,RunDyn,t);
+    [MaxLEx,SMaxLEx,BrStIndx,AxonBrx,~] = GetMaxLE(AllTrAx,Inf,RunDyn,t);
     % Record Maximums
-    OverMax = [OverMax; [t, Year, MaxLEx, DLFx, BrStIndx, FirstAxIndx, FirstAxx, MaxSimNum]];
+    OverMax = [OverMax; [t, Year, MaxLEx, BrStIndx, MaxSimNum]];
     
     % Take only the influence lines that apply to the current InfCase
     Infv = Inf.v(:,Inf.UniqInds == t);
@@ -38,17 +38,17 @@ for t = 1:NumInfCases
         Infx = Inf.x(1:FirstNan-1,:);
     end
     
-    T = Apercu(PDC,'Trial',Infx,Infv,BrStIndx,TrLineUp,MaxLEx/ESIA(t),DLFx,LaneDir,ILRes);
-    %T = Apercu(PDC,'Trial',Infx,Infv(:,Inf.UniqInds == t),BrStIndx,TrLineUp,MaxLEx/ESIA(t),DLFx,LaneDir,ILRes);
+    T = Apercu(PDC,'Trial',Infx,Infv,BrStIndx,TrLineUp,MaxLEx/ESIA(t),MaxLEx/SMaxLEx,LaneDir,ILRes);
+    %T = Apercu(PDC,'Trial',Infx,Infv(:,Inf.UniqInds == t),BrStIndx,TrLineUp,MaxLEx/ESIA(t),MaxLEx/SMaxLEx,LaneDir,ILRes);
     
-    %T = Apercu(PDCx,BaseData.ApercuTitle,Infx,Infv,BrStInd,TrLineUp,MaxLE/ESIA.Total(InfCase(t)),DLF,Lane.Dir,BaseData.ILRes);
+    %T = Apercu(PDCx,BaseData.ApercuTitle,Infx,Infv,BrStInd,TrLineUp,MaxLE/ESIA.Total(InfCase(t)),MaxLEx/SMaxLEx,Lane.Dir,BaseData.ILRes);
             
 end
 
 % [Delete vehicles involved in maximum case, and re-analyze]
 
 % Convert Results to Table
-OverMx = array2table(OverMax,'VariableNames',{'InfCase','Year','MaxLE','MaxDLF','MaxBrStInd','MaxFirstAxInd','MaxFirstAx','SimNum'});
+OverMx = array2table(OverMax,'VariableNames',{'InfCase','Year','MaxLE','MaxBrStInd','SimNum'});
 
 % The max case... for troubleshooting
 OverM(MaxSimNum,:);
