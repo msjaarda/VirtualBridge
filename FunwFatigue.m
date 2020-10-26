@@ -52,7 +52,7 @@ plot(NumC,Stress,'k-')
 set(gca, 'YScale', 'log', 'XScale', 'log')
 hold on
 xlim([1E4 1E9])
-ylim([1E1 1E4])
+ylim([1E1 1E3])
 ylabel('Stress Range (MPa)')
 xlabel('Number of Cycles (#)')
 
