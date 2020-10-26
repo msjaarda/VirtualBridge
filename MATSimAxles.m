@@ -8,7 +8,7 @@ clear, clc, format long g, rng('shuffle'), close all;
 warning('off','MATLAB:mir_warning_maybe_uninitialized_temporary')
 
 % NOTES
-% - Always remember that we are limited to 25t - larger getts tossed by P1
+% - Always remember that we are limited to 25t - larger gets tossed by P1
 
 % We can observe a phenomenon where including the ClassOW can sometimes
 % decrease the results. This is because of rounding. See 2nd to last
@@ -18,11 +18,18 @@ warning('off','MATLAB:mir_warning_maybe_uninitialized_temporary')
                       
 % Traffic Info
 %Year = 2011:2019; % Also have 2010 WIMEnhanced for Ceneri and Oberburen
-Year = 2015;
+Year = 2017;
 %SName = {'Ceneri', 'Denges', 'Gotthard', 'Oberburen'};
 SName = {'Oberburen'};
 %InfDist = 0.6:0.2:2.6; % Strip width
 InfDist = 2.6;%:0.2:2.6;
+
+% Option to load Traffic Info from output of "SpecialVehicleMaxEvents"
+% - The purpose was to provide RH and Pad with Apercu of cases where
+% Overweight vehicles contributed to larger effects than standard traffic
+load('ClassOWApercu');
+%{'Ceneri408', 'Ceneri409', 'Denges405', 'Denges406', 'Gotthard402', 'Oberburen415', 'Oberburen416'};
+    
 
 ApercuT = 1;
 SaveT = 0; 
@@ -33,6 +40,8 @@ SaveT = 0;
 
 % Initialize variables
 YearlyMax = [];
+
+for p = 1:length(
 
 % For each length of area to be analyzed, optional parfor
 for u = 1:length(InfDist)

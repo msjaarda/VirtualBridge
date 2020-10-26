@@ -54,6 +54,19 @@ Q = TrLineUp(TrLineUp(:,1) >= BrStInd & TrLineUp(:,1) <= BrStInd+length(Infx)-1,
 % Define T, an excerpt of WIM/VWIM PDC with just vehicles on the bridge
 T = PDC(unique(Q(:,3)),:);
 
+% Add date stamp if possible!
+% Convert to string
+try
+    Date = datetime(T.JJJJMMTT(1),'ConvertFrom', 'yyyymmdd');
+    Ti = num2str(T.HHMMSS(1));
+    LengthTi = length(Ti);
+    Ti = [repmat('0',1,6-length(Ti)) Ti];
+    H = Ti(1:2); M = Ti(3:4); S = Ti(5:6);
+    Time = [H ':' M '.' S];
+    TimeFlag = 1;
+catch
+end
+
 % For adding platooning effects, add a column for in a platoon or not
 Map = unique(Q(:,3));
 if any(strcmp('AllVehPlat',T.Properties.VariableNames))
@@ -131,7 +144,7 @@ end
 subplot(NumLanePlots+2,1,NumLanePlots+1)
 % BARFIX4
 %h = bar(0:Infx(end),barp/9.81,1.2,'grouped','EdgeColor','k');
-h = bar(0:ILRes:Infx(end),barp/9.81,1.2,'grouped','EdgeColor','k');
+h = bar(0:ILRes:Infx(end),barp/9.81,1.2/ILRes,'grouped','EdgeColor','k');
 % fixing the xlim doesn't allow visibility of maximums
 %xlim([0 max(Infx)])
 ylim([0 ceil(max(max(barp/9.81))/5)*5])
@@ -169,6 +182,15 @@ end
 count = 0;
 for j = 1:NumLanePlots
     subplot(NumLanePlots+2,1,j)
+    if j == 1
+        try
+            if TimeFlag == 1
+                text(0,9,datestr(Date),'FontSize',9,'FontWeight','bold','HorizontalAlignment','left','Color','k','Color',[0.5 0.5 0.5])
+                text(0,1.25,Time,'FontSize',9,'FontWeight','bold','HorizontalAlignment','left','Color','k','Color',[0.5 0.5 0.5])
+            end
+        catch
+        end
+    end
     if j <= length(Lanes)
         for i = 1:numel((vc{j}))/2
             hold on
