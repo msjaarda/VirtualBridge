@@ -39,6 +39,7 @@ ylabel('Cycle Counts PDF')
 
 % Draw SN Curve... m = 3, k = 5, and shift until damage = 1
 figure
+% Start with FAT80
 CAT = 80;
 n2 = 2E6; s2 = CAT;                                 % 2 is C (Class Value)
 n1 = 1E4; s1 = (s2^(3)*n2/n1)^(1/3);                % 1 is leftmost

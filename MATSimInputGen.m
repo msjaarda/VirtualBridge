@@ -17,7 +17,7 @@ tic, clear, clc, hold off, close all, format long g, rng('shuffle')
 % ----- INPUT -----
 
 % Year, #, Station Name, string, save and plot toggles
-Year = 2011; SName = 'Ceneri'; Save = 0; PlotFits = 1;
+Year = 2018; SName = 'A16'; Save = 0; PlotFits = 1;
 
 % ----- ENDIN -----
 
@@ -155,7 +155,7 @@ LaneDistBr(PDC,TrTyps,TrAxPerGr,Station)
 
 % If importing new TrLib to TrLib
 
-load('C:\Users\sjaarda\Desktop\SwissTraffic\Library Variables\TrLib.mat')
+load('TrLib.mat')
 TrLib.([SName,num2str(Year)]).TrDistr = Distr_Excel;
 TrLib.([SName,num2str(Year)]).TrLinFit = LinFit_Excel;
 TrLib.([SName,num2str(Year)]).TrAllo = TrLib.Ceneri2018.TrAllo;
