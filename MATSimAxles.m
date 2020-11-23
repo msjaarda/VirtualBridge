@@ -17,21 +17,21 @@ warning('off','MATLAB:mir_warning_maybe_uninitialized_temporary')
 % Input Information --------------------
                       
 % Traffic Info
-%Year = 2011:2019; % Also have 2010 WIMEnhanced for Ceneri and Oberburen
-Year = 2017;
-%SName = {'Ceneri', 'Denges', 'Gotthard', 'Oberburen'};
-SName = {'Oberburen'};
+Year = 2011:2019; % Also have 2010 WIMEnhanced for Ceneri and Oberburen
+%Year = 2012;
+SName = {'Ceneri', 'Denges', 'Gotthard', 'Oberburen'};
+%SName = {'Oberburen'};
 %InfDist = 0.6:0.2:2.6; % Strip width
-InfDist = 2.6;%:0.2:2.6;
+InfDist = 1.4;%:0.2:2.6;
 
 % Option to load Traffic Info from output of "SpecialVehicleMaxEvents"
 % - The purpose was to provide RH and Pad with Apercu of cases where
 % Overweight vehicles contributed to larger effects than standard traffic
-load('ClassOWApercu');
+%load('ClassOWApercu');
 %{'Ceneri408', 'Ceneri409', 'Denges405', 'Denges406', 'Gotthard402', 'Oberburen415', 'Oberburen416'};
     
 
-ApercuT = 1;
+ApercuT = 0;
 SaveT = 0; 
 
 % All
@@ -39,9 +39,10 @@ SaveT = 0;
 % ClassOW
 
 % Initialize variables
-YearlyMax = [];
+YearlyMax = nan(500000,6);
+j = 1;
 
-for p = 1:length(
+%for p = 1:length(
 
 % For each length of area to be analyzed, optional parfor
 for u = 1:length(InfDist)
@@ -89,8 +90,11 @@ for u = 1:length(InfDist)
             % Load File
             PD = load(['PrunedS1 WIM/',SName{r},'/',SName{r},'_',num2str(Year(i)),'.mat']);
             
-            % Add row for Class, Daytime, and Daycount
+            % Add col for Class, Daytime, and Daycount
             PD = Classify(PD.PD);  PD = Daytype(PD,Year(i));
+            
+            % Add col for week
+            PD.Semaine = ceil(PD.Daycount/7);
             
             % We treat each station separately..
             Stations = unique(PD.ZST);
@@ -120,8 +124,19 @@ for u = 1:length(InfDist)
                         end
                     end
                     
+                    Weeks = unique(PDCx.Semaine);
+                    
+                    for z = 1:length(Weeks)
+                        
+                        PDCz = PDCx(PDCx.Semaine == Weeks(z),:);
+                    
                     % Convert PDC to AllTrAx (must be greater than 0 to actually Spacesave! Decide on spacesave... should be < 80 I think)
-                    [PDCr, AllTrAx, TrLineUp] = WIMtoAllTrAx(PDCx,4,Lane.Dir,BaseData.ILRes);
+                    [PDCr, AllTrAx, TrLineUp] = WIMtoAllTrAx(PDCz,4,Lane.Dir,BaseData.ILRes);
+                    
+                    if length(AllTrAx) < 1000
+                        %YearlyMax = [YearlyMax; [Year(i), Station, 0, InfDist(u), PDCr.Semaine(1)]];
+                        continue
+                    end
                     
                     % Round TrLineUp first row, move unrounded to fifth row
                     TrLineUp(:,5) = TrLineUp(:,1); TrLineUp(:,1) = round(TrLineUp(:,1)/BaseData.ILRes);
@@ -164,8 +179,11 @@ for u = 1:length(InfDist)
                         %AllTrAx(BrStInd:BrStInd + Inf.x(end),:) = 0;
                         
                     end
-
-                    YearlyMax = [YearlyMax; [Year(i), Station, round(MaxLE,3), InfDist(u)]];
+                    
+                    YearlyMax(j,:) = [Year(i), Station, round(MaxLE,3), InfDist(u), PDCr.Semaine(1), m];
+                    j = j+1;
+                    
+                    end
 
                 end
                 
@@ -175,27 +193,60 @@ for u = 1:length(InfDist)
 end
 
 % Add Column for All, Class, ClassOW
-YearlyMax = array2table(YearlyMax,'VariableNames',{'Year', 'Station', 'MaxLE', 'Width'});
-YearlyMax.ClassT = repmat(["All"; "ClassOW"; "Class"],height(YearlyMax)/3,1);
+YearlyMax = array2table(YearlyMax,'VariableNames',{'Year', 'Station', 'MaxLE', 'Width', 'Week', 'm'});
 
-% Make sure All is always equal or greater than the other 2
-% This is to account for rounding errors
-Q = [YearlyMax.MaxLE(YearlyMax.ClassT == "All"),YearlyMax.MaxLE(YearlyMax.ClassT == "ClassOW"),YearlyMax.MaxLE(YearlyMax.ClassT == "Class")];
-T = max(Q');
-T = T';
-YearlyMax.MaxLE(YearlyMax.ClassT == "All") = T;
-Q = [YearlyMax.MaxLE(YearlyMax.ClassT == "ClassOW"),YearlyMax.MaxLE(YearlyMax.ClassT == "Class")];
-T = max(Q');
-T = T';
-YearlyMax.MaxLE(YearlyMax.ClassT == "ClassOW") = T;
+%YearlyMax.ClassT = ;
 
-% The above solves some issues, but it is still possible that ClassOW is
-% falsely larger than Class. IndicesRerun are the cases to investigate if
-% it is desired.
-IndicesRerun = find(YearlyMax.MaxLE(YearlyMax.ClassT == "ClassOW")./YearlyMax.MaxLE(YearlyMax.ClassT == "Class") > 1)*3;
+% Must adapt this for including weeks...
+%YearlyMax.ClassT = repmat(["All"; "ClassOW"; "Class"],height(YearlyMax)/3,1);
+% Delete entries where one of them is 0 (not enough data)
+%YearlyMax(YearlyMax.MaxLE == 0,:
+
+
+% % Make sure All is always equal or greater than the other 2
+% % This is to account for rounding errors
+% Q = [YearlyMax.MaxLE(YearlyMax.ClassT == "All"),YearlyMax.MaxLE(YearlyMax.ClassT == "ClassOW"),YearlyMax.MaxLE(YearlyMax.ClassT == "Class")];
+% T = max(Q');
+% T = T';
+% YearlyMax.MaxLE(YearlyMax.ClassT == "All") = T;
+% Q = [YearlyMax.MaxLE(YearlyMax.ClassT == "ClassOW"),YearlyMax.MaxLE(YearlyMax.ClassT == "Class")];
+% T = max(Q');
+% T = T';
+% YearlyMax.MaxLE(YearlyMax.ClassT == "ClassOW") = T;
+% 
+% % The above solves some issues, but it is still possible that ClassOW is
+% % falsely larger than Class. IndicesRerun are the cases to investigate if
+% % it is desired.
+% IndicesRerun = find(YearlyMax.MaxLE(YearlyMax.ClassT == "ClassOW")./YearlyMax.MaxLE(YearlyMax.ClassT == "Class") > 1)*3;
+
+
+
+WeeklyMaxx = YearlyMax;
+WeeklyMaxx(isnan(WeeklyMaxx.Year),:) = [];
+
+%WeeklyMax.m = num2str(WeeklyMax.m);
+
+%WeeklyMax.Properties.VariableNames = {'Year'  'Station'  'MaxLE'  'Width'  'Week'  'ClassT'};
+
+WeeklyMaxx.ClassT(WeeklyMaxx.m == 1) = "All";
+WeeklyMaxx.ClassT(WeeklyMaxx.m == 2) = "ClassOW";
+WeeklyMaxx.ClassT(WeeklyMaxx.m == 3) = "Class";
+
+WeeklyMaxx.m = [];
+
+WeeklyMax = sortrows(WeeklyMax,[1 2 5 6]);
+
+for i = height(WeeklyMax):-3:5
+    if ~strcmp(WeeklyMax.ClassT(i),"ClassOW")
+        disp(i)
+        break
+    end
+end
+
+WeeklyMax(i,:) = [];
 
 % Optional Save
 if SaveT
-    save('WIMYearlyMaxQSum','YearlyMax');
+    save('WIMWeeklyMaxQSum','YearlyMax');
 end
 
