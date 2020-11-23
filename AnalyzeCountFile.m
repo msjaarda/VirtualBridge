@@ -12,7 +12,7 @@ format long g
 
 % Load daily .log file with traffic stream from counting station
 %load('CH167_20190823')
-load('Counting Jams\Jam528')
+load('Counting Flow\CH194_20190825')
 Lane = 1;
 
 %rd = Jam300x;

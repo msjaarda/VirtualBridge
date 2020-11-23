@@ -209,13 +209,13 @@ x = 50:0.1:70;
     end   
 %end
 
-figure
-plot(x,Up)
-xlim([57 66])
-
-figure
-histogram(Up(Up>57),100,'normalization','pdf')
-xlim([57 66])
+% figure
+% plot(x,Up)
+% xlim([57 66])
+% 
+% figure
+% histogram(Up(Up>57),100,'normalization','pdf')
+% xlim([57 66])
 
 
 
