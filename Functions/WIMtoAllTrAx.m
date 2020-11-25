@@ -58,7 +58,11 @@ if EnhancedWIM
 elseif ~VWIM
     
     % Sort by timestamp (VWIM need not be sorted)
-    PDCx = sortrows(PDCx,{'JJJJMMTT','HHMMSS'});
+    try
+        PDCx = sortrows(PDCx,{'JJJJMMTT','HHMMSS'});
+    catch
+        PDCx = sortrows(PDCx,{'Time'});
+    end
     
 end
 
@@ -80,14 +84,25 @@ if RegularWIM
         LaneInds = PDCx.FS == Lanes(i);
         DC = rand(height(PDCx(LaneInds,1)),1);
         
-        % Find all locations where truck i and i - 1 arrived at the same time
-        AA = [1; diff(PDCx.HHMMSS(LaneInds))];
-        
-        % Replace with early and late decimal values
-        DC(find(AA == 0)-1) = 0.15;
-        DC(AA == 0) = 0.85;
-        
-        PDCx.HH(LaneInds) = DC; 
+        try
+            % Find all locations where truck i and i - 1 arrived at the same time
+            AA = [1; diff(PDCx.HHMMSS(LaneInds))];
+            
+            % Replace with early and late decimal values
+            DC(find(AA == 0)-1) = 0.15;
+            DC(AA == 0) = 0.85;
+            
+            PDCx.HH(LaneInds) = DC;
+        catch
+            % Find all locations where truck i and i - 1 arrived at the same time
+            AA = [1; seconds(diff(PDCx.Time(LaneInds)))];
+            
+            % Replace with early and late decimal values
+            DC(find(AA == 0)-1) = 0.15;
+            DC(AA == 0) = 0.85;
+            
+            PDCx.Time(LaneInds) = PDCx.Time(LaneInds) + milliseconds(DC*10);
+        end
     end
 end
 
@@ -109,8 +124,12 @@ if VWIM
     
 else
     
-    PDCx.TStamp = 60*60*24*(PDCx.Daycount-1) + 60*60*floor(PDCx.HHMMSS/10000) + 60*floor(rem(PDCx.HHMMSS,10000)/100) + rem(PDCx.HHMMSS,100) + PDCx.HH;
-    PDCx.DeltaT = [0; diff(PDCx.TStamp)];
+    try
+        PDCx.TStamp = 60*60*24*(PDCx.Daycount-1) + 60*60*floor(PDCx.HHMMSS/10000) + 60*floor(rem(PDCx.HHMMSS,10000)/100) + rem(PDCx.HHMMSS,100) + PDCx.HH;
+        PDCx.DeltaT = [0; diff(PDCx.TStamp)];
+    catch
+        PDCx.DeltaT = [0; seconds(diff(PDCx.Time))];
+    end
     PDCx.Dist = PDCx.DeltaT.*((PDCx.SPEED/100)*0.2777777777778); PDCx.Dist(1) = 1;
     
     % We can do spacesaver here since we treat all at the same time...
