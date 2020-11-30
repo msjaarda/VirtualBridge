@@ -24,9 +24,9 @@ clear, clc, format long g, rng('shuffle'), close all;
                       
 % Traffic Info
 Year = 2003:2019;
-%Year = 2003;
+%Year = 2010:2011;
 %SName = {'Ceneri', 'Denges', 'Gotthard', 'Oberburen'};
-SName = {'Ceneri', 'Denges', 'Gotthard', 'Oberburen', 'StMaurice', 'Schafisheim', 'Plazzas', 'A16'};
+SName = {'Trubbach','Mattstetten'};
 %SName = {'Gotthard'};
 
 % Toggles
@@ -38,7 +38,7 @@ ILRes = 0.2;   % Needed for WIMtoAllTrAx
     
 % Input Complete   ---------------------
 
-AxSingle = array2table(NaN(100000000,3));
+AxSingle = array2table(NaN(200000000,3));
 AxSingle.Properties.VariableNames = {'AWT1kN','ZST','CLASS'};
 AxSingle.Time(:) = NaT;
 AxSingleNum = 1;
