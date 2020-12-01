@@ -19,10 +19,10 @@ clear, clc, format long g, rng('shuffle'), close all;
 % Input Information --------------------
                       
 % Traffic Info
-Year = 2011:2019; % Also have 2010 WIMEnhanced for Ceneri and Oberburen
-%Year = 2012;
-SName = {'Ceneri', 'Denges', 'Gotthard', 'Oberburen'};
-%SName = {'Oberburen'};
+%Year = 2011:2019; % Also have 2010 WIMEnhanced for Ceneri and Oberburen
+Year = 2017;
+%SName = {'Ceneri', 'Denges', 'Gotthard', 'Oberburen'};
+SName = {'Ceneri'};
 %InfDist = 0.6:0.2:2.6; % Strip width
 InfDist = 1.4;
     
@@ -33,7 +33,7 @@ Stage2Prune = true;
 % Input Complete   ---------------------
 
 % Initialize variables and start row counter
-YearlyMax = nan(500000,6); j = 1;
+MaxEvents = nan(500000,11); j = 1;
 
 % For each strip length to be analyzed
 for u = 1:length(InfDist)
@@ -92,86 +92,83 @@ for u = 1:length(InfDist)
                 % Take only stations w
                 PDCx = PDC(PDC.ZST == Stations(w),:);
                 
+                % SOMEHOW THIS AFFECTS THE RESULTS
+                % Find dominant and weak lanes and recode as 1, 2, respectively
+                PDCx.FS = PDCx.FS + 3;
+                [C,ia,ic] = unique(PDCx.FS);
+                a_counts = accumarray(ic,1); [~, b] = max(a_counts); [~, c] = min(a_counts);
+                DomL = C(b); WeakL = C(c);
+                PDCx.FS(PDCx.FS == DomL) = 1;
+                PDCx.FS(PDCx.FS == WeakL) = 2;
+                
                 % Convert PDC to AllTrAx - Spacesave at 4 (plus min 26 = 30)
-                [PDCr, AllTrAx, TrLineUp] = WIMtoAllTrAx(PDCx(PDCx.Group == z,:),4,Lane.Dir,BaseData.ILRes);
+                [PDCr, AllTrAx, TrLineUp] = WIMtoAllTrAx(PDCx,4,Lane.Dir,BaseData.ILRes);
 
                 % Make groups out of each unique day
                 PDCr.Group = findgroups(dateshift(PDCr.Time,'start','day'));
                 
-                % Expand TrLineUp
+                % Round TrLineUp first row, move unrounded to fifth row
+                TrLineUp(:,5) = TrLineUp(:,1); TrLineUp(:,1) = round(TrLineUp(:,1)/BaseData.ILRes);
+                % Expand TrLineUp to include groups
                 TrLineUp(:,6) = PDCr.Group(TrLineUp(:,3));
                 
-                % TrLineUp [       1             2         3        4         5            6            7           8         9       ]
-                %            AllTrAxIndex    AxleValue   Truck#   LaneID  Station(m) StationDiff(m) SingleFlag TridemFlag TandemFlag
+                % TrLineUp [       1             2         3        4         5               6       ]
+                %            AllTrAxIndex    AxleValue   Truck#   LaneID  Station(m)   Group(UniqueDay)
                 
                 % Perform search for maximums for each day
-                for z = 1:max(PDCx.Group)
+                for z = 1:max(PDCr.Group)
                     
+                    clc
+                    % To track progress
+                    fprintf('\nLocation: %s\n    Year: %i\n     Day: %i\n\n',SName{r},Year(i),z)
+            
+                    % Store starting and end indices
+                    Starti = max(0,min(TrLineUp(TrLineUp(:,6) == z,1))-300);
+                    Endi = min(max(TrLineUp(TrLineUp(:,6) == z,1)+300),length(AllTrAx));
                     
+                    % Subdivide AllTrAx
+                    AllTrAxSub = AllTrAx(Starti:Endi,:);
 
-                    
-                    % Lets try doing WIMtoAllTrAx just once per ZST
-                    % We beef up TrLineUp so we don't need to go into PDCr
-                    % We modify AllTrAx each time, taking only the section
-                    % corresponding to our Group (unique day).
-                    % We track the indices to be able to get the true
-                    % AllTrAx Index for plugging into TrLineUp
-                    
-                    
-                    
-                    
-                    % Think about instead of doing WIMtoAllTrAx each z loop
-                    % instead grabbing the relavent rows of AllTrAx each
-                    % time...why not add a Time col to TrLineUp? this way
-                    % we would not need to go back and modify PDC. We could
-                    % also consider outputting truck class and lane stats
-                    % to the final output variable
-                    
-                    
-                    
-                    
-                    
-                    PDCx = PDCr;
-                    
-                    
-                    
-                    
-                    % Don't bother running if the week is too small
-                    if length(AllTrAx) < 1000
-                        %YearlyMax = [YearlyMax; [Year(i), Station, 0, InfDist(u), PDCr.Semaine(1)]];
+                    % Don't bother running if the segment is too small
+                    if length(AllTrAxSub) < 1000
                         continue
                     end
                     
-                    % Round TrLineUp first row, move unrounded to fifth row
-                    TrLineUp(:,5) = TrLineUp(:,1); TrLineUp(:,1) = round(TrLineUp(:,1)/BaseData.ILRes);
-                    
-                    % Lets beep up TrLineUp so that we don't need to keep
-                    % dipping into PDC?
-                    
-                    
+                    k = 0;
                     % For each analysis
-                    for k = 1:BaseData.NumAnalyses
+                    while k < BaseData.NumAnalyses
                         
                         % Subject Influence Line to Truck Axle Stream
-                        [MaxLE,SMaxLE,BrStInd,AxonBr,~] = GetMaxLE(AllTrAx,Inf,BaseData.RunDyn,1);
+                        [MaxLE,SMaxLE,BrStInd,~,~] = GetMaxLE(AllTrAxSub,Inf,BaseData.RunDyn,1);
                         
-                        % What if we want to know when it happened??
-                        % Not just the date... we can use TrLineUp to link!
-                        % We have BrStInd... this is the index (AllTrAx) for the
-                        % start of the bridge. We convert to
+                        % Allow for possible BrStInd < 0
+                        if BrStInd < 0
+                            AllTrAxSub(1:length(Inf.v),:) = 0;
+                            continue
+                        end
+                        k = k+1;
                         
-                        % Put a try statement in case BrStInd wraps around
-                        % (highly unlikely)
-                        %try
-                        IND = BrStInd:BrStInd+length(Inf.v)-1; IND = IND';
-                        IND = IND(Inf.v == 1);
-                        Sample = TrLineUp(TrLineUp >= min(IND) & TrLineUp <= max(IND),3);
-                        %catch
-                        %Sample = randi(max(TrLineUp),1);
-                        %end
-                        MaxLETime = PDCr.Time(Sample(1));
-                        Vehs = PDCr.CLASS(Sample);
+                        BrStIndx = BrStInd+Starti-1;
                         
+                        % Possible that BrStInd wraps around (highly unlikely)
+                        % Cross that bridge if we ever get there!
+                        % Get Indices from strip length
+                        StripInds = BrStIndx:BrStIndx+length(Inf.v)-1; StripInds = StripInds'; StripInds = StripInds(flip(Inf.v) == 1);
+                        %StripIndsSub = BrStInd:BrStInd+length(Inf.v)-1; StripIndsSub = StripIndsSub'; StripIndsSub = StripIndsSub(flip(Inf.v) == 1);
+                        TrNums = TrLineUp(TrLineUp(:,1) >= min(StripInds) & TrLineUp(:,1) <= max(StripInds),3);
+                        TrNumsU = unique(TrNums);
+                        
+                        % Get key info to save
+                        MaxLETime = PDCr.Time(TrNums(1));
+                        Vehs = PDCr.CLASS(TrNumsU);
+                        Lnes = PDCr.FS(TrNumsU);
+                        L1Veh = Vehs(Lnes == 1);
+                        L2Veh = Vehs(Lnes == 2);
+                        % 99 is coded as empty (0 is taken by unclassified)
+                        if isempty(L1Veh); L1Veh = 99; end
+                        if isempty(L2Veh); L2Veh = 99; end
+                        
+                        % Get ClassT (in m form for now)
                         if min(Vehs) == 0
                             m = 1;
                         elseif sum(Vehs > 39 & Vehs < 50) > 0
@@ -180,63 +177,50 @@ for u = 1:length(InfDist)
                             m = 3;
                         end
                         
-
-                        
-
-                        
+                        % Optional Apercu
                         if ApercuT
-                            BaseData.ApercuTitle = [SName{r} ' ' num2str(Station) ' ' num2str(Year(i)) ' Max'];
-                            T = Apercu(PDCr,BaseData.ApercuTitle,Inf.x,Inf.v(:,1),BrStInd,TrLineUp,MaxLE/ESIA.Total(1),MaxLE/SMaxLE,Lane.Dir,BaseData.ILRes);
+                            BaseData.ApercuTitle = [SName{r} ' ' num2str(Stations(w)) ' ' num2str(Year(i)) ' Max'];
+                            T = Apercu(PDCr,BaseData.ApercuTitle,Inf.x,Inf.v(:,1),BrStIndx,TrLineUp,MaxLE/ESIA.Total(1),MaxLE/SMaxLE,Lane.Dir,BaseData.ILRes);
                         end
                         
-                        % Just make sure we also delete from PDC for proper
-                        % time/class recognition...
+                        % Troubleshooting
+                        %disp([sum(AllTrAxSub(StripInds-(Starti-1),3)) MaxLE])
+                        L1Load = sum(AllTrAxSub(StripInds-(Starti-1),1));
+                        L2Load = sum(AllTrAxSub(StripInds-(Starti-1),2));
+                        L1Ax = sum(AllTrAxSub(StripInds-(Starti-1),1)>0);
+                        L2Ax = sum(AllTrAxSub(StripInds-(Starti-1),2)>0);
                         
-                        % Should we only do WIMtoAllTrAxOnce?
+                        % Save MaxEvents... add Lane 1 Veh Lane 2 Veh Num Ax ex speed?
+                        % Save Times and Datenums and then convert
+                        MaxEvents(j,:) = [datenum(MaxLETime), Stations(w), MaxLE, m, k, L1Veh, L2Veh, L1Load, L2Load, L1Ax, L2Ax];
+                        j = j+1;
                         
-                        % % Delete vehicle entries from TrLineUp for re-analysis
-                        %TrLineUp(TrLineUp(:,1) > BrStInd & TrLineUp(:,1) < BrStInd + Inf.x(end),:) = [];
-                        
-                        % Do we even need to delete from TrLineUp? I don't
-                        % think so!!
-                        
+                        % Prepare for next run
                         % Set Axles to zero in AllTrAx (can't delete because indices are locations)
-                        AllTrAx(BrStInd:BrStInd + Inf.x(end),:) = 0;
+                        AllTrAxSub(StripInds-(Starti-1),:) = 0;
                         
                     end
-                    
-                    % Might have to keep track of datetimes
-                    YearlyMax(j,:) = [Year(i), Station, round(MaxLE,3), InfDist(u), m, datenum(MaxLETime)];
-                    j = j+1;
-                    
                 end              
             end
         end
     end
 end
 
-% Add Column for All, Class, ClassOW
+
 % Convert back to datetime !!
-YearlyMax = array2table(YearlyMax,'VariableNames',{'Year', 'ZST', 'MaxLE', 'Width', 'Time', 'm'});
+% Delete empty rows and convert to table
+MaxEvents(isnan(MaxEvents(:,1)),:) = [];
+MaxEvents = array2table(MaxEvents,'VariableNames',{'Datenum', 'ZST', 'MaxLE', 'm', 'DayRank', 'L1Veh', 'L2Veh', 'L1Load', 'L2Load', 'L1Ax', 'L2Ax'});
+MaxEvents.Time = datetime(MaxEvents.Datenum,'ConvertFrom','datenum');
+MaxEvents.Datenum = [];
 
-WeeklyMaxx = YearlyMax;
-WeeklyMaxx(isnan(WeeklyMaxx.Year),:) = [];
+% Add in the description of MaxEvents that it is for 1.4 m (justified by previous memos)
+MaxEvents.Properties.Description = '1.4 m strip length, 0.1 m ILRes';
 
-%WeeklyMax.m = num2str(WeeklyMax.m);
+% Add Column for All, Class, ClassOW and delete former m
+MaxEvents.ClassT(MaxEvents.m == 1) = "All";
+MaxEvents.ClassT(MaxEvents.m == 2) = "ClassOW";
+MaxEvents.ClassT(MaxEvents.m == 3) = "Class";
+MaxEvents.m = [];
 
-%WeeklyMax.Properties.VariableNames = {'Year'  'Station'  'MaxLE'  'Width'  'Week'  'ClassT'};
 
-WeeklyMaxx.ClassT(WeeklyMaxx.m == 1) = "All";
-WeeklyMaxx.ClassT(WeeklyMaxx.m == 2) = "ClassOW";
-WeeklyMaxx.ClassT(WeeklyMaxx.m == 3) = "Class";
-
-WeeklyMaxx.m = [];
-
-% 30-11-2020
-% We want to eliminate the difference between Class, ClassOW, and All.
-% We should compute the calculation of the distance between vehicles with
-% all vehicles involved (no deletions), and THEN filter based on class.
-% This should take care of the problem.
-% Furthermore, we will recreate the variable as DailyMax with a Time stamp
-% variable, so as to make it easy to use Findgroups and Splitapply to get
-% Weekly and Yearly Maxes.
