@@ -19,10 +19,10 @@ clear, clc, format long g, rng('shuffle'), close all;
 % Input Information --------------------
                       
 % Traffic Info
-%Year = 2011:2019; % Also have 2010 WIMEnhanced for Ceneri and Oberburen
-Year = 2017;
-%SName = {'Ceneri', 'Denges', 'Gotthard', 'Oberburen'};
-SName = {'Ceneri'};
+Year = 2011:2019; % Also have 2010 WIMEnhanced for Ceneri and Oberburen
+%Year = 2017;
+SName = {'Ceneri', 'Denges', 'Gotthard', 'Oberburen'};
+%SName = {'Ceneri'};
 %InfDist = 0.6:0.2:2.6; % Strip width
 InfDist = 1.4;
     
@@ -130,7 +130,7 @@ for u = 1:length(InfDist)
                     AllTrAxSub = AllTrAx(Starti:Endi,:);
 
                     % Don't bother running if the segment is too small
-                    if length(AllTrAxSub) < 1000
+                    if length(AllTrAxSub) < 2000
                         continue
                     end
                     
@@ -167,6 +167,8 @@ for u = 1:length(InfDist)
                         % 99 is coded as empty (0 is taken by unclassified)
                         if isempty(L1Veh); L1Veh = 99; end
                         if isempty(L2Veh); L2Veh = 99; end
+                        if length(L1Veh) > 1; L1Veh(2) = []; end
+                        if length(L2Veh) > 1; L2Veh(2) = []; end
                         
                         % Get ClassT (in m form for now)
                         if min(Vehs) == 0
