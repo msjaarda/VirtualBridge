@@ -1,26 +1,20 @@
 % ------------------------------------------------------------------------
 %                             AxleStatsBasic
 % ------------------------------------------------------------------------
-% Assemble All, Simple, Tandem, and Tridem Axles, using geometry, to gain
+% Assemble Simple, Tandem, and Tridem Axles, using geometry, to gain
 % information on Q1 and maximum axle loads
 % Differs from function AxleStats because it finds axle groups in
-% non-classified vehicles. Optional variable save at end (large var)
-% Generate WIMAxles, a massive variable with all the axle info
-
-% Task now is to include date # and week # for different block maxima
+% non-classified vehicles. Optional variable save at end (large vars)
 
  % Initial commands
 clear, clc, format long g, rng('shuffle'), close all;
 
 % Notes
-% - Could add the ability to load and add new years/stations
+% - Add new stations to existing variables manually (load together and cat)
 % - Remember that we are limited to 25t - larger getts tossed by S1Prune
-% - Make sure ClassOW is set to true inside Classify.m
+% - Make sure ClassOW is set to true inside Classify.m and no 11bis
 
 % Input Information --------------------
-
-% Optional loading of existing var to add to
-%load('WIMAxles')
                       
 % Traffic Info
 Year = 2003:2019;
@@ -32,8 +26,8 @@ SName = {'Trubbach','Mattstetten'};
 % Toggles
 AxleStatsT = 0;
 AxleStatsPlot = 0;
-
 Stage2Prune = true;
+
 ILRes = 0.2;   % Needed for WIMtoAllTrAx
     
 % Input Complete   ---------------------
@@ -76,34 +70,33 @@ for r = 1:length(SName)
             continue
         end
         
-        % Add row for Class, Daytime, and Daycount
-        PD = Classify(PD.PD);  %PD = Daytype(PD,Year(i));
-        PD = AddDatetime(PD,1);
+        % Add Datetime
+        PDC = Classify(PD.PD);  %PD = Daytype(PD,Year(i));
+        PDC = AddDatetime(PDC,1);
         
         % Fix Oberburen pre 2006 station naming issue (ZST = 410 both dirs)
         if strcmp(SName{r},'Oberburen') && Year(i) < 2006
-            PD.ZST(PD.FS < 3) = 415;
-            PD.ZST(PD.ZST == 410) = 416;
+            PDC.ZST(PDC.FS < 3) = 415;
+            PDC.ZST(PDC.ZST == 410) = 416;
         end
         if strcmp(SName{r},'Trubbach') && Year(i) < 2006
-            PD.ZST(PD.FS < 3) = 417;
-            PD.ZST(PD.ZST == 407) = 418;
+            PDC.ZST(PDC.FS < 3) = 417;
+            PDC.ZST(PDC.ZST == 407) = 418;
         end
         if strcmp(SName{r},'Mattstetten') && Year(i) < 2006
-            PD.ZST(PD.FS < 3) = 413;
-            PD.ZST(PD.ZST == 407) = 414;
+            PDC.ZST(PDC.FS < 3) = 413;
+            PDC.ZST(PDC.ZST == 407) = 414;
         end
-        
-        
+
         % We treat each station separately
-        Stations = unique(PD.ZST);
+        Stations = unique(PDC.ZST);
         
         % For each station
         for w = 1:length(Stations)
             
             Station = Stations(w);
             
-            PDCx = PD(PD.ZST == Station,:);
+            PDCx = PDC(PDC.ZST == Station,:);
             
             % Further trimming if necessary
             if Stage2Prune
@@ -119,11 +112,12 @@ for r = 1:length(SName)
             
             % TrLineUp [       1             2         3        4         5       ]
             %            AllTrAxIndex    AxleValue   Truck#   LaneID  Station(m)
-                        
             % Distances refer to distance in front
                         
             % Treat the lanes separately & incorporate direction
             Lanes = unique(PDCx.FS);
+            
+            % Complication vehicle recognition scheme (created through trial and error)
             for p = 1:length(Lanes)
                 
                 % LaneB is lane boolean
@@ -180,19 +174,9 @@ for r = 1:length(SName)
             TrLineUp(TrLineUp(:,9)==1,7) = 2;
             TrLineUp(circshift(TrLineUp(:,9)==1,1),7) = 2;
             
-            % Make unidentified axles (till now) singles
-            %TrLineUp(TrLineUp(:,7)==0,7) = 1;
-            
             % TrLineUp [       1             2         3        4         5            6            7           8         9       ]
-            %            AllTrAxIndex    AxleValue   Truck#   LaneID  Station(m) StationDiff(m) SingleFlag TridemFlag TandemFlag 
-                        
+            %            AllTrAxIndex    AxleValue   Truck#   LaneID  Station(m) StationDiff(m) SingleFlag TridemFlag TandemFlag          
             % Distances refer to distance in front
-            
-            % Why is the 7th column sometimes 0??
-            % Escapes single/tandem/tridem altogether...
-            % It is a flag to notice when Gotthard problem is fixed
-            % FIXED
-            %sum(TrLineUp(:,7)==0)
             
             % Optional: Verify with AxleStats
             if AxleStatsT
@@ -203,9 +187,9 @@ for r = 1:length(SName)
                 [STaTr,AllAx] = AxleStats(PDCx,TrAxPerGr,TrTyps,[SName{r} ' ' num2str(Station)],Year(i),AxleStatsPlot);
             end
             
-            % Could add date stamp PDCx.JJJJMMTT(TrLineUp(:,3)) or more...
             % PDCx Index is found in TrLineUp(:,3)
             
+            % Legacy (kept because it is informative)
             % All [Q Class]
             %Axles.([SName{r} num2str(Station)])(Year(i)-2000).All = [TrLineUp(:,2) PDCx.CLASS(TrLineUp(:,3))];
             % Single [Q Class]
@@ -254,4 +238,3 @@ AxTandem(isnan(AxTandem.ZST),:) = [];
 AxTridem(isnan(AxTridem.ZST),:) = [];
 
 % Saving is manual
-%save('WIMAxles', 'Axles')

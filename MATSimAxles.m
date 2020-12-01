@@ -1,18 +1,20 @@
 % ------------------------------------------------------------------------
 %                            MATSimAxles
 % ------------------------------------------------------------------------
-% Generate WIMYearlyMaxQSum - a summary of maximum effects on a strip width
+% Generate a summary of maximum effects on a strip length
+% Purpose is to study Q1+Q2, in that way this script is a sister to
+% AxleStatsBasic, which focusses on Q1 on its own. Both have live scripts
+% which load vars and perform analyses.
+% AxleStatsBasic >> Q1 Investigation
+% MATSimAxles    >> Q1Q2 Investigation
 
  % Initial commands
-clear, clc, format long g, rng('shuffle'), close all; 
-warning('off','MATLAB:mir_warning_maybe_uninitialized_temporary')
+clear, clc, format long g, rng('shuffle'), close all;
 
-% NOTES
-% - Always remember that we are limited to 25t - larger gets tossed by P1
-
-% We can observe a phenomenon where including the ClassOW can sometimes
-% decrease the results. This is because of rounding. See 2nd to last
-% note, and code to solve for which vehicles were involved.
+% Notes
+% - Add new stations to existing variables manually (load together and cat)
+% - Remember that we are limited to 25t - larger getts tossed by S1Prune
+% - Make sure ClassOW is set to true inside Classify.m and no 11bis
 
 % Input Information --------------------
                       
@@ -22,55 +24,38 @@ Year = 2011:2019; % Also have 2010 WIMEnhanced for Ceneri and Oberburen
 SName = {'Ceneri', 'Denges', 'Gotthard', 'Oberburen'};
 %SName = {'Oberburen'};
 %InfDist = 0.6:0.2:2.6; % Strip width
-InfDist = 1.4;%:0.2:2.6;
-
-% Option to load Traffic Info from output of "SpecialVehicleMaxEvents"
-% - The purpose was to provide RH and Pad with Apercu of cases where
-% Overweight vehicles contributed to larger effects than standard traffic
-%load('ClassOWApercu');
-%{'Ceneri408', 'Ceneri409', 'Denges405', 'Denges406', 'Gotthard402', 'Oberburen415', 'Oberburen416'};
+InfDist = 1.4;
     
-
+% Toggles
 ApercuT = 0;
-SaveT = 0; 
+Stage2Prune = true;
 
-% All
-% Class
-% ClassOW
+% Input Complete   ---------------------
 
-% Initialize variables
-YearlyMax = nan(500000,6);
-j = 1;
+% Initialize variables and start row counter
+YearlyMax = nan(500000,6); j = 1;
 
-%for p = 1:length(
-
-% For each length of area to be analyzed, optional parfor
+% For each strip length to be analyzed
 for u = 1:length(InfDist)
     
-    % Initialize BaseData (keep inside parfor)
+    % Initialize BaseData
     BaseData = table;
     % Roadway Info
     BaseData.TransILx = 0; BaseData.TransILy = 0; BaseData.LaneCen = 0;
     BaseData.StationNum = 1;
-    
-    BaseData.Stage2Prune = true;
-    ClassOnly = [0 1 1];
-    ClassOW = [0 0 1];
-    
+    % IL Info
     BaseData.ILs = {'Axle'};  
     BaseData.ILRes = 0.1;   % Do not change right now
-    
     % Analysis Info
     BaseData.RunDyn = 0;
-    BaseData.MultipleCases = 1;
-    BaseData.NumAnalyses = 1;
-   
-    
-    % Input Complete   ---------------------
-        
+    BaseData.Stage2Prune = Stage2Prune;
+    % New stretegy - do it 10 times per day. Detect if ClassOW or UnClass are included and code as such
+    BaseData.NumAnalyses = 10;
+
     % For each station to be analyzed
     for r = 1:length(SName)
         
+        % Adjust direction for Gotthard
         if strcmp(SName{r},'Gotthard')
             BaseData.LaneDir = {'1,2'};
         else
@@ -90,49 +75,68 @@ for u = 1:length(InfDist)
             % Load File
             PD = load(['PrunedS1 WIM/',SName{r},'/',SName{r},'_',num2str(Year(i)),'.mat']);
             
-            % Add col for Class, Daytime, and Daycount
-            PD = Classify(PD.PD);  PD = Daytype(PD,Year(i));
+            % Classify and add Datetime
+            PDC = Classify(PD.PD); PDC = AddDatetime(PDC,1);
             
-            % Add col for week
-            PD.Semaine = ceil(PD.Daycount/7);
+            % Further trimming if necessary
+            if BaseData.Stage2Prune
+                PDC = PruneWIM2(PDC,0);
+            end
             
-            % We treat each station separately..
-            Stations = unique(PD.ZST);
+            % We treat each station separately
+            Stations = unique(PDC.ZST);
         
             % For each station
             for w = 1:length(Stations)
                 
-                Station = Stations(w);
+                % Take only stations w
+                PDCx = PDC(PDC.ZST == Stations(w),:);
                 
-                PDCy = PD(PD.ZST == Station,:);
+                % Convert PDC to AllTrAx - Spacesave at 4 (plus min 26 = 30)
+                [PDCr, AllTrAx, TrLineUp] = WIMtoAllTrAx(PDCx(PDCx.Group == z,:),4,Lane.Dir,BaseData.ILRes);
+
+                % Make groups out of each unique day
+                PDCr.Group = findgroups(dateshift(PDCr.Time,'start','day'));
                 
-                % Further trimming if necessary
-                if BaseData.Stage2Prune
-                    PDCy = PruneWIM2(PDCy,0);
-                end
+                % Expand TrLineUp
+                TrLineUp(:,6) = PDCr.Group(TrLineUp(:,3));
                 
-                for m = 1:3
+                % TrLineUp [       1             2         3        4         5            6            7           8         9       ]
+                %            AllTrAxIndex    AxleValue   Truck#   LaneID  Station(m) StationDiff(m) SingleFlag TridemFlag TandemFlag
+                
+                % Perform search for maximums for each day
+                for z = 1:max(PDCx.Group)
                     
-                    PDCx = PDCy;
-                        
-                    if ClassOnly(m) == 1
-                        PDCx.CLASS(PDCx.CLASS == 119) = 0;
-                        PDCx(PDCx.CLASS == 0,:) = [];
-                        if ClassOW(m) == 1
-                            PDCx.CLASS(PDCx.CLASS > 39 & PDCx.CLASS < 50) = 0;
-                            PDCx(PDCx.CLASS == 0,:) = [];
-                        end
-                    end
                     
-                    Weeks = unique(PDCx.Semaine);
+
                     
-                    for z = 1:length(Weeks)
-                        
-                        PDCz = PDCx(PDCx.Semaine == Weeks(z),:);
+                    % Lets try doing WIMtoAllTrAx just once per ZST
+                    % We beef up TrLineUp so we don't need to go into PDCr
+                    % We modify AllTrAx each time, taking only the section
+                    % corresponding to our Group (unique day).
+                    % We track the indices to be able to get the true
+                    % AllTrAx Index for plugging into TrLineUp
                     
-                    % Convert PDC to AllTrAx (must be greater than 0 to actually Spacesave! Decide on spacesave... should be < 80 I think)
-                    [PDCr, AllTrAx, TrLineUp] = WIMtoAllTrAx(PDCz,4,Lane.Dir,BaseData.ILRes);
                     
+                    
+                    
+                    % Think about instead of doing WIMtoAllTrAx each z loop
+                    % instead grabbing the relavent rows of AllTrAx each
+                    % time...why not add a Time col to TrLineUp? this way
+                    % we would not need to go back and modify PDC. We could
+                    % also consider outputting truck class and lane stats
+                    % to the final output variable
+                    
+                    
+                    
+                    
+                    
+                    PDCx = PDCr;
+                    
+                    
+                    
+                    
+                    % Don't bother running if the week is too small
                     if length(AllTrAx) < 1000
                         %YearlyMax = [YearlyMax; [Year(i), Station, 0, InfDist(u), PDCr.Semaine(1)]];
                         continue
@@ -141,85 +145,79 @@ for u = 1:length(InfDist)
                     % Round TrLineUp first row, move unrounded to fifth row
                     TrLineUp(:,5) = TrLineUp(:,1); TrLineUp(:,1) = round(TrLineUp(:,1)/BaseData.ILRes);
                     
-                    %OverMax = [];
-                    BaseData.ApercuTitle = [SName{r} ' ' num2str(Station) ' ' num2str(Year(i)) ' Max'];
+                    % Lets beep up TrLineUp so that we don't need to keep
+                    % dipping into PDC?
                     
-                    % Atm, just one analysis per year stored in YearlyMax
+                    
+                    % For each analysis
                     for k = 1:BaseData.NumAnalyses
                         
                         % Subject Influence Line to Truck Axle Stream
-                        [MaxLE,SMaxLE,BrStInd,AxonBr] = GetMaxLE(AllTrAx,Inf,BaseData.RunDyn,1);
-                        % % Record Maximums
-                        %OverMax = [OverMax; [1, Year(i), MaxLE, SMaxLE, BrStInd]];
+                        [MaxLE,SMaxLE,BrStInd,AxonBr,~] = GetMaxLE(AllTrAx,Inf,BaseData.RunDyn,1);
                         
-                        % See second to last note for an explanation of the
-                        % below... it tried to flag cases where ClassOW has
-                        % a maximum that actually includes OW vehicles.
-                        % Code not ready to run.
-%                         S = TrLineUp(find(TrLineUp(:,1)>min(BrStInd+find(Inf.v>0)) & TrLineUp(:,1)<max(BrStInd+find(Inf.v>0))),:);
-%                         
-%                         AO = PDCr.CLASS(unique(S(:,3)));
-%                         
-%                         if m == 2
-%                             if isempty(find(AO > 39 & AO < 50))
-%                                 TG = 0;
-%                                 MaxLEr = MaxLE;
-%                             else
-%                                 TG = 1
-%                             end
-%                         end
+                        % What if we want to know when it happened??
+                        % Not just the date... we can use TrLineUp to link!
+                        % We have BrStInd... this is the index (AllTrAx) for the
+                        % start of the bridge. We convert to
+                        
+                        % Put a try statement in case BrStInd wraps around
+                        % (highly unlikely)
+                        %try
+                        IND = BrStInd:BrStInd+length(Inf.v)-1; IND = IND';
+                        IND = IND(Inf.v == 1);
+                        Sample = TrLineUp(TrLineUp >= min(IND) & TrLineUp <= max(IND),3);
+                        %catch
+                        %Sample = randi(max(TrLineUp),1);
+                        %end
+                        MaxLETime = PDCr.Time(Sample(1));
+                        Vehs = PDCr.CLASS(Sample);
+                        
+                        if min(Vehs) == 0
+                            m = 1;
+                        elseif sum(Vehs > 39 & Vehs < 50) > 0
+                            m = 2;
+                        else
+                            m = 3;
+                        end
+                        
 
+                        
+
+                        
                         if ApercuT
+                            BaseData.ApercuTitle = [SName{r} ' ' num2str(Station) ' ' num2str(Year(i)) ' Max'];
                             T = Apercu(PDCr,BaseData.ApercuTitle,Inf.x,Inf.v(:,1),BrStInd,TrLineUp,MaxLE/ESIA.Total(1),MaxLE/SMaxLE,Lane.Dir,BaseData.ILRes);
                         end
                         
+                        % Just make sure we also delete from PDC for proper
+                        % time/class recognition...
+                        
+                        % Should we only do WIMtoAllTrAxOnce?
+                        
                         % % Delete vehicle entries from TrLineUp for re-analysis
                         %TrLineUp(TrLineUp(:,1) > BrStInd & TrLineUp(:,1) < BrStInd + Inf.x(end),:) = [];
-                        % % Set Axles to zero in AllTrAx (can't delete because indices are locations)
-                        %AllTrAx(BrStInd:BrStInd + Inf.x(end),:) = 0;
+                        
+                        % Do we even need to delete from TrLineUp? I don't
+                        % think so!!
+                        
+                        % Set Axles to zero in AllTrAx (can't delete because indices are locations)
+                        AllTrAx(BrStInd:BrStInd + Inf.x(end),:) = 0;
                         
                     end
                     
-                    YearlyMax(j,:) = [Year(i), Station, round(MaxLE,3), InfDist(u), PDCr.Semaine(1), m];
+                    % Might have to keep track of datetimes
+                    YearlyMax(j,:) = [Year(i), Station, round(MaxLE,3), InfDist(u), m, datenum(MaxLETime)];
                     j = j+1;
                     
-                    end
-
-                end
-                
+                end              
             end
         end
     end
 end
 
 % Add Column for All, Class, ClassOW
-YearlyMax = array2table(YearlyMax,'VariableNames',{'Year', 'Station', 'MaxLE', 'Width', 'Week', 'm'});
-
-%YearlyMax.ClassT = ;
-
-% Must adapt this for including weeks...
-%YearlyMax.ClassT = repmat(["All"; "ClassOW"; "Class"],height(YearlyMax)/3,1);
-% Delete entries where one of them is 0 (not enough data)
-%YearlyMax(YearlyMax.MaxLE == 0,:
-
-
-% % Make sure All is always equal or greater than the other 2
-% % This is to account for rounding errors
-% Q = [YearlyMax.MaxLE(YearlyMax.ClassT == "All"),YearlyMax.MaxLE(YearlyMax.ClassT == "ClassOW"),YearlyMax.MaxLE(YearlyMax.ClassT == "Class")];
-% T = max(Q');
-% T = T';
-% YearlyMax.MaxLE(YearlyMax.ClassT == "All") = T;
-% Q = [YearlyMax.MaxLE(YearlyMax.ClassT == "ClassOW"),YearlyMax.MaxLE(YearlyMax.ClassT == "Class")];
-% T = max(Q');
-% T = T';
-% YearlyMax.MaxLE(YearlyMax.ClassT == "ClassOW") = T;
-% 
-% % The above solves some issues, but it is still possible that ClassOW is
-% % falsely larger than Class. IndicesRerun are the cases to investigate if
-% % it is desired.
-% IndicesRerun = find(YearlyMax.MaxLE(YearlyMax.ClassT == "ClassOW")./YearlyMax.MaxLE(YearlyMax.ClassT == "Class") > 1)*3;
-
-
+% Convert back to datetime !!
+YearlyMax = array2table(YearlyMax,'VariableNames',{'Year', 'ZST', 'MaxLE', 'Width', 'Time', 'm'});
 
 WeeklyMaxx = YearlyMax;
 WeeklyMaxx(isnan(WeeklyMaxx.Year),:) = [];
@@ -234,19 +232,11 @@ WeeklyMaxx.ClassT(WeeklyMaxx.m == 3) = "Class";
 
 WeeklyMaxx.m = [];
 
-WeeklyMax = sortrows(WeeklyMax,[1 2 5 6]);
-
-for i = height(WeeklyMax):-3:5
-    if ~strcmp(WeeklyMax.ClassT(i),"ClassOW")
-        disp(i)
-        break
-    end
-end
-
-WeeklyMax(i,:) = [];
-
-% Optional Save
-if SaveT
-    save('WIMWeeklyMaxQSum','YearlyMax');
-end
-
+% 30-11-2020
+% We want to eliminate the difference between Class, ClassOW, and All.
+% We should compute the calculation of the distance between vehicles with
+% all vehicles involved (no deletions), and THEN filter based on class.
+% This should take care of the problem.
+% Furthermore, we will recreate the variable as DailyMax with a Time stamp
+% variable, so as to make it easy to use Findgroups and Splitapply to get
+% Weekly and Yearly Maxes.
