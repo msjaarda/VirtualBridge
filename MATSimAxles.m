@@ -33,7 +33,7 @@ Stage2Prune = true;
 % Input Complete   ---------------------
 
 % Initialize variables and start row counter
-MaxEvents = nan(500000,11); j = 1;
+MaxEvents = nan(500000,13); j = 1;
 
 % For each strip length to be analyzed
 for u = 1:length(InfDist)
@@ -161,14 +161,21 @@ for u = 1:length(InfDist)
                         % Get key info to save
                         MaxLETime = PDCr.Time(TrNums(1));
                         Vehs = PDCr.CLASS(TrNumsU);
+                        Spds = PDCr.SPEED(TrNumsU);
                         Lnes = PDCr.FS(TrNumsU);
                         L1Veh = Vehs(Lnes == 1);
                         L2Veh = Vehs(Lnes == 2);
+                        L1Spd = Spds(Lnes == 1);
+                        L2Spd = Spds(Lnes == 2);
                         % 99 is coded as empty (0 is taken by unclassified)
                         if isempty(L1Veh); L1Veh = 99; end
                         if isempty(L2Veh); L2Veh = 99; end
                         if length(L1Veh) > 1; L1Veh(2) = []; end
                         if length(L2Veh) > 1; L2Veh(2) = []; end
+                        if isempty(L1Spd); L1Spd = -1; end
+                        if isempty(L2Spd); L2Spd = -1; end
+                        if length(L1Spd) > 1; L1Spd(2) = []; end
+                        if length(L2Spd) > 1; L2Spd(2) = []; end
                         
                         % Get ClassT (in m form for now)
                         if min(Vehs) == 0
@@ -194,7 +201,7 @@ for u = 1:length(InfDist)
                         
                         % Save MaxEvents... add Lane 1 Veh Lane 2 Veh Num Ax ex speed?
                         % Save Times and Datenums and then convert
-                        MaxEvents(j,:) = [datenum(MaxLETime), Stations(w), MaxLE, m, k, L1Veh, L2Veh, L1Load, L2Load, L1Ax, L2Ax];
+                        MaxEvents(j,:) = [datenum(MaxLETime), Stations(w), MaxLE, m, k, L1Veh, L2Veh, L1Load, L2Load, L1Ax, L2Ax, L1Spd, L2Spd];
                         j = j+1;
                         
                         % Prepare for next run
@@ -212,7 +219,7 @@ end
 % Convert back to datetime !!
 % Delete empty rows and convert to table
 MaxEvents(isnan(MaxEvents(:,1)),:) = [];
-MaxEvents = array2table(MaxEvents,'VariableNames',{'Datenum', 'ZST', 'MaxLE', 'm', 'DayRank', 'L1Veh', 'L2Veh', 'L1Load', 'L2Load', 'L1Ax', 'L2Ax'});
+MaxEvents = array2table(MaxEvents,'VariableNames',{'Datenum', 'ZST', 'MaxLE', 'm', 'DayRank', 'L1Veh', 'L2Veh', 'L1Load', 'L2Load', 'L1Ax', 'L2Ax',  'L1Sp', 'L2Sp'});
 MaxEvents.Time = datetime(MaxEvents.Datenum,'ConvertFrom','datenum');
 MaxEvents.Datenum = [];
 
