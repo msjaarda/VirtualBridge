@@ -1,4 +1,4 @@
-# SwissTraffic
+# VBridge
 
 This project aims to answer questions about the effect of road traffic on bridges in Switzerland. There are 2 primary data sources:
 + Weigh-in-Motion [WIM] Data
