@@ -14,7 +14,8 @@ Road traffic data is treated/filtered and converted to axle point load data and 
 This can be done with WIM data directly, or it can be with simulated vehicles (deriving properties from the WIM vehicles).
 
 A basic framework is given below
-![alt text](https://msjaarda.github.io/VirtualBridge/HTML/Framework.png?raw=true)
+
+![alt text](https://msjaarda.github.io/VirtualBridge/HTML/Frameworkx.png?raw=true)
 
 The main programs within this project are
 + *MATSim*
