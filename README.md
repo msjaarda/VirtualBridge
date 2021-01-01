@@ -13,6 +13,9 @@ The program requires data from a road network to function. There are 2 primary d
 Road traffic data is treated/filtered and converted to axle point load data and combined with bridge influence lines to get bridge load effects.
 This can be done with WIM data directly, or it can be with simulated vehicles (deriving properties from the WIM vehicles).
 
+A basic framework is given below
+![alt text](https://msjaarda.github.io/VirtualBridge/HTML/Framework.png?raw=true)
+
 The main programs within this project are
 + *MATSim*
 + *MATSimWIM*
