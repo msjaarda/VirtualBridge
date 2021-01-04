@@ -37,7 +37,7 @@ AxLineUp(AxLineUp(:,5) == 1,5) = 1:length(AxLineUp(AxLineUp(:,5) == 1,5));
 % Why not do regardless?
 if BaseData.RunPlat == 1
     if FixVars.CarWgt == 0
-        Index = find(AxLineUp(:,5) == BatchSize*BaseData.TrRate);
+        Index = find(AxLineUp(:,5) > BatchSize*BaseData.TrRate - 0.1 & AxLineUp(:,5) < BatchSize*BaseData.TrRate + 0.1);
         % Add until we are at the end of that vehicle
         while AxLineUp(Index + 1,3) == AxLineUp(Index,3)
            Index = Index + 1; 
