@@ -1,5 +1,5 @@
 ---
-layout: page
+layout: none
 title: Heavy Vehicle Platooning in Switzerland
 ---
 
