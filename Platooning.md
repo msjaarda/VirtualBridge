@@ -1,6 +1,6 @@
 ---
 layout: page
-title: "Heavy Vehicle Platooning in Switzerland"
+title: Heavy Vehicle Platooning in Switzerland
 permalink: https://msjaarda.github.io/VirtualBridge/Platooning
 ---
 
