@@ -12,8 +12,11 @@ format long g
 
 % Load daily .log file with traffic stream from counting station
 %load('CH167_20190823')
-load('Counting Flow\CH194_20190825')
-Lane = 1;
+load('FF137')
+%load('Counting Flow\CH194_20190825')
+Lane = 4;
+
+rd(rd.Lane > 6,:) = [];
 
 %rd = Jam300x;
 %rd = rd(rd.Time <15.8)
@@ -23,7 +26,7 @@ Dir1 = rd.Lane == Lane;% | rd.Lane == 2;
 rd = rd(Dir1,:);
 
 %rd = rd(rd.Time > 16.5 & rd.Time < 18.15,:);
-%rd = rd(rd.Speed > 80,:);
+rd = rd(rd.Speed < 30,:);
 
 % WD = not(isweekend(rdm.Day));
 % rd = rdm(WD,:);
