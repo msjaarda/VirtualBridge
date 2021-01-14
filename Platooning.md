@@ -1,3 +1,5 @@
 # Platoons
 
-VirtualBridge is a program that is used to answer research questions about the effect of road traffic on bridges in Switzerland.
+Below is a description of a project in progress for AGB 2017/004
+
+IN CONSTRUCTION!
