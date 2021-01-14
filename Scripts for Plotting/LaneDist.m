@@ -9,7 +9,7 @@ Dates = 2017;
 %Station = {'Ceneri' 'Denges' 'Oberburen'};
 SName = 'Ceneri';
 x = 0;
-PlotType = 'LaneDist';   % Options are 'LaneDist' or 'Weight'
+PlotType = 'Weight';   % Options are 'LaneDist' or 'Weight'
 
    
 for i = Dates

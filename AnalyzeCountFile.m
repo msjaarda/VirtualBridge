@@ -12,11 +12,13 @@ format long g
 
 % Load daily .log file with traffic stream from counting station
 %load('CH167_20190823')
-load('FF137')
-%load('Counting Flow\CH194_20190825')
+%load('FF137')
+load('Jam194x')
 Lane = 4;
 
-rd(rd.Lane > 6,:) = [];
+% rd(rd.Lane > 6,:) = [];
+% rd(isnan(rd.Speed),:) = [];
+% rd(rd.Speed > 170,:) = [];
 
 %rd = Jam300x;
 %rd = rd(rd.Time <15.8)
@@ -25,8 +27,36 @@ rd(rd.Lane > 6,:) = [];
 Dir1 = rd.Lane == Lane;% | rd.Lane == 2;
 rd = rd(Dir1,:);
 
+
+% Try to detect traffic jams... define a jam as any situation in which the
+% trailing average is 
+% rd.TrailA = movmean(rd.Speed,[100 0]);
+% sum(rd.TrailA < 30);
+% Inds = find(rd.TrailA < 30);
+
+% Define when Jams starts and ends
+% Starts = [Inds(1); Inds(diff(Inds) > 1)];
+% End = [Inds(diff(Inds) > 1) Inds(end)];
+% 
+% Un = unique(diff(Inds));
+% NumJams = length(Un);
+% Inds();
+% 
+% 
+% p = num2str(rd.d);
+% Year = str2num([repmat('20',length(p),1) p(:,end-1:end)]);
+% Month = str2num(p(:,end-3:end-2));
+% Day = str2num(p(:,1:end-4));
+% rd.Time = datetime(Year,Month,Day,rd.h,rd.m,rd.s,rd.ms);
+% 
+% for i = 1:NumJams
+%     figure
+%     plot(rd.Time(Inds(Un(i))-150:Inds(end-NumJams+1)+150),rd.Speed(Inds(Un(i))-150:Inds(end)+150))
+% end
+
+
 %rd = rd(rd.Time > 16.5 & rd.Time < 18.15,:);
-rd = rd(rd.Speed < 30,:);
+%rd = rd(rd.Speed > 80,:);
 
 % WD = not(isweekend(rdm.Day));
 % rd = rdm(WD,:);

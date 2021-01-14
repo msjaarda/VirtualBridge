@@ -12,8 +12,8 @@ close all
 format long g
 
 % INPUT -----------
-Year = 2018;
-SName = 'Gotthard';
+Year = 2017;
+SName = 'Denges';
 
 % Let the Classify function add the .CLASS column to PD
 load(['PrunedS1 WIM/',SName,'/',SName,'_',num2str(Year),'.mat']);
@@ -26,7 +26,7 @@ PDC = Classify(PD);
 % 1. Disqualification by weight (try under 6 or 10 tonnes)
 PDC = PDC(PDC.GW_TOT > 6000,:);
 % 2. Disqualification by Swiss10 Class (exclude 2,3,4,6)
-% Note all years have proper Sw10 data... therefore exclude, not include
+% Not all years have proper Sw10 data... therefore exclude, not include
 PDC(PDC.CS == 2 | PDC.CS == 3 | PDC.CS == 4 | PDC.CS == 6,:) = [];
 %PDC = PDC(PDC.CS == 1 | PDC.CS == 5 | PDC.CS == 8 | PDC.CS == 9 | PDC.CS == 10,:);
 % Get rid of overweight classes and class 11bis
@@ -68,15 +68,43 @@ labelsw = {sprintf('[11] %.1f%%', 100*w(1)/TW)...
 
 
 % Which ones should be highlighted?
-%explode = [1 1 1 1 1 1 1 1 1 1 1 1 1 1 1];
+explode = [1 1 1 1 1 1 1 1 1 1 1 1 1 1];
 explode = [0 0 0 0 0 0 0 0 0 0 0 0 0 0];
+%explode = x/NT < 0.03;
+
+figure('Position',[200 200 1436 650]);
 
 % Create pie chart
 subplot(1,2,1);
-pie(x, explode, labelsn);
+h = pie(x, explode, labelsn);
+th = findobj(h,'Type','Text'); % text handles
+isSmall = endsWith({th.String}, '<');
 title('Class Coverage by Number')
 
 subplot(1,2,2);
-pie(w, explode, labelsw);
+h2 = pie(w, explode, labelsw);
 title('Class Coverage by Weight')
 
+COLs = [0 0 0 0 0 0 0 0 0 0 0 0 0 0];
+
+set(gcf,'color','w');
+patchHand = findobj(h, 'Type', 'Patch'); 
+patchHand2 = findobj(h2, 'Type', 'Patch'); 
+for i = 1:4
+    patchHand(i).FaceColor = 'w';
+    patchHand2(i).FaceColor = 'w';
+end
+for i = 5:10
+    patchHand(i).FaceColor = [0.4 0.4 0.4];
+    patchHand2(i).FaceColor = [0.4 0.4 0.4];
+end
+for i = 11:13
+    patchHand(i).FaceColor = [0.7 0.7 0.7];
+    patchHand2(i).FaceColor = [0.7 0.7 0.7];
+end
+for i = 14
+    patchHand(i).FaceColor = 'k';
+    patchHand2(i).FaceColor = 'k';
+end
+
+sgtitle('Denges 2017 WIM','fontweight','bold','fontsize',14);
