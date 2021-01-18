@@ -3,7 +3,7 @@
 VirtualBridge is a program that is used to answer research questions about the effect of road traffic on bridges in Switzerland.
 
 There are 2 main projects currently underway:
-+ OFROU - [Updating alpha Factors for SIA 269](https://msjaarda.github.io/VirtualBridge/269LMUpdate)
++ OFROU - [Updating Alpha Factors for SIA 269](https://msjaarda.github.io/VirtualBridge/269LMUpdate)
 + AGB   - [Estimating the Effect of Platooning](https://msjaarda.github.io/VirtualBridge/Platooning)
 
 The program requires data from a road network to function. There are 2 primary data sources:
