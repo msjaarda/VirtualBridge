@@ -15,7 +15,7 @@ This can be done with WIM data directly, or it can be with simulated vehicles (d
 
 A basic framework is given below
 
-![alt text](https://msjaarda.github.io/VirtualBridge/HTML/Overview.png?raw=true)
+![alt text](https://msjaarda.github.io/VirtualBridge/HTML/Overviewx.png?raw=true)
 
 The main programs within this project are
 + *VBSim*
