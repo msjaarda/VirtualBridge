@@ -10,7 +10,7 @@ File_List(1:2) = [];
 NumFiles = size(File_List,1);
 
 % Initialize
-i = 51;
+i = 301;
 % Get individual filename
 FileName = File_List(i).name;
 % Initialize rd
@@ -24,7 +24,7 @@ next = height(rd)+1;
 % Expand rd
 rd(next:height(rd)*1000,:) = array2table(nan(height(rd)*1000-height(rd),width(rd)));
 
-for i = 52:150
+for i = 302:length(File_List)
     
     % Get individual filename
     FileName = File_List(i).name;
