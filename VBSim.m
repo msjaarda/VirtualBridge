@@ -1,12 +1,12 @@
 % ------------------------------------------------------------------------
-%                              MATSim
+%                              VBSim
 % ------------------------------------------------------------------------
 % Simulate traffic over a bridge to find maximum load effects
-% Used with Simple or Complete MATSimInput spreadsheet
+% Used with Simple or Complete VBSimInput spreadsheet
 % Add Fatigue
 % Add Smart Naming
 % Make sure Apercu is smooth and all necessary info is saved
-% MATSimWIM might need more info, say for DWIM to know the IL
+% VBSimWIM might need more info, say for DWIM to know the IL
 
 % Initializing commands
 clear, clc, close all, format long g, rng('shuffle');
