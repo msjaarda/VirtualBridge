@@ -15,7 +15,7 @@ MATPlots = [1 2 3 4];
 %PlotCeneri = false;
 
 % Saving
-SaveFig = true;
+SaveFig = false;
 SaveFolder = 'PlatoonPlotswTwin';
 SaveSuffix = '';
 

@@ -3,7 +3,7 @@
 
 % Initial commands
 clear, clc, format long g, rng('shuffle');
-%close all
+close all
 
 % Input File or Folder Name
 Folder_Name = 'PlatStud60m'; 
