@@ -10,10 +10,11 @@ clear, clc, format long g, rng('shuffle'), close all;
 
 % Input Information --------------------
 
-InfCase = [2 6 9];        % User must know the InfCase number(s)
+InfCase = [4 12];        % User must know the InfCase number(s)
 
-Folder = 'PlatoonTwinApercu';
-FDate = 'Sep03-20 113250';
+Folder = 'PlatoonApercu';
+FDate = 'Jan29-21 100236';
+%FDate = 'Sep03-20 113250';
 
 FName = ['Apercu\' Folder '\AWIM_' FDate '.mat']; % Options
 OutputFName = ['Output\' Folder '\' FDate '.mat'];
@@ -45,6 +46,9 @@ BaseData.ApercuTitle = sprintf('%s','VAWIM');
 [Num.Lanes,Lane,LaneData,~,~] = UpdateData(BaseData,[],1,1);
 [Inf,Num.InfCases,Inf.x,Inf.v,ESIA] = GetInfLines(OutInfo.LaneData,BaseData,Num.Lanes);
 
+% Classify
+PDC = Classify(PD);
+
 for i = 1:length(InfCase)
 
 try
@@ -55,9 +59,9 @@ end
     
 % There is no InfCase with VWIM
 try
-    PDCx = PD(PD.SimNum == SimNum & PD.InfCase == InfCase(i),:);
+    PDCx = PDC(PDC.SimNum == SimNum & PDC.InfCase == InfCase(i),:);
 catch
-    PDCx = PD(PD.SimNum == SimNum,:);
+    PDCx = PDC(PDC.SimNum == SimNum,:);
 end
        
 % Convert PDC to AllTrAx

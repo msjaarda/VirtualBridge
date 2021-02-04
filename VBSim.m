@@ -12,7 +12,7 @@
 clear, clc, close all, format long g, rng('shuffle');
 
 % Input File
-InputFile = 'MATSimInputPlatoonD.xlsx'; 
+InputFile = 'InputAutoGen.xlsx'; 
 
 % Read in simulation data
 [BaseData,LaneData,TrData,FolDist] = ReadInputFile(['Input/' InputFile]);

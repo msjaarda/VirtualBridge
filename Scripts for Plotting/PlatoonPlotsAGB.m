@@ -1,5 +1,11 @@
 % Plot Platoon Results in AGB Format
 
+% This should become the main one... should we ditch PlatoonPlots.m?
+
+% Works with Section set to Twin or Box...
+
+% Modify to not use Esim/Esia
+
 % Initial Commands
 clear, clc, close all
 
@@ -35,7 +41,7 @@ J{4} = '10 m IVD'; J{5} = 'No Platoons'; %J{6} = 'Cen 18';
 % Custom Input
 
 % Set Plot Parameters
-Section = 'Twin'; % Box, Twin, TwinRed, TwinExp, TwinConc
+Section = 'Box'; % Box, Twin, TwinRed, TwinExp, TwinConc
 Config = 'Mo';   % Bi, Mo
 Dist = 'ExFast'; % Split, Stand, ExFast, ExSlow
 
@@ -88,6 +94,7 @@ end
 %load('AGBMATResults.mat')
 
 load('PLATResultswTwin.mat')  
+%load('PLATResults.mat')  
 %PLAT.(Section).(Dist).(Loc).(PlatSize).(PlatRate).(AE).(IVD)(Span/20)
 load('Ceneri2017ResultswTwin.mat')
 
