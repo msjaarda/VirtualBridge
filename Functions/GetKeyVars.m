@@ -17,6 +17,9 @@ if ismember('PlatPct', TrDistr.Properties.VariableNames)
     PlatPct = TrDistr.PlatPct;
 else
     PlatPct = BaseData.PlatRate*(TrDistr.TrDistr > PlatCutOff);
+    % Just for an experiment! Change after. 29.01.2020
+    PlatPct(3) = 0;
+    PlatPct(4) = 0;
 end
 
 % Define batch size 

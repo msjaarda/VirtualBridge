@@ -17,7 +17,7 @@ tic, clear, clc, hold off, close all, format long g, rng('shuffle')
 % ----- INPUT -----
 
 % Year, #, Station Name, string, save and plot toggles
-Year = 2017; SName = 'Ceneri'; Save = 0; PlotFits = 1;
+Year = 2017; SName = 'Denges'; Save = 0; PlotFits = 1;
 
 % ----- ENDIN -----
 

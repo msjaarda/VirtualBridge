@@ -87,19 +87,20 @@ else
     % Implemented to replicate AGB 2002/005 (see pg 17)
     NumAx = sum(TrData.TrWitAx{:,:} >= 0,2);
     
-    if all(Lane.TrDistr == [85;15])
-        AxFactor = zeros(Num.TrTyp,2);
-        AxFactor(NumAx == 2 | NumAx == 3,:) = repelem([80 20],sum(NumAx == 2 | NumAx == 3),1);
-        AxFactor(NumAx == 4,:) = repelem([85 15],sum(NumAx == 4),1);
-        AxFactor(NumAx == 5 | NumAx == 6,:) = repelem([90 10],sum(NumAx == 5 | NumAx == 6),1);
-        LaneTrDistr = TrData.TrDistr.TrDistr.*AxFactor/100;
-    elseif  all(Lane.TrDistr == [96;4])
-        AxFactor = zeros(Num.TrTyp,2);
-        AxFactor(NumAx == 2 | NumAx == 3,:) = repelem([94 6],sum(NumAx == 2 | NumAx == 3),1);
-        AxFactor(NumAx == 4,:) = repelem([97 3],sum(NumAx == 4),1);
-        AxFactor(NumAx == 5 | NumAx == 6,:) = repelem([97 3],sum(NumAx == 5 | NumAx == 6),1);
-        LaneTrDistr = TrData.TrDistr.TrDistr.*AxFactor/100;
-    end
+    % Supress when not doing AGB project
+%     if all(Lane.TrDistr == [85;15])
+%         AxFactor = zeros(Num.TrTyp,2);
+%         AxFactor(NumAx == 2 | NumAx == 3,:) = repelem([80 20],sum(NumAx == 2 | NumAx == 3),1);
+%         AxFactor(NumAx == 4,:) = repelem([85 15],sum(NumAx == 4),1);
+%         AxFactor(NumAx == 5 | NumAx == 6,:) = repelem([90 10],sum(NumAx == 5 | NumAx == 6),1);
+%         LaneTrDistr = TrData.TrDistr.TrDistr.*AxFactor/100;
+%     elseif  all(Lane.TrDistr == [96;4])
+%         AxFactor = zeros(Num.TrTyp,2);
+%         AxFactor(NumAx == 2 | NumAx == 3,:) = repelem([94 6],sum(NumAx == 2 | NumAx == 3),1);
+%         AxFactor(NumAx == 4,:) = repelem([97 3],sum(NumAx == 4),1);
+%         AxFactor(NumAx == 5 | NumAx == 6,:) = repelem([97 3],sum(NumAx == 5 | NumAx == 6),1);
+%         LaneTrDistr = TrData.TrDistr.TrDistr.*AxFactor/100;
+%     end
     
     for i = 1:size(LaneTrDistr,2)
         CS = cumsum(LaneTrDistr(:,i));
