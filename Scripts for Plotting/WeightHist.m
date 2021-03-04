@@ -6,12 +6,12 @@ format long g
 
 Year = 2003;
 SName{1} = 'Denges';
-%SName{2} = 'Mattstetten';
-%SName{3} = 'Gotthard';
+SName{2} = 'Mattstetten';
+SName{3} = 'Ceneri';
 x = 0;
-PlotType = 'LaneDist';   % Options are 'LaneDist' or 'Weight'
+PlotType = 'Weight';   % Options are 'LaneDist' or 'Weight'
 
-Num = 1;
+Num = 3;
    
 for i = 1:Num
     
