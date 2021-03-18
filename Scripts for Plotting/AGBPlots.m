@@ -16,12 +16,12 @@ Plot1 = true;
 %Plot1T = [];
 Plot2 = true;
 Plot3 = false;
-PlotMargins = true;
-PlotCeneriM = true;
+PlotMargins = false;
+PlotCeneriM = false;
 % Plot Series Toggles (1 through 5 are Got 03, Mat 03, Den 03, Det, Cen 18)
-Plots = [1 2 3 4 5 6];
+Plots = [1 2 3 4];
 % Use TM's E (slightly different than MATSim E)
-AlwaysTME = false;
+AlwaysTME = true;
 % Saving
 SaveFig = false;
 SaveFolder = 'AGBPlots';

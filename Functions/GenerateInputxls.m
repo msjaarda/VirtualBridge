@@ -28,11 +28,15 @@ for w = 1:numel(jj)
     
     File_List = GetFileList(Folder_List(j).name);
     
-    for i = 1:length(File_List)
-        load(['Output/' Folder_List(j).name '/' File_List(i).name])
-        OInfo(i) = OutInfo;
+    try
+        for i = 1:length(File_List)
+            load(['Output/' Folder_List(j).name '/' File_List(i).name])
+            OInfo(i) = OutInfo;
+        end
+        clear OutInfo
+    catch
+        continue
     end
-    clear OutInfo
     
     SumTab.(Folder_List(j).name) = struct2table(File_List);
     SumTab.(Folder_List(j).name)(:,2:end) = [];
