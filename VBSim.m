@@ -3,7 +3,7 @@
 % ------------------------------------------------------------------------
 % Simulate traffic over a bridge to find maximum load effects
 % Used with Simple or Complete VBSimInput spreadsheet
-% Add Fatigue
+% Develop Fatigue
 % Add Smart Naming
 % Make sure Apercu is smooth and all necessary info is saved
 % VBSimWIM might need more info, say for DWIM to know the IL
@@ -12,7 +12,7 @@
 clear, clc, close all, format long g, rng('shuffle');
 
 % Input File
-InputFile = 'MATSimInputPlatoonConfidencex.xlsx'; 
+InputFile = 'MATSimInputPlatoonConfidence.xlsx'; 
 
 % Read in simulation data
 [BaseData,LaneData,TrData,FolDist] = ReadInputFile(['Input/' InputFile]);
@@ -46,7 +46,7 @@ for g = 1:height(BaseData)
     %for v = 1:BaseData.NumSims(g)
         
         % Initialize variables outside of batch simulation loop
-        LaneAxLineUp = cell(Num.Lanes,1); LaneVehLineUp = cell(Num.Lanes,1); ApercuMax = [];
+        LaneAxLineUp = cell(Num.Lanes,1); LaneVehLineUp = cell(Num.Lanes,1); ApercuMax = []; t= [];
         [MaxMaxLE, SMaxMaxLE, Maxk, MaxBrStInd, MaxDamage] = deal(zeros(1,Num.InfCases));
         
         for k = 1:Num.Batches
