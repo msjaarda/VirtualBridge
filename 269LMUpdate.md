@@ -11,3 +11,6 @@ For the first (slow) lane, this is done using simple block maxima of tandem axle
 
 Finally, the alpha for small "q" is set through simulations involving jammed traffic.
 
+## LiveScripts
+[Q1Investigation](https://msjaarda.github.io/VirtualBridge/HTML/Q1Investigation)  
+[Q1Q2Investigation](https://msjaarda.github.io/VirtualBridge/HTML/Q1Q2Investigation)
