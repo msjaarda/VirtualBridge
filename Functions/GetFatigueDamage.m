@@ -15,7 +15,6 @@ T = array2table(c,'VariableNames',{'Count','Range','Mean','Start','End'});
 
 % Calculate damage from R
 % Take each cycle... count half cycles as full cycles... and compute damage
-% Start by assuming FAT80
 % Initialize with zeros
 T.Life = zeros(height(T),1);
 % Assume m = 3

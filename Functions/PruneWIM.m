@@ -3,6 +3,8 @@ function [PD] = PruneWIM(Year,Station,SName,RD,Report,Save)
 %assembled using "DailytoYearly.m") and prunes it, giving back processed
 %data (PD)
 
+% Example PruneWIM(2017,408,'Ceneri',RD,1,0)
+
 % Year/Station (string OR number), SName (string)
 % Report/Save (1/0 flags)
 

@@ -66,8 +66,8 @@ for i = 1:NumInfCases
     
     % Decide if we go + or - 0.6... try both, take higher? make sure no error
     
-    % If we give 0... we assume same IL for all lanes. If we give just
-    % Shear in lane 2, for example, we assume 0 for all other lanes.
+    % If we give 0 in the Lane column of LaneData... we assume same IL for all lanes. 
+    % If we give only Shear in lane 2, for example, we assume 0 for all other lanes.
     if Inf.Lanes(Inf.UniqStartInds(i)) == 0
         MaxInfv(:,i) = repmat(aprime,NumLanes,1);       % a to aprime 20.2
     else
@@ -105,6 +105,11 @@ if NumLanes > 1
     Qk(2) = 200;
 end
 Alpha = 1;      % Changed from 0.90 to 1 on 20.02 to better reflect AGB results
+
+% On 25.03.2021 Matt and Lucas used LucasInfluenceLine to show that this
+% method underpredicts ESIA for twin girder bridges because in Lucas' code he
+% shifts the point loads Q1 and Q2 to the edge, and I do not. TM did the
+% same as Lucas.
 
 % Calculate ESIA for each InfCase
 for i = 1:NumInfCases

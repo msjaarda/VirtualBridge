@@ -12,7 +12,7 @@
 clear, clc, close all, format long g, rng('shuffle');
 
 % Input File
-InputFile = 'MATSimInputPlatoonConfidencex.xlsx'; 
+InputFile = 'MATSimInput.xlsx'; 
 
 % Read in simulation data
 [BaseData,LaneData,TrData,FolDist] = ReadInputFile(['Input/' InputFile]);
@@ -42,8 +42,8 @@ for g = 1:height(BaseData)
     % Initialize parpool if necessary and initialize progress bar
     if BaseData.Parallel(g) > 0, gcp; clc; end, m = StartProgBar(BaseData.NumSims(g), Num.Batches, g, height(BaseData)); tic; st = now;
     
-    parfor (v = 1:BaseData.NumSims(g), BaseData.Parallel(g)*100)
-    %for v = 1:BaseData.NumSims(g)
+    %parfor (v = 1:BaseData.NumSims(g), BaseData.Parallel(g)*100)
+    for v = 1:BaseData.NumSims(g)
         
         % Initialize variables outside of batch simulation loop
         LaneAxLineUp = cell(Num.Lanes,1); LaneVehLineUp = cell(Num.Lanes,1); ApercuMax = [];
@@ -100,6 +100,7 @@ for g = 1:height(BaseData)
                     if BaseData.RunFat(g) == 1 % Check if we need == 1
                         Damage = GetFatigueDamage(R,BaseData.FatScale(g),BaseData.FatCat(g));
                         if Damage > MaxDamage(t)
+                            % Why is MaxDamage the same for all InfCases??
                             MaxDamage(t) = Damage;
                         end
                     end

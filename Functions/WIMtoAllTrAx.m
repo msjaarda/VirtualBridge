@@ -21,7 +21,14 @@ function [PDCx, AllTrAx, TrLineUp] = WIMtoAllTrAx(PDCx,SpaceSaver,LaneDir,ILRes)
 
 % Detect type of WIM file
 % Determine if we have Enhanced or VWIM cases
-EnhancedWIM = ismember('HH', PDCx.Properties.VariableNames);
+if ismember('HH', PDCx.Properties.VariableNames);
+    EnhancedWIM = true;
+elseif ismember('Time', PDCx.Properties.VariableNames);
+    % Make sure here that Time has the extra decimal
+    EnhancedWIM = any(mod(second(PDCx.Time(1:20)),1)>0);
+else
+    EnhancedWIM = false;
+end
 % Optional conversion from AllAxSpCu to SpCu
 if ismember('AllAxSpCu', PDCx.Properties.VariableNames)
     PDCx.Properties.VariableNames{'AllAxSpCu'} = 'SpCu';
@@ -42,8 +49,11 @@ if EnhancedWIM
     % Solve for TR (as an estimate)... not reported right now
     TR = height(PDCx)/PDCx.Head(end);
     
+    try
     % Fix decimal seconds
     PDCx.HH = str2double(PDCx.HH)/100;
+    catch
+    end
     
     % Changes variables names to be lane specific
     try
@@ -52,8 +62,13 @@ if EnhancedWIM
     catch
     end
     
+    try
     % Sort by timestamp
     PDCx = sortrows(PDCx,{'JJJJMMTT','HHMMSS','HH'});
+    catch
+        PDCx = sortrows(PDCx,{'Time'});
+    end
+    
     
 elseif ~VWIM
     
@@ -135,7 +150,7 @@ else
     % We can do spacesaver here since we treat all at the same time...
     % Need to be careful here because this is not the space between vehicles...
     % it is the space different between the start of vehicles! We should
-    % add the max length of a vehicle, which is PruneWIM is 26m
+    % add the max length of a vehicle, which in PruneWIM is 26m
     if SpaceSaver > 0
         PDCx.Dist(PDCx.Dist > SpaceSaver + 26) = SpaceSaver + 26;
     end

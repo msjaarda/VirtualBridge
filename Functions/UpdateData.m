@@ -20,7 +20,6 @@ NumLanes = length(Lane.Dir);
 % FolDist is getting a make-over! We can now use qualitative measures:
 % "Jammed" or "Stopped" : 0 kph
 % "At-rest" or "Crawling" : 2 kph
-% "Congest18" : 18 kph
 % "Congested" : 30 kph
 % "Free-flowing" : 1000 veh/hr
 
@@ -33,26 +32,26 @@ if ismember('Flow', BaseData.Properties.VariableNames)
     FolDist = array2table(zeros(4,4));
     FolDist.Properties.VariableNames = {'TT', 'TC', 'CT', 'CC'};
     if iscell(BaseData.Flow)
-        VehSpd = str2num(BaseData.Flow{:});
-        if isempty(VehSpd)
-        if strcmp(BaseData.Flow{:},'Jammed') || strcmp(BaseData.Flow{:},'Stopped')
-            FolDist.TT = [0.1 15 2.93 10.8]';
-            FolDist.TC = [0.1 15 2.41 9.18]';
-            FolDist.CT = [0.1 15 2.15 10.9]';
-            FolDist.CC = [0.1 15 2.15 15.5]';
-            VehSpd = 0; % kph
-        elseif strcmp(BaseData.Flow{:},'At-rest') || strcmp(BaseData.Flow{:},'Crawling')
-            VehSpd = 2; % kph
-        elseif strcmp(BaseData.Flow{:},'Congest18') % Legacy
-            VehSpd = 18; % kph
-        elseif strcmp(BaseData.Flow{:},'Congested')
-            VehSpd = 30; % kph
-        elseif strcmp(BaseData.Flow{:},'Free-flowing')
-            VehSpd = 1000; % > 100 therefore, veh/hr
-        else
-            fprintf('\nWarning: Not a recognized FolDist input\n\n')
-        end
-        end
+       % VehSpd = str2num(BaseData.Flow{:});
+       % if isempty(VehSpd)
+            if strcmp(BaseData.Flow{:},'Jammed') || strcmp(BaseData.Flow{:},'Stopped')
+                FolDist.TT = [0.1 15 2.93 10.8]';
+                FolDist.TC = [0.1 15 2.41 9.18]';
+                FolDist.CT = [0.1 15 2.15 10.9]';
+                FolDist.CC = [0.1 15 2.15 15.5]';
+                VehSpd = 0; % kph
+            elseif strcmp(BaseData.Flow{:},'At-rest') || strcmp(BaseData.Flow{:},'Crawling')
+                VehSpd = 2; % kph
+            elseif strcmp(BaseData.Flow{:},'Congested')
+                VehSpd = 30; % kph
+            elseif strcmp(BaseData.Flow{:},'Free-flowing')
+                VehSpd = 1000; % > 100 therefore, veh/hr
+            else
+                fprintf('\nWarning: Not a recognized FolDist input\n\n')
+            end
+      %  end
+    else
+        VehSpd = BaseData.Flow;
     end
     if VehSpd > 0 && VehSpd < 101
         FolDist.TT = [VehSpd/15 15+1.1*VehSpd 2.15 9]';
