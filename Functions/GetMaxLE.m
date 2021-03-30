@@ -35,6 +35,18 @@ uDLF = ones(length(Infv),1);
 % Preallocate R
 Rx = zeros(size(AllTrAx,1)+size(Infv,1)-1,size(Infv,2));
 
+
+% WE HAVE AN ISSUE HERE WITH CONVOLUTION THAT WE CANNOT SOLVE AT THE MOMENT
+% (TOO MANY THINGS RELYING ON IT AS IT IS CURRENTLY WRITTEN). TO BE REVISED
+% WHEN WE ADD MULTIPUTRES AND PONT DALLES ILs...
+% when you do conv(u,v) it is u moving accross v
+% it uses "edge padding" when no shape is specified. Instead we could do
+% "same" or "valid" which reduces the number of results. BUT the other
+% thing is that u is flipped before the convolution happens. So we should
+% pre-flip it so we can intuitively understand what is going on.
+% Right now we are flipping our Inf line in other scripts to match the
+% results here! https://ch.mathworks.com/help/matlab/ref/conv.html
+
 % Compute maximum load effects
 for i = 1:size(Infv,2)
     
