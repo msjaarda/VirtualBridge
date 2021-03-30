@@ -96,7 +96,10 @@ for g = 1:height(BaseData)
            % clc
             % To track progress
             % Improve tracking now that we have parfor (borrow from VBSim)
-           % fprintf('\nLocation: %s\n    Year: %i\n Station: %i\n     Day: %i\n\n',BaseData.SName{g},BaseData.Year(g),Stations(w),z)
+            if height(BaseData) < 10
+                clc
+            fprintf('\nLocation: %s\n    Year: %i\n Station: %i\n     Day: %i\n\n',BaseData.SName{g},BaseData.Year(g),Stations(w),z)
+            end
             
             % Store starting and end indices
             Starti = max(1,min(TrLineUp(TrLineUp(:,6) == z,1))-1000);
@@ -116,16 +119,17 @@ for g = 1:height(BaseData)
             k = 0;
             % For each analysis
             while k < BaseData.NumAnalyses(g)
+             
                 
                 % Subject Influence Line to Truck Axle Stream
                 [MaxLE,SMaxLE,BrStInd,~,~] = GetMaxLE(AllTrAxSub,Infl,BaseData.RunDyn(g),t);
                 
                 % Allow for possible BrStInd < 0
-                if BrStInd < 0
-                    AllTrAxSub(1:length(Infl.v),:) = 0;
-                    continue
+                if BrStInd <= 0
+                     AllTrAxSub(1:length(Infl.v),:) = 0;
+                     continue
                 end
-                k = k+1;
+                   k = k+1;
                 
                 BrStIndx = BrStInd+Starti-1;
                 
