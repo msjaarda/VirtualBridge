@@ -3,6 +3,7 @@ function UpProgBar(m, st, v, k, NumSims, NumBatches)
 t = v;
 Num = NumSims;
 
+
 no = (now-st);
 if no > 1
     marker = 'd';
@@ -13,7 +14,7 @@ elseif no*24*60 > 1
 else
     no = no*3600*24; marker = 's';
 end
- 
+
 
 
 if NumSims < 10
@@ -29,7 +30,7 @@ if NumSims < 10
             end
         end
     else
-                % Update progress bar
+        % Update progress bar
         if mod(t,Num/m) == 0
             if numel(num2str(floor(no))) == 2
                 fprintf('\b\b\b\b\b\b\b\b|%s%.2f%s\n',' ',no,marker);
@@ -48,10 +49,9 @@ elseif k == max(NumBatches)
         else
             fprintf('\b\b\b\b\b\b\b\b|%s%.2f%s\n','  ',no,marker);
         end
-
+        
     end
-
+    
 end
-
 
 end

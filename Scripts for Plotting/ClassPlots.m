@@ -14,8 +14,8 @@ close all
 format long g
 
 % INPUT -----------
-Year = 2017;
-SName = 'Ceneri';
+Year = 2012;
+SName = 'Sumter';
 Vehicle = 99; % for histograms
 % Options include each vehicle, 0, for unclassified 99 for all
 % -----------------

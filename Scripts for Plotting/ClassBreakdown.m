@@ -12,8 +12,8 @@ close all
 format long g
 
 % INPUT -----------
-Year = 2017;
-SName = 'Denges';
+Year = 2012;
+SName = 'Sumter';
 
 % Let the Classify function add the .CLASS column to PD
 load(['PrunedS1 WIM/',SName,'/',SName,'_',num2str(Year),'.mat']);
@@ -27,7 +27,10 @@ PDC = Classify(PD);
 PDC = PDC(PDC.GW_TOT > 6000,:);
 % 2. Disqualification by Swiss10 Class (exclude 2,3,4,6)
 % Not all years have proper Sw10 data... therefore exclude, not include
+try
 PDC(PDC.CS == 2 | PDC.CS == 3 | PDC.CS == 4 | PDC.CS == 6,:) = [];
+catch
+end
 %PDC = PDC(PDC.CS == 1 | PDC.CS == 5 | PDC.CS == 8 | PDC.CS == 9 | PDC.CS == 10,:);
 % Get rid of overweight classes and class 11bis
 PDC.CLASS(PDC.CLASS > 39 & PDC.CLASS < 50) = 0;
@@ -107,4 +110,4 @@ end
 %     patchHand2(i).FaceColor = 'k';
 % end
 
-sgtitle('Denges 2017 WIM','fontweight','bold','fontsize',14);
+sgtitle([SName ' ' num2str(Year) ' WIM'],'fontweight','bold','fontsize',14);

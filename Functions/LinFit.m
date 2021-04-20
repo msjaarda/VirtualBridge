@@ -43,8 +43,8 @@ for i = 1:NumTrTyp    % For each truck type
         % Start with y... it is easier
         % It is the axle group in question
         Range = m(TrTypPriority{i}(j)-1)+1:m(TrTypPriority{i}(j));
-        Range = Range + 13;
-        % AWT01 = Column 14
+        Range = Range + find(string(PDC.Properties.VariableNames) == "AX");
+        % modified 7/4/21 to including smart column label finding.
 
         y = PDC{PDC.CLASS == TrTyps(i),Range}/102;
         y = sum(y,2);

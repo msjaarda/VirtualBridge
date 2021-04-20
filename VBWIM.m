@@ -1,181 +1,235 @@
 % ------------------------------------------------------------------------
-%                            MATSimWIM
+%                            VBWIM
 % ------------------------------------------------------------------------
-% Run real traffic over a bridge to find maximum load effects
-% Used with Virtual or Real WIM results
+% Generate a summary of maximum effects on bridges from real WIM
+% This has a sister live script which loads the var and perform analyses.
+% VBWIM         >> q Investigation
 
-% Initial commands
-clear, clc, format long g, rng('shuffle'), close all; BaseData = table;
+ % Initial commands
+clear, clc, format long g, rng('shuffle'), close all;
+warning('off','MATLAB:mir_warning_maybe_uninitialized_temporary')
 
-% Input Information --------------------
-                        
-% Necessary Inputs
+% Notes
+% - Add new stations to existing variables manually (load together and cat)
+% - Make sure ClassOW is set to true inside Classify.m and no 11bis
 
-% Station Info incl. station name, number, and year
-Year = 2016:2018;
-BaseData.SName = 'Denges';
-BaseData.StationNum = 1;
-BaseData.NumAnalyses = 10;
-
-% Input Complete   ---------------------
-
-% % NOTE: Optional Input through File
-% % replace "UpdateData(BaseData,LaneData,1,1);" with..
-% % "
 % Input File Name
-InputFile = 'Input/MATSimWIMInput.xlsx';
+InputFile = 'Input/MATSimWIMInputFlo.xlsx';
+
 % Read Input File
 [BaseData,LaneData,~,~] = ReadInputFile(InputFile);
 
-for g = 1:height(BaseData)
+% Initialize variables and start row counter
+MaxEvents = nan(400000,14,height(BaseData));
 
-    % Obtain Influence Line Info
-    [Num.Lanes,Lane,LaneData,~,~] = UpdateData(BaseData(g,:),[],1,1);
-    [Inf,Num.InfCases,Inf.x,Inf.v,ESIA] = GetInfLines(LaneData,BaseData(g,:),Num.Lanes);
+if BaseData.Parallel(1) > 0, gcp; clc; end
+
+% Start Progress Bar
+if height(BaseData) > 5
+    u = StartProgBar(height(BaseData), 1, 1, 1); tic; st = now;
+end
+
+%parfor g = 1:height(BaseData)
+for g = 1:height(BaseData)
     
-    % Initialize
-    OverMax = [];
+    MaxEvents1 = nan(400000,14);
+    j = 1;
+     
+    % Obtain Influence Line Info
+    [NLanes,Lane,LaneData,~,~] = UpdateData(BaseData(g,:),[],1,1);
+    [Infl,NInfCases,Infl.x,Infl.v,ESIA] = GetInfLines(LaneData,BaseData(g,:),NLanes);
     
     % Load File
-    load(['PrunedS1 WIM/',BaseData.SName{:},'/',BaseData.SName{:},'_',num2str(Year(i)),'.mat']);
-    temp = BaseData.SName{:};
-    clear BaseData.SName
-    BaseData.SName = BaseData.SName{:};
+    PD = load(['PrunedS1 WIM/',BaseData.SName{g},'/',BaseData.SName{g},'_',num2str(BaseData.Year(g)),'.mat']);
     
-    % Add row for Class, Daytime, and Daycount
-    PDC = Classify(PD);
-    PDC = Daytype(PDC,Year(i));
-    clear('PD')
-    
-    % We treat each station separately.. SNum is the input for which
-    Stations = unique(PDC.ZST);
-    Station = Stations(BaseData.StationNum);
-    PDCx = PDC(PDC.ZST == Station,:);
-    clear('PDC')
-    
-    %BaseData.ApercuTitle = sprintf('%s %s %i %i',BaseData.Type,BaseData.SName,Stations(BaseData.StationNum),Year(i));
-    % Plot Titles
-    %BaseData.PlotTitle = sprintf('%s Staion %i Max M+ [Top %i/Year] | 40m Simple Span',BaseData.SName,Stations(BaseData.StationNum),BaseData.NumAnalyses);
+    % Classify and add Datetime
+    PDC = Classify(PD.PD); PDC = AddDatetime(PDC,1);
     
     % Further trimming if necessary
-    if BaseData.S2Prune == 1
-        PDCx = PruneWIM2(PDCx,0);
+    if BaseData.S2Prune(g) == 1
+        PDC = PruneWIM2(PDC,0);
+    end
+            
+    % We treat each station separately
+    Stations = unique(PDC.ZST);
+    
+    % For each station
+    for w = 1:length(Stations)
+                
+        % Take only stations w
+        PDCx = PDC(PDC.ZST == Stations(w),:);
+        
+        % Find dominant and weak lanes and recode as 1, 2, respectively
+        PDCx.FS = PDCx.FS + 3;
+        [C,ia,ic] = unique(PDCx.FS);
+        a_counts = accumarray(ic,1); [~, b] = max(a_counts); [~, c] = min(a_counts);
+        DomL = C(b); WeakL = C(c);
+        PDCx.FS(PDCx.FS == DomL) = 1;
+        PDCx.FS(PDCx.FS == WeakL) = 2;
+        
+        % Convert PDC to AllTrAx - Spacesave at 4 (plus min 26 = 30)
+        [PDCr, AllTrAx, TrLineUp] = WIMtoAllTrAx(PDCx,4,Lane.Dir,BaseData.ILRes(g));
+        
+        % Make groups out of each unique day
+        PDCr.Group = findgroups(dateshift(PDCr.Time,'start','day'));
+        
+        % Round TrLineUp first row, move unrounded to fifth row
+        TrLineUp(:,5) = TrLineUp(:,1); TrLineUp(:,1) = round(TrLineUp(:,1)/BaseData.ILRes(g));
+        % Expand TrLineUp to include groups
+        TrLineUp(:,6) = PDCr.Group(TrLineUp(:,3));
+        
+        % TrLineUp [       1             2         3        4         5               6       ]
+        %            AllTrAxIndex    AxleValue   Truck#   LaneID  Station(m)   Group(UniqueDay)
+        
+        % Perform search for maximums for each day
+        for z = 1:max(PDCr.Group)
+            
+            if height(BaseData) <= 5
+                clc
+                fprintf('\nLocation: %s\n    Year: %i\n Station: %i\n     Day: %i\n\n',BaseData.SName{g},BaseData.Year(g),Stations(w),z)
+            end
+            
+            % Store starting and end indices
+            Starti = max(1,min(TrLineUp(TrLineUp(:,6) == z,1))-1000);
+            Endi = min(max(TrLineUp(TrLineUp(:,6) == z,1)+1000),length(AllTrAx));
+            
+            % Subdivide AllTrAx
+            AllTrAxSub = AllTrAx(Starti:Endi,:);
+            
+            % Don't bother running if the segment is too small
+            if length(AllTrAxSub) < 10000 | sum(AllTrAxSub,'all') == 0
+                continue
+            end
+            
+            % For each influence case
+            for t = 1:NInfCases
+                
+                % Subdivide AllTrAx
+                AllTrAxSub = AllTrAx(Starti:Endi,:);
+                
+                k = 0;
+                % For each analysis
+                while k < BaseData.NumAnalyses(g) & sum(AllTrAxSub,'all') > 0
+                    
+                    % Subject Influence Line to Truck Axle Stream
+                    [MaxLE,SMaxLE,BrStIndSub,AxonBr,~] = GetMaxLE(AllTrAxSub,Infl,BaseData.RunDyn(g),t);
+                    
+                    % Get length of bridge in number of indices
+                    BrLengthInds = length(Infl.v(~isnan(Infl.v(:,t)),t));
+                    
+                    % Wrapping issues - check if BrStIndSub is less than or
+                    % equal to zero OR BrStIndSub + BrLengthInds - 1
+                    % exceeds the size of AllTrAxSub
+                    % Not necessarily a problem, for example if BrStInd
+                    % still works with the parents AllTrAx
+                    % Right now we opt to ignore the edge cases... see note
+                    % in GetMaxLE (CAPS). Must solve later on...
+                    if BrStIndSub < 1
+                        AllTrAxSub(1:BrStIndSub + BrLengthInds - 1,:) = 0;
+                        continue
+                    elseif BrStIndSub + BrLengthInds - 1 > height(AllTrAxSub)
+                        AllTrAxSub(BrStIndSub:end,:) = 0;
+                        continue
+                    end
+                    
+                    % Adjust BrStInd for AllTrAx instead of sub
+                    BrStInd = BrStIndSub+Starti-1;
+                    
+                    % CHECKS
+                    % This should be equal
+                    isequal(AllTrAxSub(BrStIndSub:BrStIndSub + BrLengthInds - 1)',AxonBr);
+                    % As should this
+                    isequal(AllTrAx(BrStInd:BrStInd + BrLengthInds -1)',AxonBr);
+                    % This should equal when no DLF
+                    % See if this is only the case with symmetrical ILs...
+                    % Shouldn't really work without flipping otherwise! YUP
+                    sum(AxonBr .* flip(Infl.v(~isnan(Infl.v(:,t)),t)));
+                    
+                    k = k+1;
+
+                    StripInds = BrStInd:BrStInd + BrLengthInds -1; StripInds = StripInds';
+    
+                    % Get Truck Numbers and unique ones)
+                    TrNums = TrLineUp(TrLineUp(:,1) >= min(StripInds) & TrLineUp(:,1) <= max(StripInds),3);
+                    TrNumsU = unique(TrNums);
+                    
+                    % Get key info to save
+                    MaxLETime = PDCr.Time(TrNums(1));
+                    Vehs = PDCr.CLASS(TrNumsU);
+                    Spds = PDCr.SPEED(TrNumsU);
+                    Lnes = PDCr.FS(TrNumsU);
+                    L1Veh = numel(Vehs(Lnes == 1));
+                    L2Veh = numel(Vehs(Lnes == 2));
+                    L1Spd = mean(Spds(Lnes == 1));
+                    L2Spd = mean(Spds(Lnes == 2));
+                    % 99 is coded as empty (0 is taken by unclassified)
+                    if isempty(L1Veh); L1Veh = 99; end
+                    if isempty(L2Veh); L2Veh = 99; end
+                    if isnan(L1Spd); L1Spd = -1; end
+                    if isnan(L2Spd); L2Spd = -1; end
+                    
+                    % Get ClassT (in m form for now, convert later)
+                    if min(Vehs) == 0
+                        m = 1;
+                    elseif sum(Vehs > 39 & Vehs < 50) > 0
+                        m = 2;
+                    else
+                        m = 3;
+                    end
+                    
+                    % Optional Apercu
+                    if BaseData.Apercu(g) == 1 & month(MaxLETime) == 1 & day(MaxLETime) == 8
+                        ApercuTitle = [BaseData.SName{g} ' ' num2str(Stations(w)) ' ' num2str(BaseData.Year(g)) ' Max'];
+                        T = Apercu(PDCr,ApercuTitle,Infl.x,Infl.v(:,1),BrStInd,TrLineUp,MaxLE/ESIA.Total(1),MaxLE/SMaxLE,Lane.Dir,BaseData.ILRes(g));
+                    end
+                    
+                    % Troubleshooting
+                    L1Load = sum(AllTrAxSub(StripInds-(Starti-1),1));
+                    L2Load = sum(AllTrAxSub(StripInds-(Starti-1),2));
+                    L1Ax = sum(AllTrAxSub(StripInds-(Starti-1),1)>0);
+                    L2Ax = sum(AllTrAxSub(StripInds-(Starti-1),2)>0);
+                    
+                    % Save MaxEvents... save times as Datenums and then convert
+                    MaxEvents1(j,:) = [datenum(MaxLETime), Stations(w), MaxLE, t, m, k, L1Veh, L2Veh, L1Load, L2Load, L1Ax, L2Ax, L1Spd, L2Spd];
+                    j = j+1;
+                    
+                    % Prepare for next run
+                    % Set Axles to zero in AllTrAx (can't delete because indices are locations)
+                    AllTrAxSub(StripInds-(Starti-1),:) = 0;
+                    
+                end
+            end
+        end
     end
     
-    if BaseData.ClassOnly == 1
-        PDCx(PDCx.CLASS == 0,:) = [];
-    end
+    % Place results inside larger result
+    MaxEvents(:,:,g) = MaxEvents1;
     
-    % CUSTOM EDIT for multiple cases
-    if v == 2
-        [Lanes, a, b] = unique(PDCx.FS);
-        if sum(PDCx.FS == Lanes(1)) < sum(PDCx.FS == Lanes(2))
-            SlowLane = Lanes(1);
-        else
-            SlowLane = Lanes(2);
-        end
-        PDCx(PDCx.GW_TOT > 44000 & PDCx.FS == SlowLane,:) = [];
-    elseif v == 3
-        PDCx(PDCx.GW_TOT > 44000,:) = [];
-    end
-    
-    % Convert PDC to AllTrAx
-    [PDCx, AllTrAx, TrLineUp] = WIMtoAllTrAx(PDCx,round(Inf.x(end)),Lane.Dir,BaseData.ILRes);
-    
-    % Round TrLineUp first row, move unrounded to fifth row
-    TrLineUp(:,5) = TrLineUp(:,1); TrLineUp(:,1) = round(TrLineUp(:,1)/BaseData.ILRes);
-    
-    for k = 1:BaseData.NumAnalyses
-        
-        for t = 1:length(InfCase)
-            % Subject Influence Line to Truck Axle Stream
-            [MaxLE,SMaxLE,BrStInd,AxonBr,~] = GetMaxLE(AllTrAx,Inf,BaseData.RunDyn,InfCase(t));
-            % Record Maximums
-            OverMax = [OverMax; [InfCase(t), Year(i), MaxLE, SMaxLE, BrStInd]];
-        end
-        
-        if BaseData.NumAnalyses == 1 && length(InfCase) == 1
-            T = Apercu(PDCx,BaseData.ApercuTitle,Inf.x,Inf.v(:,t),BrStInd,TrLineUp,MaxLE/ESIA.Total(t),MaxLE/SMaxLE,Lane.Dir,BaseData.ILRes);
-        end
-        
-        % Delete vehicle entries from TrLineUp for re-analysis
-        TrLineUp(TrLineUp(:,1) > BrStInd & TrLineUp(:,1) < BrStInd + Inf.x(end),:) = [];
-        % Set Axles to zero in AllTrAx (can't delete because indices are locations)
-        AllTrAx(BrStInd:BrStInd + Inf.x(end),:) = 0;
-        
+    if height(BaseData) > 5
+        % Update progress bar
+        UpProgBar(u, st, g, 1, height(BaseData), 1)
     end
 end
 
-% Convert Results to Table
-OverMaxT = array2table(OverMax,'VariableNames',{'InfCase','Year','MaxLE','SMaxLE','MaxBrStInd'});
+% Trim back
 
-% % % Get ESIA
-% % aQ1 = 0.7; aQ2 = 0.5; aq = 0.5;
-% % % T69 stands for SIA 269
-% % ESIA.T69 = 1.5*(ESIA.EQ(1)*aQ1+ESIA.EQ(2)*aQ2+ESIA.Eq*aq);
-% % % Custom
-% % AGBSim = 1.1*9604;
+MaxEvents = reshape(permute(MaxEvents,[1 3 2]),[],14);
+%MaxEvents(all(all(isnan(MaxEvents),2),3),:,:) = [];
 
-% Simplify results into D
-for i = 1:length(Year)
-    D(:,i) = OverMaxT.MaxLE(OverMaxT.Year == Year(i));
-end
+MaxEvents(isnan(MaxEvents(:,1)),:) = [];
 
-% Create plot if multiple years involved
-if length(Year) > 1
-    xwidth = [Year(1)-1 Year(end)+1];
-    figure
-    YearsforD = repmat(Year,BaseData.NumAnalyses,1);
-    Dx = D(1:BaseData.NumAnalyses,:);
-    scatter(YearsforD(:)-0.15,Dx(:),'sk','MarkerFaceColor',0.2*[1 1 1])
-    hold on
-%     Dx = D(BaseData.NumAnalyses+1:BaseData.NumAnalyses*2,:);
-%     scatter(YearsforD(:),Dx(:),'sk','MarkerFaceColor',0.6*[1 1 1])
-%     hold on
-%     Dx = D(BaseData.NumAnalyses*2+1:BaseData.NumAnalyses*3,:);
-%     scatter(YearsforD(:)+0.15,Dx(:),'sk','MarkerFaceColor',1*[1 1 1])
-%     hold on
-    plot(xwidth,[ESIA.Total ESIA.Total],'k')
-    text(Year(1),ESIA.Total+ESIA.Total*0.05,sprintf('E_{SIA}'),'FontSize',11,'FontWeight','bold','Color','k')
-    hold on
-    plot(xwidth,[AGBSim AGBSim],'r')
-    text(Year(1),AGBSim-ESIA.Total*0.2,'E_{SIM 99%} AGB 2002/005 with \gamma = 1.1','FontSize',11,'FontWeight','bold','Color','r')
-    hold on
-    plot(xwidth,.9*[ESIA.Total ESIA.Total],'-.k')
-    text(Year(1),.9*ESIA.Total-ESIA.Total*0.05,'E_{SIA261}   [\alpha_{Q1/Q2/q} = 0.9]','FontSize',11,'FontWeight','bold','Color','k')
-    hold on
-    plot(xwidth,[ESIA.T69 ESIA.T69],'-.k')
-    text(Year(1),ESIA.T69+ESIA.Total*0.05,'E_{SIA269}   [\alpha_{Q1} = 0.7, \alpha_{Q2} = 0.5, \alpha_{q} = 0.5]','FontSize',11,'FontWeight','bold','Color','k')
-    ylim([0 ceil(round(ESIA.Total,-3)/10000)*10000])
-    ytickformat('%g')
-    xlim(xwidth)
-    xlabel('Year')
-    ylabel('Moment (kNm)')
-    title(BaseData.PlotTitle)
-    legend('Raw Traffic','Only < 44 tonnes in 2nd Lane','Only < 44 tonnes')
-end
+% Convert back to datetime !!
+% Delete empty rows and convert to table
+MaxEvents = array2table(MaxEvents,'VariableNames',{'Datenum', 'ZST', 'MaxLE', 'InfCase', 'm', 'DayRank', 'L1Veh', 'L2Veh', 'L1Load', 'L2Load', 'L1Ax', 'L2Ax',  'L1Sp', 'L2Sp'});
+MaxEvents.Time = datetime(MaxEvents.Datenum,'ConvertFrom','datenum');
+MaxEvents.Datenum = [];
 
-% Create box plot
+% Add in the description of MaxEvents that it is for 1.4 m (justified by previous memos)
+%MaxEvents.Properties.Description = '1.4 m strip length, 0.1 m ILRes';
 
-% figure
-% boxplot(D,Year)
-% hold on
-% plot([0 length(Year)+1],[ESIA.Total ESIA.Total],'k')
-% text(1,ESIA.Total+ESIA.Total*0.05,sprintf('E_{SIA}'),'FontSize',11,'FontWeight','bold','Color','k')
-% hold on
-% plot([0 length(Year)+1],[AGBSim AGBSim],'k')
-% text(1+5,AGBSim-ESIA.Total*0.05,'E_{SIM 99%} AGB 2002/005 with \gamma = 1.1','FontSize',11,'FontWeight','bold','Color','r')
-% hold on
-% plot([0 length(Year)+1],.9*[ESIA.Total ESIA.Total],'-.k')
-% text(1,.9*ESIA.Total-ESIA.Total*0.05,'E_{SIA261}   [\alpha_{Q/q}] = 0.9','FontSize',11,'FontWeight','bold','Color','k')
-% hold on
-% plot([0 length(Year)+1],[ESIA.T69 ESIA.T69],'-.k')
-% text(1+5,ESIA.T69+ESIA.Total*0.05,'E_{SIA269}   [\alpha_{Q1} = 0.7\alpha_{Q1} = 0.5, \alpha_{q} = 0.5]','FontSize',11,'FontWeight','bold','Color','k')
-% ylim([0 ceil(round(ESIA.Total,-3)/10000)*10000])
-% ytickformat('%g')
-% xlabel('Year')
-% ylabel('Moment (kNm)')
-% title(sprintf('Ceneri Staion 409 Max M+ [Top %i/Year] | 40m Simple Span',BaseData.NumAnalyses))
-
-
+% Add Column for All, Class, ClassOW and delete former m
+MaxEvents.ClassT(MaxEvents.m == 1) = "All";
+MaxEvents.ClassT(MaxEvents.m == 2) = "ClassOW";
+MaxEvents.ClassT(MaxEvents.m == 3) = "Class";
+MaxEvents.m = [];
 
