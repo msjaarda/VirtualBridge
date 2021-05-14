@@ -47,6 +47,8 @@ ClassOW = true;
 % Legend of Vehicle Types:
 % 4 = "Overweight"
 
+% Can add more HV classes here. See Excel OverWeightVehicleLibrary.xlsx
+
 % NOTE: During DailytoYearly.m, we created additional table columns so that
 % the variables would work with the "Traffic Analysis" program. We
 % populated these columns with zeros. However, we do have data from
