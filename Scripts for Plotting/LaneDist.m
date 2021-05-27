@@ -5,9 +5,9 @@ close all
 format long g
 
 %Dates = StartY:EndY;
-Dates = 2017;
+Dates = 2012;
 %Station = {'Ceneri' 'Denges' 'Oberburen'};
-SName = 'Ceneri';
+SName = 'Florida9901';
 x = 0;
 PlotType = 'Weight';   % Options are 'LaneDist' or 'Weight'
 

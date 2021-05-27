@@ -1,5 +1,7 @@
 function [Flo] = GetFloDist(FolDist,FixVars,Flo,PlatFolDist)
 %GETFLODIST Grabs FloDist NB: TC means Truck, followed by a Car (<<<Truck<<Car)
+%%%                         THIS IS WRONG!!! SEE BELOW... TC means
+%%%                         <<<CAR<<<<TRUCK (Truck after car)
 
 % TT 0
 % CT -1

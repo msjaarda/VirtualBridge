@@ -114,7 +114,9 @@ for i = 1:NumTrTyp
     if BaseData.VWIM == 1 || BaseData.Apercu == 1
         LaneAxWgt(Flo.Veh == i,1:TrTyp.NumAx(i)) = P'*102;                % Convert to kg
         LaneWB(Flo.Veh == i,1:TrTyp.NumAx(i)-1) = P2(1:end-1,:)'*100;     % Convert to cm
-        LaneLen(Flo.Veh == i) = FixVars.TrFront + sum(P2)'*100;           % Convert to cm
+        %LaneLen(Flo.Veh == i) = FixVars.TrFront + sum(P2)'*100;           % Convert to cm
+        % Caught by LM... forgot to multiply TrFront to cm
+        LaneLen(Flo.Veh == i) = FixVars.TrFront*100 + sum(P2)'*100;           % Convert to cm
     end
     % This P and P2 procedure are not effected by removing cars
 end

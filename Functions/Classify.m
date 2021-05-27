@@ -10,6 +10,7 @@ function [PDC] = Classify(PD)
 % Classificaiton according to AGB 2002/005 with the addition of Class 23
 % and 11bis.
 
+% There is the option to classify OW vehicles (see bottom)
 ClassOW = true;
 
 % SName (string), Year (string OR number)
@@ -31,8 +32,8 @@ ClassOW = true;
 % Type 123a:    1238
 
 % Legend of Vehicle Types:
-% 7 = "r"
-% 8 = "a"
+% 7 = "r"     remorque
+% 8 = "a"     articulated
 % 9 = "bis"
 
 % This classification scheme uses numbers, not strings. Keep in mind:
@@ -46,13 +47,14 @@ ClassOW = true;
 % Legend of Vehicle Types:
 % 4 = "Overweight"
 
+% Can add more HV classes here. See Excel OverWeightVehicleLibrary.xlsx
+
 % NOTE: During DailytoYearly.m, we created additional table columns so that
 % the variables would work with the "Traffic Analysis" program. We
 % populated these columns with zeros. However, we do have data from
 % those columns from PruneTRDTXTFile. So we won't delete them.
 
 % Add a table column for Classification "CLASS"
-
 PDC = PD;
 PDC.CLASS = zeros(size(PDC,1),1);
 
@@ -82,7 +84,7 @@ PDC.CLASS(Type,:) = 11;
 Axles = PDC.AX == 3;
 Dist12 = PDC.W1_2 >= 360 & PDC.W1_2 < 720;
 Dist23 = PDC.W2_3 >= 60 & PDC.W2_3 < 240;
-Weight = PDC.GW_TOT >= 7000 & PDC.GW_TOT < 45000;
+Weight = PDC.GW_TOT >= 7000  & PDC.GW_TOT < 45000;
 Type = logical(Axles.*Dist12.*Dist23.*Weight);
 PDC.CLASS(Type,:) = 12;
 
@@ -132,7 +134,7 @@ PDC.CLASS(Type,:) = 23;
 Axles = PDC.AX == 3;
 Dist12 = PDC.W1_2 >= 320 & PDC.W1_2 < 450;
 Dist23 = PDC.W2_3 >= 360 & PDC.W2_3 < 860;
-Weight = PDC.GW_TOT >= 7000 & PDC.GW_TOT < 45000;
+Weight = PDC.GW_TOT >= 7000  & PDC.GW_TOT < 45000;
 Type = logical(Axles.*Dist12.*Dist23.*Weight);
 PDC.CLASS(Type,:) = 111; 
 
@@ -180,7 +182,7 @@ Dist12 = PDC.W1_2 >= 360 & PDC.W1_2 < 640;
 Dist23 = PDC.W2_3 >= 360 & PDC.W2_3 < 640;
 Dist34 = PDC.W3_4 >= 360 & PDC.W3_4 < 640;
 Dist45 = PDC.W4_5 >= 60 & PDC.W4_5 < 240;
-Weight = PDC.GW_TOT >= 9000 & PDC.GW_TOT < 75000;
+Weight = PDC.GW_TOT >= 9000  & PDC.GW_TOT < 75000;
 Type = logical(Axles.*Dist12.*Dist23.*Dist34.*Dist45.*Weight);
 PDC.CLASS(Type,:) = 11127; 
 
@@ -209,7 +211,7 @@ Dist12 = PDC.W1_2 >= 320 & PDC.W1_2 < 450;
 Dist23 = PDC.W2_3 >= 360 & PDC.W2_3 < 860;
 Dist34 = PDC.W3_4 >= 60 & PDC.W3_4 < 240;
 Dist45 = PDC.W4_5 >= 60 & PDC.W4_5 < 240;
-Weight = PDC.GW_TOT >= 9000 & PDC.GW_TOT < 75000;
+Weight = PDC.GW_TOT >= 9000  & PDC.GW_TOT < 75000;
 Type = logical(Axles.*Dist12.*Dist23.*Dist34.*Dist45.*Weight);
 PDC.CLASS(Type,:) = 1138; 
 
@@ -221,7 +223,7 @@ Dist23 = PDC.W2_3 >= 60 & PDC.W2_3 < 240;
 Dist34 = PDC.W3_4 >= 360 & PDC.W3_4 < 860;
 Dist45 = PDC.W4_5 >= 60 & PDC.W4_5 < 240;
 Dist56 = PDC.W5_6 >= 60 & PDC.W5_6 < 240;
-Weight = PDC.GW_TOT >= 10000 & PDC.GW_TOT < 90000;
+Weight = PDC.GW_TOT >= 10000  & PDC.GW_TOT < 90000;
 Type = logical(Axles.*Dist12.*Dist23.*Dist34.*Dist45.*Dist56.*Weight);
 PDC.CLASS(Type,:) = 1238; 
 

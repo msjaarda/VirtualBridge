@@ -65,6 +65,16 @@ try
     Time = [H ':' M '.' S];
     TimeFlag = 1;
 catch
+    try
+        Date = T.Time(1);
+        Date.Second = 0;
+        Date.Minute = 0;
+        Date.Hour = 0;
+        H = num2str(hour(T.Time(1))); M = num2str(minute(T.Time(1))); S = num2str(second(T.Time(1)));
+        Time = [H ':' M '.' S];
+        TimeFlag = 1;
+    catch
+    end
 end
 
 % For adding platooning effects, add a column for in a platoon or not

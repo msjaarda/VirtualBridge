@@ -15,15 +15,17 @@ TtkN = 102;
 % Classified Only (only applies to All Axles - others are class only always)
 ClassOnly = false;
 
-if width(PDC) > 35
-    if sum(strcmp('Head',PDC.Properties.VariableNames)) > 0
-        shift = 13;
-    else
-        shift = 13 + 10;
-    end
-else
-    shift = 13;
-end
+shift = find(string(PDC.Properties.VariableNames) == "AX");
+
+% if width(PDC) > 35
+%     if sum(strcmp('Head',PDC.Properties.VariableNames)) > 0
+%         shift = 13;
+%     else
+%         shift = 13 + 10;
+%     end
+% else
+%     shift = 13;
+% end
 
 if Plot == 1
     FaceAlpa = 0.7;

@@ -36,8 +36,15 @@ if ismember('Flow', BaseData.Properties.VariableNames)
        % if isempty(VehSpd)
             if strcmp(BaseData.Flow{:},'Jammed') || strcmp(BaseData.Flow{:},'Stopped')
                 FolDist.TT = [0.1 15 2.93 10.8]';
-                FolDist.TC = [0.1 15 2.41 9.18]';
-                FolDist.CT = [0.1 15 2.15 10.9]';
+                % Changed 20.04.21 after error caught by LM.
+                % To be overhauled in next version.
+                FolDist.TC = [0.1 15 2.15 10.9]';
+                FolDist.CT = [0.1 15 2.41 9.18]';
+%                 FolDist.TC = [0.1 15 2.41 9.18]';
+%                 FolDist.CT = [0.1 15 2.15 10.9]';
+% TC is a truck, followed by a car (<<<Truck<<Car)
+%%%                         THIS IS WRONG!!! SEE BELOW... TC means
+%%%                         <<<CAR<<<<TRUCK (Truck after car)
                 FolDist.CC = [0.1 15 2.15 15.5]';
                 VehSpd = 0; % kph
             elseif strcmp(BaseData.Flow{:},'At-rest') || strcmp(BaseData.Flow{:},'Crawling')
@@ -70,8 +77,10 @@ if ismember('Flow', BaseData.Properties.VariableNames)
         FolDist.CC = FolDist.TT;
     elseif VehSpd == 0
         FolDist.TT = [0.1 15 2.93 10.8]';
-        FolDist.TC = [0.1 15 2.41 9.18]';
-        FolDist.CT = [0.1 15 2.15 10.9]';
+        FolDist.TC = [0.1 15 2.15 10.9]';
+        FolDist.CT = [0.1 15 2.41 9.18]';
+        %                 FolDist.TC = [0.1 15 2.41 9.18]';
+        %                 FolDist.CT = [0.1 15 2.15 10.9]';
         FolDist.CC = [0.1 15 2.15 15.5]';
     end
 end
@@ -105,7 +114,11 @@ if ismember('TransILx', BaseData.Properties.VariableNames)
     if iscell(BaseData.TransILx)
         % LaneFact is 1 with no Transverse influence lines given
         if BaseData.TransILx{:} == '0'
-            LaneFact = 1;
+            if BaseData.InfSurf == 1
+                LaneFact = 2;
+            else
+                LaneFact = 1;
+            end
         else
             % Use x and y coordinates to define line, then LaneCen to get LaneFact
             TransILx = cellfun(@str2num,split(BaseData.TransILx{:},','));
@@ -113,10 +126,16 @@ if ismember('TransILx', BaseData.Properties.VariableNames)
             LaneCen = cellfun(@str2num,split(BaseData.LaneCen{:},','));
             LaneFact = interp1(TransILx,TransILy,LaneCen,'linear','extrap');
         end
+    elseif BaseData.InfSurf == 1
+        LaneFact = 2;
     else
         LaneFact = 1;
     end
     % We gain info on LaneData.Lane here 1:length(LaneFact)
+elseif BaseData.InfSurf == 1
+    
+    LaneFact = 2;
+    
 else
     % LaneFact is 1 when no Transverse influence lines are given
     LaneFact = 1;
@@ -124,7 +143,7 @@ end
 
 % NOTE: You can only mix ILs if they have the same ILRes...
 % This is why we wanted to stick to 0.5 earlier. Right now only Tessin ILs
-% have ILRes ~= 1
+% have ILRes ~= 1... now Pont Dalles also have ILRes ~= 1
 
 % Check if Simple Input method Influence lines are given
 if ismember('ILs', BaseData.Properties.VariableNames)
@@ -147,7 +166,7 @@ if ismember('ILs', BaseData.Properties.VariableNames)
     % Example: V.V80 means just V80 from Library V
         
     % Initialize Table Columns
-    [LaneData.InfNum, LaneData.Name, LaneData.Lane, LaneData.x, LaneData.Infv] = deal([]);
+    [LaneData.InfNum, LaneData.Name, LaneData.Lane, LaneData.x, LaneData.Infv, LaneData.Infv2] = deal([]);
     
     % Populate LaneData.Infv and LaneData.x
     % Step through each IL family given -- ILs = IL
@@ -169,10 +188,22 @@ if ismember('ILs', BaseData.Properties.VariableNames)
         [c, ~] = size(LaneData.Infv);
         z = nan(max(a,c),b);
         z(1:a,1:b) = InfLib.(ILs{i}).Infv(:,Index);
+        % added for Pont Dalles
+        if LaneFact == 2
+            z2 = z;
+            % added for Pont Dalles
+            z2(1:a,1:b) = InfLib.(ILs{i}).Infv2(:,Index);
+        end
         if a > c && c > 0
             LaneData.Infv(c+1:a,:) = nan;
+            if LaneFact == 2
+                LaneData.Infv2(c+1:a,:) = nan;
+            end
         end
         LaneData.Infv = [LaneData.Infv, z];
+        if LaneFact == 2
+            LaneData.Infv2 = [LaneData.Infv2, z2];
+        end
         % Replace Infx if it is longer than previous
         if length(InfLib.(ILs{i}).Infx) > length(LaneData.x)
             LaneData.x = InfLib.(ILs{i}).Infx;
@@ -187,6 +218,14 @@ if ismember('ILs', BaseData.Properties.VariableNames)
     if LaneFact == 1
         LaneData.Lane = zeros(NumInf,1);
         LaneData.InfNum = 1:NumInf; 
+    elseif LaneFact == 2
+        LaneData.Lane = ones(NumInf,1);
+        LaneData.InfNum = repmat(1:NumInf,1,NumLanes);
+        LaneData.Name = repmat(LaneData.Name,1,NumLanes);
+         for i = 2:NumLanes
+            LaneData.Infv = [LaneData.Infv, LaneData.Infv2];
+            LaneData.Lane = [LaneData.Lane; i*ones(NumInf,1)];
+        end
     else
         % With transverse consideration, each line must be scaled per lane
         LaneData.Infv = LaneData.Infv*LaneFact(1);
@@ -218,6 +257,9 @@ if ismember('ILs', BaseData.Properties.VariableNames)
     
     Y = array2table(LaneData.Infv);
     LaneData = rmfield(LaneData,'Infv');
+    if LaneFact == 2
+        LaneData = rmfield(LaneData,'Infv2');
+    end
     LaneData = struct2table(LaneData);
     LaneData = [LaneData Y];
     

@@ -10,22 +10,24 @@ addpath('./Misc/Deterministic Vehicles/')
 % Input Information --------------------
 
 % Roadway Info
-BaseData.LaneDir = {'1,1'};
+BaseData.LaneDir = {'1,2'};
 % Influence Line Info
-BaseData.ILs = {'Mp.Mp40'};  BaseData.ILRes = 1;
+BaseData.ILs = {'PDPp3Mp'};  BaseData.ILRes = 0.1;
 % Analysis Info
 BaseData.RunDyn = 0;
 
 BaseData.NumVeh = 1000000; % use for bi or mo ...
-BaseData.LaneTrDistr = {'80,20'}; % used for split, stand, exfast, exslow
+BaseData.LaneTrDistr = {'50,50'}; % used for split, stand, exfast, exslow
 BaseData.TrRate = 0; % used to distinguish Det
 
 BaseData.TransILx = {'0'};  % used for reduced, expanded, conc
 BaseData.TransILy = {'0'};
 BaseData.LaneCen = {'0'};
 
+BaseData.InfSurf = 1;
+
 BaseData.Save = 0;
-BaseData.Folder = '/AGB2002A15';
+BaseData.Folder = '/AGBPDD';
 
 FName = 'DetAll.mat'; % 'Det60t.mat'
 
@@ -63,14 +65,17 @@ PDCx = PD;
 % Round TrLineUp first row, move unrounded to fifth row
 TrLineUp(:,5) = TrLineUp(:,1); TrLineUp(:,1) = round(TrLineUp(:,1)/BaseData.ILRes);
 
+for t = 1:Num.InfCases
 
-% Subject Influence Line to Truck Axle Stream
-[MaxLE,SMaxLE,BrStInd,AxonBr] = GetMaxLE(AllTrAx,Inf,BaseData.RunDyn,1);
-% Record Maximums
-OverMax = [OverMax; [1, 1, MaxLE, SMaxLE, BrStInd]];
+    % Subject Influence Line to Truck Axle Stream
+    [MaxLE,SMaxLE,BrStInd,AxonBr] = GetMaxLE(AllTrAx,Inf,BaseData.RunDyn,t);
+    % Record Maximums
+    OverMax = [OverMax; [t, 1, MaxLE, SMaxLE, BrStInd]];
+
+end
 
 % Display Apercu
-T = Apercu(PDCx,BaseData.ApercuTitle,Inf.x,Inf.v(:,1),BrStInd,TrLineUp,MaxLE/ESIA.Total(1),MaxLE/SMaxLE,Lane.Dir,BaseData.ILRes);
+%T = Apercu(PDCx,BaseData.ApercuTitle,Inf.x,Inf.v(:,1),BrStInd,TrLineUp,MaxLE/ESIA.Total(1),MaxLE/SMaxLE,Lane.Dir,BaseData.ILRes);
 
 % Convert Results to Table
 OverMaxT = array2table(OverMax,'VariableNames',{'InfCase','Year','MaxLE','SMaxLE','MaxBrStInd'});

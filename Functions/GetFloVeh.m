@@ -2,6 +2,9 @@ function [Flo] = GetFloVeh(LaneNumVeh,TransPrTT,TransPrCC,BunchFactor,q,TrDistCu
 %GETFLOVEH Gets Flo.Veh and Flo.Trans
 
 % TC is a truck, followed by a car (<<<Truck<<Car)
+%%%                         THIS IS WRONG!!! SEE BELOW... TC means
+%%%                         <<<CAR<<<<TRUCK (Truck after car)
+
 % Flo.Trans(i) is the distance INFRONT of vehicle i
 % Therefore, TC is the space INFRONT of the car
             %TT is the space INFRONT of the truck (up to the truck)

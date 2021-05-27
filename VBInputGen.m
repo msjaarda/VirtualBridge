@@ -17,7 +17,7 @@ tic, clear, clc, hold off, close all, format long g, rng('shuffle')
 % ----- INPUT -----
 
 % Year, #, Station Name, string, save and plot toggles
-Year = 2003; SName = 'Denges'; Save = 0; PlotFits = 1;
+Year = 2017; SName = 'Ceneri'; Save = 0; PlotFits = 1;
 
 % ----- ENDIN -----
 
@@ -28,7 +28,11 @@ Station = unique(PD.ZST);
 % Lookup from weeklycount excel file
 InputFile = 'Misc/WorkdayCounts.xlsx'; CountingData = readtable(InputFile);
 % Get Total Workday Vehicles (x2 dir) from counting station data
-TotalVeh = CountingData{Year-1999,SName};
+try
+    TotalVeh = CountingData{Year-1999,SName};
+catch
+    TotalVeh = 100000;
+end
 
 % Let the Classify function add the .CLASS column to PD
 PDC = Classify(PD);
@@ -68,8 +72,11 @@ end
 PDC = PDC(PDC.GW_TOT > 6000,:);
 % 2. Disqualification by Swiss10 Class (exclude 2,3,4,6)
 % Note all years have proper Sw10 data... therefore exclude, not include
+try
 if sum(PDC.CS == 2 | PDC.CS == 3 | PDC.CS == 4 | PDC.CS == 6) < 0.7*height(PDC)
     PDC(PDC.CS == 2 | PDC.CS == 3 | PDC.CS == 4 | PDC.CS == 6,:) = [];
+end
+catch
 end
 %PDC = PDC(PDC.CS == 1 | PDC.CS == 5 | PDC.CS == 8 | PDC.CS == 9 | PDC.CS == 10,:);
 % Get rid of overweight classes and class 11bis

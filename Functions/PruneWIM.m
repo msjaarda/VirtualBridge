@@ -12,6 +12,7 @@ TFileName = strcat(SName,num2str(Station),'_',num2str(Year));
 
 MFileName = strcat(TFileName,'.mat');
 
+% Option to load RD if you want (give a non-table to the function)
 if not(istable(RD))
     load(MFileName);
 end
@@ -101,7 +102,9 @@ PD(OverW,:) = [];
 % go 25 to be safe.
 % 8) Remove vehicles with axle weights greater than 25 tonnes
 
-for i = 14:23
+AxIn = find(string(PD.Properties.VariableNames) == "AWT01");
+
+for i = AxIn:AxIn+8
     OverAW = PD.(i)>25000;
     TotOverAW = sum(OverAW);
     PD(OverAW,:) = [];
@@ -129,7 +132,9 @@ PD(OverAx,:) = [];
 
 % 2 Individual wheelbases should be less than 15 m
 
-for i = 24:32
+WbIn = find(string(PD.Properties.VariableNames) == "W1_2");
+
+for i = WbIn:WbIn+7
     
     OverWB = PD.(i)>1500;
     TotOverWB = sum(OverWB);
@@ -176,21 +181,7 @@ if Save == 1
     save(strcat(TFileName,'_Filtered'),'PD')
 end
 
-% Stage 2 Pruning not done here.
-
-% % % Stage 2 Custom Pruning (two more of our own)
-% % % 1. Disqualification by weight (under 6 tonnes)
-% % TotUnderW = sum(PD.GW_TOT < 6000);
-% % PD = PD(PD.GW_TOT > 6000,:);
-% % % 2. Disqualification by Swiss10 Class (exclude 2,3,4,6,7)
-% % TotSW10Ex = sum(PD.CS == 2 | PD.CS == 3 | PD.CS == 4 | PD.CS == 6 | PD.CS == 7);
-% % PD = PD(PD.CS == 1 | PD.CS == 5 | PD.CS == 8 | PD.CS == 9 | PD.CS == 10,:);
-% % 
-% % if ReportPrune == 1
-% %     fprintf('Custom Step 1) Vehicles removed for being under 6 tonnes: %i\n',TotUnderW)
-% %     fprintf('Custom Step 2) Vehicles removed for being SW10 2,3,4,6,7: %i\n\n',TotSW10Ex)
-% % end
-
+% Stage 2 Pruning not done here. See PruneWIM2
 
 end
 

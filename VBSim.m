@@ -12,7 +12,7 @@
 clear, clc, close all, format long g, rng('shuffle');
 
 % Input File
-InputFile = 'MATSimInputPlatoonConfidencex.xlsx'; 
+InputFile = 'MATSimInputPDx.xlsx'; 
 
 % Read in simulation data
 [BaseData,LaneData,TrData,FolDist] = ReadInputFile(['Input/' InputFile]);
@@ -42,8 +42,8 @@ for g = 1:height(BaseData)
     % Initialize parpool if necessary and initialize progress bar
     if BaseData.Parallel(g) > 0, gcp; clc; end, m = StartProgBar(BaseData.NumSims(g), Num.Batches, g, height(BaseData)); tic; st = now;
     
-    parfor (v = 1:BaseData.NumSims(g), BaseData.Parallel(g)*100)
-    %for v = 1:BaseData.NumSims(g)
+    %parfor (v = 1:BaseData.NumSims(g), BaseData.Parallel(g)*100)
+    for v = 1:BaseData.NumSims(g)
         
         % Initialize variables outside of batch simulation loop
         LaneAxLineUp = cell(Num.Lanes,1); LaneVehLineUp = cell(Num.Lanes,1); ApercuMax = [];
@@ -70,6 +70,8 @@ for g = 1:height(BaseData)
                     
                     % 3) Flo.Dist | Get Intervehicle Distances (m) TC is the Car following a Truck (<<<Truck<<Car)
                     Flo = GetFloDist(FolDist,FixVars,Flo,BaseData.PlatFolDist(g));
+                    %%%                         THIS IS WRONG!!! SEE BELOW... TC means
+                    %%%                         <<<CAR<<<<TRUCK (Truck after car)
                     
                     % 4) Assemble Axle Loads and Axle Spacings vectors - populate Axle Weights (kN) and Inter-Axle Distances (m) within
                     [Flo, LaneAxLineUp{q}, LaneVehLineUp{q}, TableNamesx] = GetLaneLineUp(TrTyp,Lane.Dir,q,Flo,FixVars,k,v,BaseData(g,:),TrData);

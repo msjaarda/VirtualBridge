@@ -2,15 +2,18 @@ function [BetAx_Excel] = BetAx(PDC,TrName,TrTyps,TrAxPerGr,TrTypPri,SName,Year,p
 % This function used in the MATSim input file pipeline
 
 
-if width(PDC) > 35
-    if sum(strcmp('Head',PDC.Properties.VariableNames)) > 0
-        shift = 23;
-    else
-        shift = 23 + 10;
-    end
-else
-    shift = 23;
-end
+shift = find(string(PDC.Properties.VariableNames) == "W1_2")-1;
+
+% Replaced the below with the above on 7/4/21
+% if width(PDC) > 35
+%     if sum(strcmp('Head',PDC.Properties.VariableNames)) > 0
+%         shift = 23;
+%     else
+%         shift = 23 + 10;
+%     end
+% else
+%     shift = 23;
+% end
 
 
 % Plot Stuff
