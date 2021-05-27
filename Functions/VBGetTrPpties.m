@@ -37,7 +37,7 @@ VWIMCols = [VWIMCols AWNames WBNames];
 
 if FixVars.CarWgt
     % If no cars, add column for 'CarsInfront'
-    LaneVehLineUp = [LaneVehLineUp Flo.CarsInfront];
+    %LaneVehLineUp = [LaneVehLineUp Flo.CarsInfront];
     VWIMCols{end+1} = 'CarsInfront';
 end
 
