@@ -136,7 +136,7 @@ aQ1 = 0.7; aQ2 = 0.5; aq = 0.5;
 ESIA.T69 = 1.5*(ESIA.EQ(1)*aQ1+ESIA.EQ(2)*aQ2+ESIA.Eq*aq);
 
 % Load Results from AGB Simulations
-load('Output\AGB2002\Apr15-20 1537.mat') % 85-15
+load('Misc\Apr15-20 1537.mat') % 85-15
 %load('Output\AGB2002\Apr15-20 1443.mat') % 96-04
 
 % Ninety-ninth percentile value from simulations
