@@ -166,7 +166,11 @@ if ismember('ILs', BaseData.Properties.VariableNames)
     % Example: V.V80 means just V80 from Library V
         
     % Initialize Table Columns
-    [LaneData.InfNum, LaneData.Name, LaneData.Lane, LaneData.x, LaneData.Infv, LaneData.Infv2] = deal([]);
+    [LaneData.InfNum, LaneData.Name, LaneData.Lane, LaneData.x, LaneData.Infv] = deal([]);
+    
+    if BaseData.InfSurf == 1
+        LaneData.Infv2 = [];
+    end
     
     % Populate LaneData.Infv and LaneData.x
     % Step through each IL family given -- ILs = IL

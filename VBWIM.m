@@ -14,7 +14,7 @@ warning('off','MATLAB:mir_warning_maybe_uninitialized_temporary')
 % - Make sure ClassOW is set to true inside Classify.m and no 11bis
 
 % Input File Name
-InputFile = 'Input/MATSimWIMInputFlo.xlsx';
+InputFile = 'Input/MATSimWIMInput.xlsx';
 
 % Read Input File
 [BaseData,LaneData,~,~] = ReadInputFile(InputFile);
