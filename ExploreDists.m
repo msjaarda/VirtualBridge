@@ -31,11 +31,11 @@ x = 0.4:0.01:1;
 FxE = 1-6554*exp(-27.72*x);
 fxE = 181676.88*exp(-27.72*x);
 N = [5 10 50 100 1000 10000];
-for i = 1:length(N)
-    EFxE(N,:) = FxE.^(N(i));
-    EfxE(N,:) = 181676.88*(N(i))*exp(-27.72*x).*(1-6554*exp(-27.72*x)).^((N(i))-1);
-end
-MeanEfxE = max(EfxE');
+% for i = 1:length(N)
+%     EFxE(N,:) = FxE.^(N(i));
+%     EfxE(N,:) = 181676.88*(N(i))*exp(-27.72*x).*(1-6554*exp(-27.72*x)).^((N(i))-1);
+% end
+%MeanEfxE = max(EfxE');
 
 % Polynomial
 FxP = 1-(0.3270./x).^(11.43);
@@ -59,11 +59,11 @@ plot(x,fxB)
 
 figure()
 hold on
-plot(x,EfxE)
+%plot(x,EfxE)
 
 for N = 1:8
     x = rand(10^N,1);
-    IFxE = (-1/27.72)*ln((-x+1)./6554);
+    IFxE = (-1/27.72)*log((-x+1)./6554);
     
 
 end
