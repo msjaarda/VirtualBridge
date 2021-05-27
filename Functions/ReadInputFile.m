@@ -1,5 +1,5 @@
-function [BaseData,LaneData,TrData,FolDist] = ReadInputFile(InputFile)
-%Reads MATSimInput and returns main variables (Tables)
+function [BaseData,LaneData,TrData,FolDist] = VBReadInputFile(InputFile)
+% Reads VBInput and returns main variables (Tables)
 % Input can be Simple or Complete
 % BaseData must be included in the InputFile.
 
@@ -30,8 +30,23 @@ for i = 1:NumSheets
     sheetNames{i} = readtable(InputFile,'Sheet',names(i));
 end
 
+
+
 % BaseData is always required, so we do not check if it exists first
 BaseData = sheetNames{strcmp(names,'BaseData')};
+
+if ~ismember('InfSurf', BaseData.Properties.VariableNames)
+    BaseData.InfSurf(:) = 0;
+end
+if ~ismember('PlatRate', BaseData.Properties.VariableNames)
+    BaseData.PlatRate(:) = 0;
+end
+if ~ismember('RunPlat', BaseData.Properties.VariableNames)
+    BaseData.RunPlat(:) = 0;
+end
+if ~ismember('PlatFolDist', BaseData.Properties.VariableNames)
+    BaseData.PlatFolDist(:) = 0;
+end
 % Folder is optional, but when not included (or when given as 0), must be '/'
 if ismember('Folder', BaseData.Properties.VariableNames)
     if iscell(BaseData.Folder)
@@ -85,6 +100,8 @@ else
     % Assign null value it if doesn't
     FolDist = [];
 end
+
+warning('off','MATLAB:mir_warning_maybe_uninitialized_temporary')
 
 end
 

@@ -87,6 +87,8 @@ else
     % Implemented to replicate AGB 2002/005 (see pg 17)
     NumAx = sum(TrData.TrWitAx{:,:} >= 0,2);
     
+    % ADD BACK IN FOR PD AND MP VERIFICATION! 
+    
     % Supress when not doing AGB project
 %     if all(Lane.TrDistr == [85;15])
 %         AxFactor = zeros(Num.TrTyp,2);

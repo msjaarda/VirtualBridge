@@ -1,66 +1,47 @@
 % ------------------------------------------------------------------------
-%                            MATSimDET
+%                            VBDet
 % ------------------------------------------------------------------------
 % Run deterministic vehicles over a bridge to find maximum load effects
 
 % Initial commands
 clear, clc, format long g, rng('shuffle'), close all; BaseData = table;
-addpath('./Misc/Deterministic Vehicles/')
 
 % Input Information --------------------
 
 % Roadway Info
 BaseData.LaneDir = {'1,2'};
 % Influence Line Info
-BaseData.ILs = {'PDPp3Mp'};  BaseData.ILRes = 0.1;
+BaseData.ILs = {'AGBBox.Mp.S30'};  BaseData.ILRes = 0.1;
 % Analysis Info
-BaseData.RunDyn = 0;
-
-BaseData.NumVeh = 1000000; % use for bi or mo ...
-BaseData.LaneTrDistr = {'50,50'}; % used for split, stand, exfast, exslow
-BaseData.TrRate = 0; % used to distinguish Det
-
-BaseData.TransILx = {'0'};  % used for reduced, expanded, conc
-BaseData.TransILy = {'0'};
-BaseData.LaneCen = {'0'};
-
-BaseData.InfSurf = 1;
+BaseData.RunDyn = 0; % 1.3 added manually
+% Analysis Type
+BaseData.AnalysisType = "Det";
 
 BaseData.Save = 0;
-BaseData.Folder = '/AGBPDD';
+BaseData.Folder = '/AGBDet';
 
-FName = 'DetAll.mat'; % 'Det60t.mat'
+FName = 'VB60t.mat'; % 'Det60t.mat'
+load(FName)
 
 BaseData.ApercuTitle = sprintf('%s','Deterministic Analysis');
 
 % Input Complete   ---------------------
 
-% % NOTE: Optional Input through File 
-% % replace "UpdateData(BaseData,LaneData,1,1);" with..
-% % "
-% % Input File Name
-% InputFile = 'Input/MATSimInputSimple.xlsx';
-% % Read Input File
-% [BaseData,LaneData,~,~] = ReadInputFile(InputFile); 
-% % "
-% % BaseData will be overwrote
-
 % Obtain Influence Line Info
-[Num.Lanes,Lane,LaneData,~,~] = UpdateData(BaseData,[],1,1);
-[Inf,Num.InfCases,Inf.x,Inf.v,ESIA] = GetInfLines(LaneData,BaseData,Num.Lanes);
+[Num,Lane,ILData,~,~,ESIA] = VBUpdateData(BaseData);
 
 % Initialize
 OverMax = [];
-    
-load(FName)
-% Add Factors
-PD{PD.GW_TOT == 60000,11:15} = 1.1*PD{PD.GW_TOT == 60000,11:15};
-PD{PD.GW_TOT == 40000,11:15} = 1.5*PD{PD.GW_TOT == 40000,11:15};
 
-PDCx = PD;
+InAxs = contains(PDC.Properties.VariableNames, 'AWT');
+
+% Apply Factors according to AGB 2002/005 (1.1 and 1.5)
+PDC{PDC.GW_TOT == 60000,InAxs} = 1.1*PDC{PDC.GW_TOT == 60000,InAxs};
+PDC{PDC.GW_TOT == 40000,InAxs} = 1.5*PDC{PDC.GW_TOT == 40000,InAxs};
+PDCx = PDC;
 
 % Convert PDC to AllTrAx
-[PDCx, AllTrAx, TrLineUp] = WIMtoAllTrAx(PDCx,round(Inf.x(end)),Lane.Dir,BaseData.ILRes);
+[PDCx, AllTrAx, TrLineUp] = VBWIMtoAllTrAx(PDCx,0,Lane.Dir,BaseData.ILRes);
 
 % Round TrLineUp first row, move unrounded to fifth row
 TrLineUp(:,5) = TrLineUp(:,1); TrLineUp(:,1) = round(TrLineUp(:,1)/BaseData.ILRes);
@@ -68,17 +49,18 @@ TrLineUp(:,5) = TrLineUp(:,1); TrLineUp(:,1) = round(TrLineUp(:,1)/BaseData.ILRe
 for t = 1:Num.InfCases
 
     % Subject Influence Line to Truck Axle Stream
-    [MaxLE,SMaxLE,BrStInd,AxonBr] = GetMaxLE(AllTrAx,Inf,BaseData.RunDyn,t);
+    [MaxLE,DLF,BrStInd,R] = VBGetMaxLE(AllTrAx,ILData.v{t},BaseData.RunDyn);
     % Record Maximums
-    OverMax = [OverMax; [t, 1, MaxLE, SMaxLE, BrStInd]];
+    % Add AGB 1.3 DLF
+    OverMax = [OverMax; [t, 1.3*MaxLE, 1.3, BrStInd]];
 
 end
 
 % Display Apercu
-%T = Apercu(PDCx,BaseData.ApercuTitle,Inf.x,Inf.v(:,1),BrStInd,TrLineUp,MaxLE/ESIA.Total(1),MaxLE/SMaxLE,Lane.Dir,BaseData.ILRes);
+T = VBApercu(PDCx,BaseData.ApercuTitle,ILData,1,BrStInd,TrLineUp,1.3*MaxLE/ESIA.Total(1),1.3,Lane.Dir,BaseData.ILRes);
 
 % Convert Results to Table
-OverMaxT = array2table(OverMax,'VariableNames',{'InfCase','Year','MaxLE','SMaxLE','MaxBrStInd'});
+OverMaxT = array2table(OverMax,'VariableNames',{'InfCase','MaxLE','DLF','BrStInd'});
 
 % Get ESIA
 aQ1 = 0.7; aQ2 = 0.5; aq = 0.5;
@@ -87,13 +69,9 @@ ESIA.T69 = 1.5*(ESIA.EQ(1)*aQ1+ESIA.EQ(2)*aQ2+ESIA.Eq*aq);
 
 % Optional save of OutInfo (used for deterministic AGB matching)
 OutInfo.Name = datestr(now,'mmmdd-yy HHMMSS'); OutInfo.BaseData = BaseData;
-OutInfo.ESIMS = OverMaxT.MaxLE;
-OutInfo.ESIM = OverMaxT.MaxLE*1.3; % Apply DLA
+OutInfo.ESIM = OverMaxT.MaxLE;
 OutInfo.OverMax = OverMax; OutInfo.OverMaxT = OverMaxT;
-OutInfo.InfNames = Inf.Names;
-OutInfo.LaneData = LaneData;
-
-OutInfo.ESIA = []; OutInfo.PlatPct = 0; OutInfo.Mean = []; OutInfo.Std = [];
+OutInfo.ILData = ILData; OutInfo.ESIA = ESIA;
 
 if BaseData.Save == 1
     save(['Output' BaseData.Folder '/' OutInfo.Name], 'OutInfo')
