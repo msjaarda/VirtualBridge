@@ -14,13 +14,15 @@ warning('off','MATLAB:mir_warning_maybe_uninitialized_temporary')
 % - Make sure ClassOW is set to true inside Classify.m and no 11bis
 
 % Input File Name
-InputFile = 'Input/MATSimWIMInput.xlsx';
+InputFile = 'Input/MATSimWIMInputx.xlsx';
 
 % Read Input File
 [BaseData,LaneData,~,~] = ReadInputFile(InputFile);
 
 % Initialize variables and start row counter
 MaxEvents = nan(400000,14,height(BaseData));
+
+if BaseData.Parallel(1) > 0, gcp; clc; end
 
 % Start Progress Bar
 if height(BaseData) > 10
@@ -101,6 +103,9 @@ parfor g = 1:height(BaseData)
             
             % For each influence case
             for t = 1:NInfCases
+                
+                % Subdivide AllTrAx
+                AllTrAxSub = AllTrAx(Starti:Endi,:);
                 
                 k = 0;
                 % For each analysis

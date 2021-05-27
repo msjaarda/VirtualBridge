@@ -16,9 +16,9 @@ format long g
 
 % ----- INPUT -----
 
-Year = {'2019'};
-Station = {'415' '416'};
-SName = 'Oberburen';
+Year = {'2009'};
+Station = {'408'};
+SName = 'Ceneri';
 
 % -----------------
 
@@ -28,7 +28,8 @@ for w = 1:length(Station)
 
 TFileName1 = strcat(SName,Station{w},'_',Year{q});
 TFileName = strcat(SName,'_',Year{q});
-Loc = strcat('C:\Users\sjaarda\Desktop\WIMDaily\',SName,'\',Station{w});
+Loc = strcat('C:\Users\sjaarda\Desktop\',SName,Station{w});
+%Loc = strcat('C:\Users\sjaarda\Desktop\WIMDaily\',SName,'\',Station{w});
 %Loc = strcat('C:\Users\sjaarda\Desktop\WIMDaily\',SName,'\',Station{w},'\',Year{q});
 
 % Create a structure will all filesnames in order to step through and
@@ -49,7 +50,7 @@ for i = 1:NumFiles
     % however, in order to get all the data, just set the last row to a high
     % number! It does not give an error for this. Row 22 is the first row
     % we want. The total number of columns given after importfile is 36. 
-    RDi = importDAILYfile(strcat(Loc,'\',FileName),22,10000);
+    RDi = importDAILYfile(strcat(Loc,'\',FileName),22,10000000);
     
     % Delete last row (always meaningless after the import)
     [RDisize, RDirows]= size(RDi);
@@ -156,8 +157,8 @@ PD = PruneWIM((Year{q}),Station{w},SName,RD,1,0);
 [TotDaysOpen, y] = size(unique(PD.JJJJMMTT));
 
 % writetable(PD,strcat(TFileName,'_Filtered'))
-save(strcat(TFileName,'_Filtered'),'PD')
-save(TFileName,'PD')
+%save(strcat(TFileName,'_Filtered'),'PD')
+%save(TFileName,'PD')
 
 end
 
