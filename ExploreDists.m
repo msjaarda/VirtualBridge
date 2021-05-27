@@ -1,7 +1,7 @@
 clear,clc
 
 % Simulation Maximums...
-load('C:\Users\sjaarda\Desktop\SwissTraffic\Output\AGB2002\Apr15-20 1339.mat')
+%load('C:\Users\sjaarda\Desktop\SwissTraffic\Output\AGB2002\Apr15-20 1339.mat')
 
 InfCase = 22;
 InfName = OutInfo.InfNames{14};
