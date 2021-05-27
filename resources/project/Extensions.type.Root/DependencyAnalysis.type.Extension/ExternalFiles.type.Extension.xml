@@ -1,2 +1,6 @@
 <?xml version='1.0' encoding='UTF-8'?>
+<<<<<<< HEAD
 <Info File7="InitialR.mat" File6="FatigueOutput\MpHistory_R.mat" File11="C:\Users\mjsja\Desktop\SwissTraffic\Misc\WIMAxles.mat" File5="C:\Users\mjsja\Desktop\SwissTraffic\Misc\AxTandem.mat" File4="OutInfo" File9="Output\AGB2002\Apr15-20 1537.mat" File10="C:\Users\mjsja\Projects\SwissTraffic\Functions\GetFolderList.m" File8="C:\Users\sjaarda\Desktop\SwissTraffic\Output\AGB2002\Apr15-20 1339.mat" File3="FatigueOutput\InitialR.mat" File2="Misc\Apr15-20 1537.mat" File1="WIMYearlyMaxQSum.mat" File0="PD" />
+=======
+<Info File7="C:\Users\sjaarda\Desktop\SwissTraffic\Misc\AxTandem.mat" File6="OutInfo" File5="FatigueOutput\MpHistory_R.mat" File4="C:\Users\mjsja\Projects\SwissTraffic\Functions\GetFolderList.m" File8="Output\AGB2002\Apr15-20 1537.mat" File3="Misc\Apr15-20 1537.mat" File2="FatigueOutput\InitialR.mat" File1="PD" File0="C:\Users\sjaarda\Desktop\SwissTraffic\Misc\WIMAxles.mat" />
+>>>>>>> d8bbe7f8b57c757f5d2578d7e5ce66d04229f1d9
