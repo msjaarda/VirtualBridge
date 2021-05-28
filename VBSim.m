@@ -6,7 +6,7 @@
 % Initializing commands
 clear, clc, close all, format long g, rng('shuffle');
 
-% Input File
+% Input Filec
 InputFile = 'VBSimInputPDx.xlsx';
 
 % Read in simulation data
