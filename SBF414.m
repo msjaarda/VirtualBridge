@@ -270,7 +270,7 @@ if plot2
     yd3 = (SB.m*((SB.W-xd)./(SB.W*SB.chi)).^(SB.m))./(SB.W-xd);
     line(xd,yd3)
     
-    load('FatigueOutput\InitialR.mat')
+    load('InitialR.mat')
     figure()
     histogram(R/1000,250,'normalization','pdf')
     hold on

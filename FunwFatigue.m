@@ -6,7 +6,7 @@
 % inside GetMaxLE and saved as a Fatigue Output variable... just ideas.
 
 clear, clc, close all
-load('FatigueOutput\MpHistory_R.mat')
+load('MpHistory_R.mat')
 
 % Convert Moment, kNm, to Stress, MPa
 ScalingFactor = 20;
