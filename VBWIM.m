@@ -15,6 +15,8 @@ warning('off','MATLAB:mir_warning_maybe_uninitialized_temporary')
 
 % Input File Name
 InputFile = 'Input/MATSimWIMInput.xlsx';
+% Could also do the more complete
+%InputFile = 'Input/MATSimWIMInputx.xlsx';
 
 % Read Input File
 [BaseData,LaneData,~,~] = ReadInputFile(InputFile);
@@ -233,3 +235,4 @@ MaxEvents.ClassT(MaxEvents.m == 2) = "ClassOW";
 MaxEvents.ClassT(MaxEvents.m == 3) = "Class";
 MaxEvents.m = [];
 
+% Save manually
