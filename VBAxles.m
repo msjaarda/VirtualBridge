@@ -6,7 +6,7 @@
 % AxleStatsBasic, which focusses on Q1 on its own. Both have live scripts
 % which load vars and perform analyses.
 % AxleStatsBasic >> Q1 Investigation
-% MATSimAxles    >> Q1Q2 Investigation
+% VBAxles        >> Q1Q2 Investigation
 
  % Initial commands
 clear, clc, format long g, rng('shuffle'), close all;
